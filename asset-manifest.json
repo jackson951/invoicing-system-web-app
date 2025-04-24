@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/jackson951/invoicing-system-web-app.git/static/css/main.fbba7c8b.css",
-    "main.js": "/jackson951/invoicing-system-web-app.git/static/js/main.691e699b.js",
-    "static/js/453.9f57a5d7.chunk.js": "/jackson951/invoicing-system-web-app.git/static/js/453.9f57a5d7.chunk.js",
-    "index.html": "/jackson951/invoicing-system-web-app.git/index.html",
-    "main.fbba7c8b.css.map": "/jackson951/invoicing-system-web-app.git/static/css/main.fbba7c8b.css.map",
-    "main.691e699b.js.map": "/jackson951/invoicing-system-web-app.git/static/js/main.691e699b.js.map",
-    "453.9f57a5d7.chunk.js.map": "/jackson951/invoicing-system-web-app.git/static/js/453.9f57a5d7.chunk.js.map"
+    "main.css": "/invoicing-system-web-app/static/css/main.fbba7c8b.css",
+    "main.js": "/invoicing-system-web-app/static/js/main.bf27216e.js",
+    "static/js/453.9f57a5d7.chunk.js": "/invoicing-system-web-app/static/js/453.9f57a5d7.chunk.js",
+    "index.html": "/invoicing-system-web-app/index.html",
+    "main.fbba7c8b.css.map": "/invoicing-system-web-app/static/css/main.fbba7c8b.css.map",
+    "main.bf27216e.js.map": "/invoicing-system-web-app/static/js/main.bf27216e.js.map",
+    "453.9f57a5d7.chunk.js.map": "/invoicing-system-web-app/static/js/453.9f57a5d7.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.fbba7c8b.css",
-    "static/js/main.691e699b.js"
+    "static/js/main.bf27216e.js"
   ]
 }
