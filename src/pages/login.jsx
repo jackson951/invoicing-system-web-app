@@ -16,39 +16,47 @@ const Login = () => {
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(loginSchema),
-    mode: "onChange", // Validate on each change
+    mode: "onChange",
   });
 
   const onSubmit = async (data) => {
     console.log("Logging in with:", data);
-    // Simulate login
     await new Promise((r) => setTimeout(r, 1000));
     alert("Login successful!");
   };
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
-      <div className="max-w-md w-full bg-white p-8 rounded shadow-md">
-        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
-          Sign in to your account
+      <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg">
+        <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">
+          Welcome Back 👋
         </h2>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* Email Field */}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {/* Email */}
           <Controller
             name="email"
             control={control}
             defaultValue=""
             render={({ field }) => (
-              <div>
+              <div className="relative">
                 <input
                   {...field}
                   type="email"
-                  placeholder="Email Address"
-                  className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-indigo-500"
+                  id="email"
+                  placeholder=" "
+                  className={`peer w-full px-4 pt-5 pb-2 border ${
+                    errors.email ? "border-red-500" : "border-gray-300"
+                  } rounded focus:outline-none focus:ring-2 focus:ring-indigo-500`}
                 />
+                <label
+                  htmlFor="email"
+                  className="absolute left-4 top-2 text-sm text-gray-500 transition-all peer-placeholder-shown:top-3 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-indigo-500"
+                >
+                  Email Address
+                </label>
                 {errors.email && (
-                  <p className="text-red-500 text-sm mt-1">
+                  <p className="text-red-500 text-xs mt-1">
                     {errors.email.message}
                   </p>
                 )}
@@ -56,21 +64,30 @@ const Login = () => {
             )}
           />
 
-          {/* Password Field */}
+          {/* Password */}
           <Controller
             name="password"
             control={control}
             defaultValue=""
             render={({ field }) => (
-              <div>
+              <div className="relative">
                 <input
                   {...field}
                   type="password"
-                  placeholder="Password"
-                  className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-indigo-500"
+                  id="password"
+                  placeholder=" "
+                  className={`peer w-full px-4 pt-5 pb-2 border ${
+                    errors.password ? "border-red-500" : "border-gray-300"
+                  } rounded focus:outline-none focus:ring-2 focus:ring-indigo-500`}
                 />
+                <label
+                  htmlFor="password"
+                  className="absolute left-4 top-2 text-sm text-gray-500 transition-all peer-placeholder-shown:top-3 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-indigo-500"
+                >
+                  Password
+                </label>
                 {errors.password && (
-                  <p className="text-red-500 text-sm mt-1">
+                  <p className="text-red-500 text-xs mt-1">
                     {errors.password.message}
                   </p>
                 )}
@@ -78,18 +95,32 @@ const Login = () => {
             )}
           />
 
+          {/* Submit Button */}
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 transition"
+            className="w-full bg-indigo-600 text-white font-medium py-2 rounded hover:bg-indigo-700 transition"
           >
             {isSubmitting ? "Signing in..." : "Sign In"}
           </button>
         </form>
 
-        <p className="text-center text-sm text-gray-600 mt-4">
-          Don’t have an account?{" "}
-          <a href="/register" className="text-indigo-600 hover:underline">
+        {/* Footer Links */}
+        <div className="text-sm text-center text-gray-600 mt-6">
+          <a
+            href="/forgot-password"
+            className="text-indigo-600 hover:underline"
+          >
+            Forgot your password?
+          </a>
+        </div>
+
+        <p className="text-center text-sm text-gray-500 mt-4">
+          Don't have an account?{" "}
+          <a
+            href="/register"
+            className="text-indigo-600 hover:underline font-medium"
+          >
             Register
           </a>
         </p>

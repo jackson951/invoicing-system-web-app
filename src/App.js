@@ -16,6 +16,7 @@ function App() {
           <Routes>
             {/* Default Route - Home page */}
             <Route path="/" element={<Home />} />
+            <Route path="/home" element={<Home />} />
 
             {/* Other Routes */}
             <Route path="/register" element={<Register />} />
