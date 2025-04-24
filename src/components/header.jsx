@@ -9,7 +9,10 @@ function Header() {
     <header className="fixed top-0 left-0 right-0 bg-indigo-600 text-white py-4 px-6 z-50 shadow-md">
       <div className="container mx-auto flex justify-between items-center">
         {/* Brand */}
-        <Link to="/" className="text-2xl font-extrabold tracking-tight">
+        <Link
+          to="/invoicing-system-web-app"
+          className="text-2xl font-extrabold tracking-tight"
+        >
           Bill Flow
         </Link>
 
