@@ -1,70 +1,61 @@
-# Getting Started with Create React App
+# SaaS-Based Invoicing System
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A full-featured, multi-tenant invoicing platform that allows users to create, send, manage, and track invoices in real-time. Built with ASP.NET Core and React.js, this project includes robust authentication, payment integration, and real-time analytics.
 
-## Available Scripts
+## 🚀 Tech Stack
 
-In the project directory, you can run:
+- **Backend**: ASP.NET Core (C#), Entity Framework Core, SQL Server
+- **Frontend**: React.js, Tailwind CSS
+- **Authentication**: ASP.NET Identity
+- **Payments**: Stripe API
+- **Real-time Analytics**: SignalR, Chart.js
+- **PDF Generation**: iTextSharp or similar libraries
 
-### `npm start`
+## 📦 Key Features
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- ✅ Create, send, and manage invoices
+- ✅ Multi-tenant user system with role-based access
+- ✅ Secure payment integration via Stripe (one-time + subscription)
+- ✅ Real-time dashboard with analytics and invoice tracking
+- ✅ Email verification and password reset support
+- ✅ PDF invoice generation and download
+- ✅ Admin dashboard to manage users and transactions
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## 📊 Real-Time Dashboard
 
-### `npm test`
+Users can view invoice trends, payment status, and overall business insights through a dynamic dashboard powered by Chart.js and SignalR.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## 🔐 Authentication
 
-### `npm run build`
+- User registration and login
+- Email confirmation
+- Roles: Admin, Business Owner, Accountant
+- Permission-based access to different modules
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## 💳 Stripe Integration
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- Handles secure online payments
+- Subscription billing for SaaS customers
+- Webhook support for billing events
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## 🗂 Database
 
-### `npm run eject`
+- SQL Server with Entity Framework Core Code-First approach
+- Includes invoice templates, client data, user accounts, transactions
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## 🖨️ PDF Generation
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+- Generate professional invoices in PDF format for download or print
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## 🛠️ Future Improvements
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+- Custom invoice themes
+- Invoice scheduling/reminders
+- Integration with accounting tools (e.g., QuickBooks, Xero)
 
-## Learn More
+## 📌 Project Timeline
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+- **Start Date**: April 2025
+- **Status**: In Progress
 
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+---
