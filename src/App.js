@@ -17,6 +17,7 @@ function App() {
             {/* Default Route - Home page */}
             <Route path="/" element={<Home />} />
             <Route path="/home" element={<Home />} />
+            <Route path="/invoicing-system-web-app" element={<Home />} />
 
             {/* Other Routes */}
             <Route path="/register" element={<Register />} />
