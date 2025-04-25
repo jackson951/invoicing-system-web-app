@@ -35,30 +35,31 @@ const Header = () => {
             </Link>
           </div>
           <nav className="hidden md:flex space-x-8">
-            <a
-              href="#features"
+            {/* Use Link for section navigation */}
+            <Link
+              to="/#features"
               className="text-gray-600 hover:text-indigo-600 transition"
             >
               Features
-            </a>
-            <a
-              href="#pricing"
+            </Link>
+            <Link
+              to="/#pricing"
               className="text-gray-600 hover:text-indigo-600 transition"
             >
               Pricing
-            </a>
-            <a
-              href="#testimonials"
+            </Link>
+            <Link
+              to="/#testimonials"
               className="text-gray-600 hover:text-indigo-600 transition"
             >
               Testimonials
-            </a>
-            <a
-              href="#faq"
+            </Link>
+            <Link
+              to="/#faq"
               className="text-gray-600 hover:text-indigo-600 transition"
             >
               FAQ
-            </a>
+            </Link>
           </nav>
           <div className="flex space-x-4">
             <Link

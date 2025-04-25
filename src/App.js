@@ -7,6 +7,7 @@ import NotFound from "./pages/notFound";
 import Header from './components/header';
 import Footer from "./components/footer";
 import ForgotPassword from './pages/forgotPassword';
+import Contact from './pages/contact';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/login" element={<Login />} />
             <Route path="/forgot-password" element={<ForgotPassword/>}/>
+            <Route path="/contact" element={<Contact />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
