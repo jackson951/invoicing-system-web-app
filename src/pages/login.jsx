@@ -2,6 +2,7 @@ import React from "react";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Link } from "react-router-dom"; // ✅ Use Link for navigation
 
 // Schema definition
 const loginSchema = z.object({
@@ -105,24 +106,25 @@ const Login = () => {
           </button>
         </form>
 
-        {/* Footer Links */}
+        {/* Forgot Password Link */}
         <div className="text-sm text-center text-gray-600 mt-6">
-          <a
-            href="/forgot-password"
+          <Link
+            to="/forgot-password"
             className="text-indigo-600 hover:underline"
           >
             Forgot your password?
-          </a>
+          </Link>
         </div>
 
+        {/* Register Link */}
         <p className="text-center text-sm text-gray-500 mt-4">
           Don't have an account?{" "}
-          <a
-            href="/register"
+          <Link
+            to="/register"
             className="text-indigo-600 hover:underline font-medium"
           >
             Register
-          </a>
+          </Link>
         </p>
       </div>
     </div>
