@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -6,18 +6,32 @@ import { zodResolver } from "@hookform/resolvers/zod";
 // Define roles
 const roles = ["Admin", "Business Owner", "Accountant"];
 
-// Zod schema
+// Zod schema with custom error messages inside `.string()` and `.enum()`
 const registerSchema = z
   .object({
-    fullName: z.string().min(2, "Full name is required."),
-    email: z.string().email("Please enter a valid email."),
-    companyName: z.string().min(2, "Company name is required."),
-    phone: z.string().optional(),
+    fullName: z
+      .string({ required_error: "Please provide your full name." })
+      .min(2, { message: "Full name must be at least 2 characters." }),
+    email: z
+      .string({ required_error: "Email address is required." })
+      .email(
+        "The email format you entered is invalid. Please enter a valid email."
+      ),
+    companyName: z
+      .string({ required_error: "Company name is required." })
+      .min(2, { message: "Company name must be at least 2 characters." }),
+    phone: z.string({ required_error: "Phone number is required." }).optional(),
     role: z.enum(["Admin", "Business Owner", "Accountant"], {
-      errorMap: () => ({ message: "Please select a role." }),
+      errorMap: () => ({ message: "Please select a valid role." }),
     }),
-    password: z.string().min(6, "Password must be at least 6 characters."),
-    confirmPassword: z.string().min(6, "Please confirm your password."),
+    password: z
+      .string({ required_error: "Password is required." })
+      .min(6, { message: "Password must be at least 6 characters long." }),
+    confirmPassword: z
+      .string({ required_error: "Please confirm your password." })
+      .min(6, {
+        message: "Password confirmation must be at least 6 characters long.",
+      }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     path: ["confirmPassword"],
@@ -25,19 +39,20 @@ const registerSchema = z
   });
 
 const Register = () => {
+  const [formSuccess, setFormSuccess] = useState(false);
   const {
     control,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(registerSchema),
-    mode: "onBlur",
+    mode: "onChange",
   });
 
   const onSubmit = async (data) => {
     console.log("Registering:", data);
-    await new Promise((r) => setTimeout(r, 1000));
-    alert("Registration successful!");
+    await new Promise((r) => setTimeout(r, 1500));
+    setFormSuccess(true);
   };
 
   return (
@@ -47,7 +62,14 @@ const Register = () => {
           Create Your Account
         </h2>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        {/* Success Toast */}
+        {formSuccess && (
+          <div className="bg-green-500 text-white p-3 mb-4 rounded-lg text-center">
+            Registration successful! You can now log in.
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Full Name */}
           <Controller
             name="fullName"
@@ -57,7 +79,7 @@ const Register = () => {
                 <input
                   {...field}
                   placeholder="Full Name"
-                  className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 transition-all ease-in-out transform hover:scale-105"
                 />
                 {errors.fullName && (
                   <p className="text-red-500 text-sm mt-1">
@@ -78,7 +100,7 @@ const Register = () => {
                   {...field}
                   type="email"
                   placeholder="Email Address"
-                  className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 transition-all ease-in-out transform hover:scale-105"
                 />
                 {errors.email && (
                   <p className="text-red-500 text-sm mt-1">
@@ -98,7 +120,7 @@ const Register = () => {
                 <input
                   {...field}
                   placeholder="Company Name"
-                  className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 transition-all ease-in-out transform hover:scale-105"
                 />
                 {errors.companyName && (
                   <p className="text-red-500 text-sm mt-1">
@@ -119,7 +141,7 @@ const Register = () => {
                   {...field}
                   type="tel"
                   placeholder="Phone Number (optional)"
-                  className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 transition-all ease-in-out transform hover:scale-105"
                 />
               </div>
             )}
@@ -133,7 +155,7 @@ const Register = () => {
               <div>
                 <select
                   {...field}
-                  className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 transition-all ease-in-out transform hover:scale-105"
                 >
                   <option value="">Select Role</option>
                   {roles.map((role) => (
@@ -161,7 +183,7 @@ const Register = () => {
                   {...field}
                   type="password"
                   placeholder="Password"
-                  className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 transition-all ease-in-out transform hover:scale-105"
                 />
                 {errors.password && (
                   <p className="text-red-500 text-sm mt-1">
@@ -182,7 +204,7 @@ const Register = () => {
                   {...field}
                   type="password"
                   placeholder="Confirm Password"
-                  className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 transition-all ease-in-out transform hover:scale-105"
                 />
                 {errors.confirmPassword && (
                   <p className="text-red-500 text-sm mt-1">
@@ -197,7 +219,7 @@ const Register = () => {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full bg-indigo-600 text-white font-semibold py-2 rounded hover:bg-indigo-700 transition"
+            className="w-full bg-indigo-600 text-white font-semibold py-2 rounded-md hover:bg-indigo-700 transition-all ease-in-out transform hover:scale-105"
           >
             {isSubmitting ? "Creating account..." : "Register"}
           </button>
