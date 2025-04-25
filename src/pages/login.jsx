@@ -2,7 +2,7 @@ import React from "react";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Link } from "react-router-dom"; // ✅ Use Link for navigation
+import { Link } from "react-router-dom";
 
 // Schema definition
 const loginSchema = z.object({
@@ -27,8 +27,8 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
-      <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg">
+    <div className="min-h-screen bg-gradient-to-r from-blue-50 to-gray-100 flex items-center justify-center px-4">
+      <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg transform transition-all duration-300 ease-in-out hover:scale-105">
         <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">
           Welcome Back 👋
         </h2>
@@ -48,7 +48,7 @@ const Login = () => {
                   placeholder=" "
                   className={`peer w-full px-4 pt-5 pb-2 border ${
                     errors.email ? "border-red-500" : "border-gray-300"
-                  } rounded focus:outline-none focus:ring-2 focus:ring-indigo-500`}
+                  } rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300 ease-in-out`}
                 />
                 <label
                   htmlFor="email"
@@ -79,7 +79,7 @@ const Login = () => {
                   placeholder=" "
                   className={`peer w-full px-4 pt-5 pb-2 border ${
                     errors.password ? "border-red-500" : "border-gray-300"
-                  } rounded focus:outline-none focus:ring-2 focus:ring-indigo-500`}
+                  } rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300 ease-in-out`}
                 />
                 <label
                   htmlFor="password"
@@ -102,7 +102,11 @@ const Login = () => {
             disabled={isSubmitting}
             className="w-full bg-indigo-600 text-white font-medium py-2 rounded hover:bg-indigo-700 transition"
           >
-            {isSubmitting ? "Signing in..." : "Sign In"}
+            {isSubmitting ? (
+              <div className="animate-spin border-t-2 border-white w-4 h-4 border-solid rounded-full mx-auto"></div>
+            ) : (
+              "Sign In"
+            )}
           </button>
         </form>
 

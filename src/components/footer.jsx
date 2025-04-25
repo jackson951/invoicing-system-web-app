@@ -3,12 +3,12 @@ import { FaGithub, FaTwitter, FaLinkedin } from "react-icons/fa";
 
 export default function Footer() {
   return (
-    <footer className="bg-gray-900 text-gray-300 py-6 px-4 md:px-12 mt-12">
+    <footer className="bg-gray-900 text-gray-300 py-8 px-4 md:px-12 mt-12">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Company Info */}
-        <div>
-          <h2 className="text-lg font-semibold text-white">Bill Flow</h2>
-          <p className="mt-2 text-sm leading-relaxed">
+        <div className="space-y-4">
+          <h2 className="text-2xl font-semibold text-white">Bill Flow</h2>
+          <p className="text-sm leading-relaxed">
             A full-featured, SaaS-based invoicing platform to create, manage,
             and track invoices in real-time. Empowering businesses with
             automation, insights, and seamless payments.
@@ -16,28 +16,40 @@ export default function Footer() {
         </div>
 
         {/* Quick Links */}
-        <div>
+        <div className="space-y-4">
           <h3 className="text-sm font-semibold text-white uppercase tracking-wide">
             Quick Links
           </h3>
-          <ul className="mt-3 space-y-2 text-sm">
+          <ul className="space-y-2 text-sm">
             <li>
-              <a href="/features" className="hover:underline">
+              <a
+                href="/features"
+                className="hover:text-indigo-400 hover:underline transition"
+              >
                 Features
               </a>
             </li>
             <li>
-              <a href="/pricing" className="hover:underline">
+              <a
+                href="/pricing"
+                className="hover:text-indigo-400 hover:underline transition"
+              >
                 Pricing
               </a>
             </li>
             <li>
-              <a href="/about" className="hover:underline">
+              <a
+                href="/about"
+                className="hover:text-indigo-400 hover:underline transition"
+              >
                 About Us
               </a>
             </li>
             <li>
-              <a href="/contact" className="hover:underline">
+              <a
+                href="/contact"
+                className="hover:text-indigo-400 hover:underline transition"
+              >
                 Contact
               </a>
             </li>
@@ -46,33 +58,40 @@ export default function Footer() {
 
         {/* Social + Copyright */}
         <div className="flex flex-col items-start md:items-end justify-between">
-          <div className="flex space-x-4 mb-4">
+          <div className="flex space-x-6 mb-4">
             <a
               href="https://github.com"
               aria-label="GitHub"
-              className="hover:text-white"
+              className="hover:text-white transition-all duration-300"
             >
-              <FaGithub size={20} />
+              <FaGithub size={22} />
             </a>
             <a
               href="https://twitter.com"
               aria-label="Twitter"
-              className="hover:text-white"
+              className="hover:text-white transition-all duration-300"
             >
-              <FaTwitter size={20} />
+              <FaTwitter size={22} />
             </a>
             <a
               href="https://linkedin.com"
               aria-label="LinkedIn"
-              className="hover:text-white"
+              className="hover:text-white transition-all duration-300"
             >
-              <FaLinkedin size={20} />
+              <FaLinkedin size={22} />
             </a>
           </div>
-          <p className="text-xs text-gray-400 text-right">
+          <p className="text-xs text-gray-400 text-right mt-6 md:mt-0">
             &copy; {new Date().getFullYear()} Bill Flow. All rights reserved.
           </p>
         </div>
+      </div>
+
+      {/* Divider */}
+      <div className="border-t border-gray-700 mt-8 pt-4 text-center">
+        <p className="text-sm text-gray-500">
+          Powered by Bill Flow. Designed with love.
+        </p>
       </div>
     </footer>
   );
