@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FaGoogle, FaFacebook, FaGithub } from "react-icons/fa";
+import { FaGoogle, FaFacebook } from "react-icons/fa";
+import OtpInput from "../components/OtpInput"; // Import OTP component
 
 // Define roles
 const roles = ["Admin", "Business Owner", "Accountant"];
@@ -41,6 +42,8 @@ const registerSchema = z
 
 const Register = () => {
   const [formSuccess, setFormSuccess] = useState(false);
+  const [showOtpInput, setShowOtpInput] = useState(false); // State for OTP display
+  const [otpSuccess, setOtpSuccess] = useState(false); // OTP verification status
   const {
     control,
     handleSubmit,
@@ -52,12 +55,25 @@ const Register = () => {
 
   const onSubmit = async (data) => {
     console.log("Registering:", data);
-    await new Promise((r) => setTimeout(r, 1500));
-    setFormSuccess(true);
+    await new Promise((r) => setTimeout(r, 1500)); // Simulate a delay for registration
+    setFormSuccess(true); // Indicate form submission success
+    setShowOtpInput(true); // Show OTP input after registration
+  };
+
+  const handleOtpSubmit = (data) => {
+    console.log("OTP entered:", data);
+    // Simulate OTP validation (this should be replaced with API logic)
+    if (data.otp === "123456") {
+      setOtpSuccess(true); // OTP successfully verified
+      console.log("OTP verified successfully");
+      // Optionally redirect or show a success message
+      window.location.href = "/login"; // Redirect to login page after success
+    } else {
+      console.log("Invalid OTP");
+    }
   };
 
   const handleSocialLogin = (provider) => {
-    // Handle social login logic here (e.g., Google, Facebook, etc.)
     console.log(`Logging in with ${provider}`);
   };
 
@@ -68,170 +84,181 @@ const Register = () => {
           Create Your Account
         </h2>
 
-        {/* Success Toast */}
-        {formSuccess && (
+        {/* Success Toast for Registration */}
+        {formSuccess && !showOtpInput && (
           <div className="bg-green-500 text-white p-3 mb-4 rounded-lg text-center">
-            Registration successful! You can now log in.
+            Registration successful! Please verify your OTP.
           </div>
         )}
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Full Name */}
-          <Controller
-            name="fullName"
-            control={control}
-            render={({ field }) => (
-              <div>
-                <input
-                  {...field}
-                  placeholder="Full Name"
-                  className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 transition-all ease-in-out transform hover:scale-105"
-                />
-                {errors.fullName && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.fullName.message}
-                  </p>
-                )}
-              </div>
-            )}
-          />
+        {/* OTP Success Toast */}
+        {otpSuccess && (
+          <div className="bg-green-500 text-white p-3 mb-4 rounded-lg text-center">
+            OTP verified successfully! You can now log in.
+          </div>
+        )}
 
-          {/* Email */}
-          <Controller
-            name="email"
-            control={control}
-            render={({ field }) => (
-              <div>
-                <input
-                  {...field}
-                  type="email"
-                  placeholder="Email Address"
-                  className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 transition-all ease-in-out transform hover:scale-105"
-                />
-                {errors.email && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.email.message}
-                  </p>
-                )}
-              </div>
-            )}
-          />
+        {/* Render Registration Form or OTP based on the state */}
+        {!formSuccess && !showOtpInput && (
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {/* Registration Fields */}
+            {/* Full Name */}
+            <Controller
+              name="fullName"
+              control={control}
+              render={({ field }) => (
+                <div>
+                  <input
+                    {...field}
+                    placeholder="Full Name"
+                    className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 transition-all ease-in-out transform hover:scale-105"
+                  />
+                  {errors.fullName && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.fullName.message}
+                    </p>
+                  )}
+                </div>
+              )}
+            />
 
-          {/* Company Name */}
-          <Controller
-            name="companyName"
-            control={control}
-            render={({ field }) => (
-              <div>
-                <input
-                  {...field}
-                  placeholder="Company Name"
-                  className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 transition-all ease-in-out transform hover:scale-105"
-                />
-                {errors.companyName && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.companyName.message}
-                  </p>
-                )}
-              </div>
-            )}
-          />
+            {/* Email */}
+            <Controller
+              name="email"
+              control={control}
+              render={({ field }) => (
+                <div>
+                  <input
+                    {...field}
+                    type="email"
+                    placeholder="Email Address"
+                    className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 transition-all ease-in-out transform hover:scale-105"
+                  />
+                  {errors.email && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.email.message}
+                    </p>
+                  )}
+                </div>
+              )}
+            />
 
-          {/* Phone */}
-          <Controller
-            name="phone"
-            control={control}
-            render={({ field }) => (
-              <div>
-                <input
-                  {...field}
-                  type="tel"
-                  placeholder="Phone Number (optional)"
-                  className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 transition-all ease-in-out transform hover:scale-105"
-                />
-              </div>
-            )}
-          />
+            {/* Company Name */}
+            <Controller
+              name="companyName"
+              control={control}
+              render={({ field }) => (
+                <div>
+                  <input
+                    {...field}
+                    placeholder="Company Name"
+                    className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 transition-all ease-in-out transform hover:scale-105"
+                  />
+                  {errors.companyName && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.companyName.message}
+                    </p>
+                  )}
+                </div>
+              )}
+            />
 
-          {/* Role */}
-          <Controller
-            name="role"
-            control={control}
-            render={({ field }) => (
-              <div>
-                <select
-                  {...field}
-                  className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 transition-all ease-in-out transform hover:scale-105"
-                >
-                  <option value="">Select Role</option>
-                  {roles.map((role) => (
-                    <option key={role} value={role}>
-                      {role}
-                    </option>
-                  ))}
-                </select>
-                {errors.role && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.role.message}
-                  </p>
-                )}
-              </div>
-            )}
-          />
+            {/* Phone */}
+            <Controller
+              name="phone"
+              control={control}
+              render={({ field }) => (
+                <div>
+                  <input
+                    {...field}
+                    type="tel"
+                    placeholder="Phone Number (optional)"
+                    className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 transition-all ease-in-out transform hover:scale-105"
+                  />
+                </div>
+              )}
+            />
 
-          {/* Password */}
-          <Controller
-            name="password"
-            control={control}
-            render={({ field }) => (
-              <div>
-                <input
-                  {...field}
-                  type="password"
-                  placeholder="Password"
-                  className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 transition-all ease-in-out transform hover:scale-105"
-                />
-                {errors.password && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.password.message}
-                  </p>
-                )}
-              </div>
-            )}
-          />
+            {/* Role */}
+            <Controller
+              name="role"
+              control={control}
+              render={({ field }) => (
+                <div>
+                  <select
+                    {...field}
+                    className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 transition-all ease-in-out transform hover:scale-105"
+                  >
+                    <option value="">Select Role</option>
+                    {roles.map((role) => (
+                      <option key={role} value={role}>
+                        {role}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.role && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.role.message}
+                    </p>
+                  )}
+                </div>
+              )}
+            />
 
-          {/* Confirm Password */}
-          <Controller
-            name="confirmPassword"
-            control={control}
-            render={({ field }) => (
-              <div>
-                <input
-                  {...field}
-                  type="password"
-                  placeholder="Confirm Password"
-                  className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 transition-all ease-in-out transform hover:scale-105"
-                />
-                {errors.confirmPassword && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.confirmPassword.message}
-                  </p>
-                )}
-              </div>
-            )}
-          />
+            {/* Password */}
+            <Controller
+              name="password"
+              control={control}
+              render={({ field }) => (
+                <div>
+                  <input
+                    {...field}
+                    type="password"
+                    placeholder="Password"
+                    className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 transition-all ease-in-out transform hover:scale-105"
+                  />
+                  {errors.password && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.password.message}
+                    </p>
+                  )}
+                </div>
+              )}
+            />
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full bg-indigo-600 text-white font-semibold py-2 rounded-md hover:bg-indigo-700 transition-all ease-in-out transform hover:scale-105"
-          >
-            {isSubmitting ? "Creating account..." : "Register"}
-          </button>
-        </form>
+            {/* Confirm Password */}
+            <Controller
+              name="confirmPassword"
+              control={control}
+              render={({ field }) => (
+                <div>
+                  <input
+                    {...field}
+                    type="password"
+                    placeholder="Confirm Password"
+                    className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 transition-all ease-in-out transform hover:scale-105"
+                  />
+                  {errors.confirmPassword && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.confirmPassword.message}
+                    </p>
+                  )}
+                </div>
+              )}
+            />
 
-        {/* Social login options */}
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full bg-indigo-600 text-white font-semibold py-2 rounded-md hover:bg-indigo-700 transition-all ease-in-out transform hover:scale-105"
+            >
+              {isSubmitting ? "Creating account..." : "Register"}
+            </button>
+          </form>
+        )}
+
+        {/* Social login buttons */}
         <div className="mt-6 flex justify-center space-x-4">
           <button
             onClick={() => handleSocialLogin("Google")}
@@ -249,12 +276,15 @@ const Register = () => {
           </button>
         </div>
 
-        <p className="text-center text-sm text-gray-600 mt-4">
-          Already have an account?{" "}
-          <a href="/login" className="text-indigo-600 hover:underline">
-            Log in
-          </a>
-        </p>
+        {/* OTP Input */}
+        {showOtpInput && (
+          <OtpInput
+            control={control}
+            errors={errors}
+            onSubmit={handleOtpSubmit}
+            isSubmitting={isSubmitting}
+          />
+        )}
       </div>
     </div>
   );

@@ -1,7 +1,8 @@
 // src/pages/forgotPassword.jsx
 import React, { useState } from "react";
-import { useForm, Controller } from "react-hook-form";
-import { useNavigate } from "react-router-dom"; // For navigation after password reset
+import { useForm, Controller } from "react-hook-form"; // Add Controller import here
+import { useNavigate } from "react-router-dom";
+import OtpInput from "../components/OtpInput"; // Import the OtpInput component
 
 function ForgotPassword() {
   const [step, setStep] = useState(1); // 1 = Email + Phone, 2 = OTP, 3 = Reset Password
@@ -154,52 +155,12 @@ function ForgotPassword() {
             <p className="text-sm text-center text-gray-600">
               We've sent you an OTP to verify your phone number.
             </p>
-            <form onSubmit={handleSubmit(onSubmitOtp)} className="space-y-4">
-              <div>
-                <label
-                  htmlFor="otp"
-                  className="block mb-1 text-sm font-medium text-gray-700"
-                >
-                  Enter OTP
-                </label>
-                <Controller
-                  name="otp"
-                  control={control}
-                  defaultValue=""
-                  rules={{
-                    required: "OTP is required",
-                    pattern: {
-                      value: /^[0-9]{6}$/,
-                      message: "Invalid OTP",
-                    },
-                  }}
-                  render={({ field }) => (
-                    <input
-                      id="otp"
-                      type="text"
-                      className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring ${
-                        errors.otp ? "border-red-500" : "border-gray-300"
-                      }`}
-                      placeholder="123456"
-                      {...field}
-                    />
-                  )}
-                />
-                {errors.otp && (
-                  <p className="mt-1 text-sm text-red-600">
-                    {errors.otp.message}
-                  </p>
-                )}
-              </div>
-
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full px-4 py-2 font-semibold text-white bg-blue-600 rounded hover:bg-blue-700"
-              >
-                {isSubmitting ? "Verifying..." : "Verify OTP"}
-              </button>
-            </form>
+            <OtpInput
+              control={control}
+              errors={errors}
+              onSubmit={handleSubmit(onSubmitOtp)}
+              isSubmitting={isSubmitting}
+            />
           </>
         )}
 
