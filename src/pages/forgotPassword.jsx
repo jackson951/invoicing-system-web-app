@@ -1,7 +1,7 @@
 // src/pages/forgotPassword.jsx
 import React, { useState } from "react";
-import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom"; // To redirect after password reset
+import { useForm, Controller } from "react-hook-form";
+import { useNavigate } from "react-router-dom"; // For navigation after password reset
 
 function ForgotPassword() {
   const [step, setStep] = useState(1); // 1 = Email + Phone, 2 = OTP, 3 = Reset Password
@@ -12,7 +12,7 @@ function ForgotPassword() {
 
   // React Hook Form setup
   const {
-    register,
+    control,
     handleSubmit,
     getValues,
     formState: { errors, isSubmitting },
@@ -71,20 +71,28 @@ function ForgotPassword() {
                 >
                   Email address
                 </label>
-                <input
-                  id="email"
-                  type="email"
-                  className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring ${
-                    errors.email ? "border-red-500" : "border-gray-300"
-                  }`}
-                  placeholder="you@example.com"
-                  {...register("email", {
+                <Controller
+                  name="email"
+                  control={control}
+                  defaultValue=""
+                  rules={{
                     required: "Email is required",
                     pattern: {
                       value: /^\S+@\S+$/i,
                       message: "Invalid email address",
                     },
-                  })}
+                  }}
+                  render={({ field }) => (
+                    <input
+                      id="email"
+                      type="email"
+                      className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring ${
+                        errors.email ? "border-red-500" : "border-gray-300"
+                      }`}
+                      placeholder="you@example.com"
+                      {...field}
+                    />
+                  )}
                 />
                 {errors.email && (
                   <p className="mt-1 text-sm text-red-600">
@@ -100,20 +108,28 @@ function ForgotPassword() {
                 >
                   Phone Number
                 </label>
-                <input
-                  id="phone"
-                  type="tel"
-                  className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring ${
-                    errors.phone ? "border-red-500" : "border-gray-300"
-                  }`}
-                  placeholder="123-456-7890"
-                  {...register("phone", {
+                <Controller
+                  name="phone"
+                  control={control}
+                  defaultValue=""
+                  rules={{
                     required: "Phone number is required",
                     pattern: {
                       value: /^[0-9]{10}$/,
                       message: "Invalid phone number",
                     },
-                  })}
+                  }}
+                  render={({ field }) => (
+                    <input
+                      id="phone"
+                      type="tel"
+                      className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring ${
+                        errors.phone ? "border-red-500" : "border-gray-300"
+                      }`}
+                      placeholder="123-456-7890"
+                      {...field}
+                    />
+                  )}
                 />
                 {errors.phone && (
                   <p className="mt-1 text-sm text-red-600">
@@ -146,20 +162,28 @@ function ForgotPassword() {
                 >
                   Enter OTP
                 </label>
-                <input
-                  id="otp"
-                  type="text"
-                  className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring ${
-                    errors.otp ? "border-red-500" : "border-gray-300"
-                  }`}
-                  placeholder="123456"
-                  {...register("otp", {
+                <Controller
+                  name="otp"
+                  control={control}
+                  defaultValue=""
+                  rules={{
                     required: "OTP is required",
                     pattern: {
                       value: /^[0-9]{6}$/,
                       message: "Invalid OTP",
                     },
-                  })}
+                  }}
+                  render={({ field }) => (
+                    <input
+                      id="otp"
+                      type="text"
+                      className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring ${
+                        errors.otp ? "border-red-500" : "border-gray-300"
+                      }`}
+                      placeholder="123456"
+                      {...field}
+                    />
+                  )}
                 />
                 {errors.otp && (
                   <p className="mt-1 text-sm text-red-600">
@@ -195,20 +219,30 @@ function ForgotPassword() {
                 >
                   New Password
                 </label>
-                <input
-                  id="newPassword"
-                  type="password"
-                  className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring ${
-                    errors.newPassword ? "border-red-500" : "border-gray-300"
-                  }`}
-                  placeholder="New password"
-                  {...register("newPassword", {
+                <Controller
+                  name="newPassword"
+                  control={control}
+                  defaultValue=""
+                  rules={{
                     required: "New password is required",
                     minLength: {
                       value: 6,
                       message: "Password must be at least 6 characters",
                     },
-                  })}
+                  }}
+                  render={({ field }) => (
+                    <input
+                      id="newPassword"
+                      type="password"
+                      className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring ${
+                        errors.newPassword
+                          ? "border-red-500"
+                          : "border-gray-300"
+                      }`}
+                      placeholder="New password"
+                      {...field}
+                    />
+                  )}
                 />
                 {errors.newPassword && (
                   <p className="mt-1 text-sm text-red-600">
@@ -224,22 +258,30 @@ function ForgotPassword() {
                 >
                   Confirm Password
                 </label>
-                <input
-                  id="confirmPassword"
-                  type="password"
-                  className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring ${
-                    errors.confirmPassword
-                      ? "border-red-500"
-                      : "border-gray-300"
-                  }`}
-                  placeholder="Confirm new password"
-                  {...register("confirmPassword", {
+                <Controller
+                  name="confirmPassword"
+                  control={control}
+                  defaultValue=""
+                  rules={{
                     required: "Please confirm your password",
                     validate: (value) => {
                       const { newPassword } = getValues();
                       return value === newPassword || "Passwords don't match";
                     },
-                  })}
+                  }}
+                  render={({ field }) => (
+                    <input
+                      id="confirmPassword"
+                      type="password"
+                      className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring ${
+                        errors.confirmPassword
+                          ? "border-red-500"
+                          : "border-gray-300"
+                      }`}
+                      placeholder="Confirm new password"
+                      {...field}
+                    />
+                  )}
                 />
                 {errors.confirmPassword && (
                   <p className="mt-1 text-sm text-red-600">
