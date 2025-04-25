@@ -7,7 +7,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Company Info */}
         <div className="space-y-4">
-          <h2 className="text-2xl font-semibold text-white">Bill Flow</h2>
+          <h2 className="text-2xl font-semibold text-white">Invoice Pro</h2>
           <p className="text-sm leading-relaxed">
             A full-featured, SaaS-based invoicing platform to create, manage,
             and track invoices in real-time. Empowering businesses with
@@ -90,7 +90,7 @@ export default function Footer() {
       {/* Divider */}
       <div className="border-t border-gray-700 mt-8 pt-4 text-center">
         <p className="text-sm text-gray-500">
-          Powered by Bill Flow. Designed with love.
+          Powered by Invoice Pro. Designed with love.
         </p>
       </div>
     </footer>
