@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { FaGoogle, FaFacebook, FaGithub } from "react-icons/fa";
 
 // Define roles
 const roles = ["Admin", "Business Owner", "Accountant"];
@@ -53,6 +54,11 @@ const Register = () => {
     console.log("Registering:", data);
     await new Promise((r) => setTimeout(r, 1500));
     setFormSuccess(true);
+  };
+
+  const handleSocialLogin = (provider) => {
+    // Handle social login logic here (e.g., Google, Facebook, etc.)
+    console.log(`Logging in with ${provider}`);
   };
 
   return (
@@ -224,6 +230,24 @@ const Register = () => {
             {isSubmitting ? "Creating account..." : "Register"}
           </button>
         </form>
+
+        {/* Social login options */}
+        <div className="mt-6 flex justify-center space-x-4">
+          <button
+            onClick={() => handleSocialLogin("Google")}
+            className="flex items-center bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600 transition-all ease-in-out"
+          >
+            <FaGoogle className="mr-2" />
+            Continue with Google
+          </button>
+          <button
+            onClick={() => handleSocialLogin("Facebook")}
+            className="flex items-center bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-all ease-in-out"
+          >
+            <FaFacebook className="mr-2" />
+            Continue with Facebook
+          </button>
+        </div>
 
         <p className="text-center text-sm text-gray-600 mt-4">
           Already have an account?{" "}
