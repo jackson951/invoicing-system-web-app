@@ -1,69 +1,80 @@
-// src/utils/api.js
-
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// Mock persistent stores
-let mockUsers = [];
-let mockVerificationTokens = {};
-let mockResetTokens = {};
-let mockOtpStore = {};
-let mockInvoices = [];
+// Load or initialize mock data from localStorage
+const loadMockData = () => {
+  const storedUsers = localStorage.getItem("mockUsers");
+  const storedInvoices = localStorage.getItem("mockInvoices");
 
-// Initialize with some dummy data
-const initializeMockData = () => {
-  mockUsers = [
-    {
-      id: "1",
-      fullName: "John Doe",
-      email: "john@example.com",
-      password: "password123",
-      companyName: "ABC Corp",
-      role: "Admin",
-      verified: true,
-      createdAt: new Date(),
-    },
-    {
-      id: "2",
-      fullName: "Jane Smith",
-      email: "jane@example.com",
-      password: "password123",
-      companyName: "XYZ Ltd",
-      role: "Business Owner",
-      verified: true,
-      createdAt: new Date(),
-    },
-  ];
+  let users = storedUsers ? JSON.parse(storedUsers) : [];
+  let invoices = storedInvoices ? JSON.parse(storedInvoices) : [];
 
-  mockInvoices = [
-    {
-      id: "INV-001",
-      clientId: "C1001",
-      clientName: "Client A",
-      items: [
-        { description: "Web design", quantity: 40, rate: 50 },
-        { description: "Hosting", quantity: 1, rate: 100 },
-      ],
-      total: 2100,
-      dueDate: "2025-06-01",
-      status: "Pending",
-      issuedAt: "2025-05-20",
-    },
-    {
-      id: "INV-002",
-      clientId: "C1002",
-      clientName: "Client B",
-      items: [
-        { description: "Consulting", quantity: 10, rate: 75 },
-      ],
-      total: 750,
-      dueDate: "2025-05-28",
-      status: "Paid",
-      issuedAt: "2025-05-15",
-    },
-  ];
+  // If no mock data exists, create initial test data
+  if (!storedUsers && !storedInvoices) {
+    users = [
+      {
+        id: "1",
+        fullName: "John Doe",
+        email: "john@example.com",
+        password: "password123",
+        companyName: "ABC Corp",
+        role: "Admin",
+        verified: true,
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: "2",
+        fullName: "Jane Smith",
+        email: "jane@example.com",
+        password: "password123",
+        companyName: "XYZ Ltd",
+        role: "Business Owner",
+        verified: true,
+        createdAt: new Date().toISOString(),
+      },
+    ];
+
+    invoices = [
+      {
+        id: "INV-001",
+        clientId: "C1001",
+        clientName: "Client A",
+        items: [
+          { description: "Web design", quantity: 40, rate: 50 },
+          { description: "Hosting", quantity: 1, rate: 100 },
+        ],
+        total: 2100,
+        dueDate: "2025-06-01",
+        status: "Pending",
+        issuedAt: "2025-05-20",
+      },
+      {
+        id: "INV-002",
+        clientId: "C1002",
+        clientName: "Client B",
+        items: [
+          { description: "Consulting", quantity: 10, rate: 75 },
+        ],
+        total: 750,
+        dueDate: "2025-05-28",
+        status: "Paid",
+        issuedAt: "2025-05-15",
+      },
+    ];
+
+    saveMockData(users, invoices);
+  }
+
+  return { users, invoices };
 };
 
-initializeMockData();
+// Save mock data to localStorage
+const saveMockData = (users, invoices) => {
+  localStorage.setItem("mockUsers", JSON.stringify(users));
+  localStorage.setItem("mockInvoices", JSON.stringify(invoices));
+};
+
+// Initial mock data setup
+let { users: mockUsers, invoices: mockInvoices } = loadMockData();
 
 // Function to generate a random OTP
 const generateOtp = (length = 6) => {
@@ -86,21 +97,18 @@ export const registerUser = async (userData) => {
     id: (mockUsers.length + 1).toString(),
     ...userData,
     verified: false,
-    createdAt: new Date(),
+    createdAt: new Date().toISOString(),
   };
 
   mockUsers.push(newUser);
+  saveMockData(mockUsers, mockInvoices);
 
-  // Generate verification token
   const token = Math.random().toString(36).substring(2, 10);
-  mockVerificationTokens[token] = newUser.email;
-
   return { user: newUser, verificationToken: token };
 };
 
 export const verifyEmail = async (token) => {
   await delay(1000);
-
   const tokens = JSON.parse(localStorage.getItem("mockVerificationTokens")) || {};
   const email = tokens[token];
 
@@ -111,9 +119,9 @@ export const verifyEmail = async (token) => {
 
   user.verified = true;
 
-  // Remove token
   delete tokens[token];
   localStorage.setItem("mockVerificationTokens", JSON.stringify(tokens));
+  saveMockData(mockUsers, mockInvoices);
 
   return { success: true, message: "Email verified successfully" };
 };
@@ -124,28 +132,22 @@ export const sendOtp = async (email) => {
   const user = mockUsers.find((u) => u.email === email);
   if (!user) throw new Error("No user found with this email");
 
-  const otp = generateOtp(); // Generate a new OTP
-  console.log(otp,"my otppppppppppppppppp")
-
+  const otp = generateOtp();
+  console.log(otp,"my otppppppppppp")
   const otpData = {
     email,
     otp,
     expiresAt: Date.now() + 5 * 60 * 1000, // 5 minutes
   };
 
-  // Save OTP in localStorage
   localStorage.setItem("mockOtp", JSON.stringify(otpData));
-
   return { success: true, message: "OTP sent successfully" };
 };
 
 export const verifyOtp = async (email, otp) => {
   await delay(1000);
 
-  // Get OTP from localStorage
   const stored = JSON.parse(localStorage.getItem("mockOtp"));
-  console.log(stored, "OTP check");
-
   if (
     !stored ||
     stored.email !== email ||
@@ -155,22 +157,17 @@ export const verifyOtp = async (email, otp) => {
     throw new Error("Invalid or expired OTP");
   }
 
-  // Clear after successful validation
   localStorage.removeItem("mockOtp");
 
-  // ✅ Generate a secure token
-  const token = [...Array(64)]
-    .map(() => Math.floor(Math.random() * 36).toString(36))
-    .join('');
+  const user = mockUsers.find((u) => u.email === email);
+  const token = btoa(JSON.stringify({ id: user.id, email: user.email }));
 
-  // ✅ Store token → email mapping in localStorage
-  const existing = JSON.parse(localStorage.getItem("mockVerificationTokens")) || {};
-  existing[token] = email;
-  localStorage.setItem("mockVerificationTokens", JSON.stringify(existing));
+  const existingTokens = JSON.parse(localStorage.getItem("mockVerificationTokens")) || {};
+  existingTokens[token] = email;
+  localStorage.setItem("mockVerificationTokens", JSON.stringify(existingTokens));
 
   return { success: true, message: "OTP verified", token };
 };
-
 
 export const loginUser = async ({ email, password }) => {
   await delay(1000);
@@ -180,7 +177,18 @@ export const loginUser = async ({ email, password }) => {
 
   if (!user.verified) throw new Error("Please verify your email");
 
+  // Create a token (you can use JWT in production)
   const token = btoa(JSON.stringify({ id: user.id, email: user.email }));
+
+  // Save token and user to localStorage
+  localStorage.setItem("token", token);
+  localStorage.setItem("user", JSON.stringify({
+    id: user.id,
+    fullName: user.fullName,
+    email: user.email,
+    companyName: user.companyName,
+    role: user.role,
+  }));
 
   return {
     token,
@@ -201,7 +209,9 @@ export const sendPasswordResetEmail = async (email) => {
   if (!user) throw new Error("If this email exists, we'll send a reset link.");
 
   const token = Math.random().toString(36).substring(2, 10);
-  mockResetTokens[token] = { email, expiresAt: Date.now() + 10 * 60 * 1000 };
+  const resetTokens = JSON.parse(localStorage.getItem("mockResetTokens") || "{}");
+  resetTokens[token] = { email, expiresAt: Date.now() + 10 * 60 * 1000 };
+  localStorage.setItem("mockResetTokens", JSON.stringify(resetTokens));
 
   return { success: true, resetToken: token };
 };
@@ -209,7 +219,9 @@ export const sendPasswordResetEmail = async (email) => {
 export const resetPassword = async (token, newPassword) => {
   await delay(1000);
 
-  const entry = mockResetTokens[token];
+  const resetTokens = JSON.parse(localStorage.getItem("mockResetTokens") || "{}");
+  const entry = resetTokens[token];
+
   if (!entry || entry.expiresAt < Date.now()) {
     throw new Error("Invalid or expired token");
   }
@@ -218,7 +230,9 @@ export const resetPassword = async (token, newPassword) => {
   if (!user) throw new Error("User not found");
 
   user.password = newPassword;
-  delete mockResetTokens[token];
+  delete resetTokens[token];
+  localStorage.setItem("mockResetTokens", JSON.stringify(resetTokens));
+  saveMockData(mockUsers, mockInvoices);
 
   return { success: true, message: "Password reset successful" };
 };
@@ -245,7 +259,7 @@ export const fetchDashboardData = async () => {
     }));
 
   return {
-    invoices: mockInvoices,
+    invoices: [...mockInvoices],
     stats: {
       totalInvoices,
       paidCount,
@@ -261,12 +275,14 @@ export const createInvoice = async (invoiceData) => {
   await delay(1000);
 
   const newInvoice = {
-    id: `INV-${Math.floor(Math.random() * 1000)}`,
+    id: `INV-${Math.floor(Math.random() * 10000)}`,
     ...invoiceData,
     issuedAt: new Date().toISOString(),
   };
 
   mockInvoices.push(newInvoice);
+  saveMockData(mockUsers, mockInvoices);
+
   return { success: true, invoice: newInvoice };
 };
 
@@ -283,6 +299,8 @@ export const updateInvoice = async (id, updatedData) => {
   if (index === -1) throw new Error("Invoice not found");
 
   mockInvoices[index] = { ...mockInvoices[index], ...updatedData };
+  saveMockData(mockUsers, mockInvoices);
+
   return { success: true, invoice: mockInvoices[index] };
 };
 
@@ -292,5 +310,7 @@ export const deleteInvoice = async (id) => {
   if (index === -1) throw new Error("Invoice not found");
 
   mockInvoices.splice(index, 1);
+  saveMockData(mockUsers, mockInvoices);
+
   return { success: true, message: "Invoice deleted successfully" };
 };

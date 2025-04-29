@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 // Import loginUser from dummy API
 import { loginUser } from "../utils/api";
@@ -16,6 +16,7 @@ const loginSchema = z.object({
 const Login = () => {
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState("");
+  const navigate = useNavigate();
 
   const {
     control,
@@ -37,9 +38,13 @@ const Login = () => {
 
       // Save token to localStorage
       localStorage.setItem("token", response.token);
-
-      // Redirect to dashboard
-      window.location.href = "/dashboard";
+      localStorage.setItem("user", JSON.stringify(response.user));
+      // Role-based redirect
+      if (response.user.role === "Admin") {
+        navigate("/admin"); // ✅ Admin route
+      } else {
+        navigate("/dashboard"); // ✅ User dashboard
+      }
     } catch (error) {
       console.error("Login failed:", error.message);
       setApiError(
