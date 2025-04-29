@@ -1,8 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link } from "react-router-dom";
+
+// Import loginUser from dummy API
+import { loginUser } from "../utils/api";
 
 // Schema definition
 const loginSchema = z.object({
@@ -11,19 +14,40 @@ const loginSchema = z.object({
 });
 
 const Login = () => {
+  const [loading, setLoading] = useState(false);
+  const [apiError, setApiError] = useState("");
+
   const {
     control,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm({
     resolver: zodResolver(loginSchema),
     mode: "onChange",
   });
 
   const onSubmit = async (data) => {
-    console.log("Logging in with:", data);
-    await new Promise((r) => setTimeout(r, 1000));
-    alert("Login successful!");
+    setLoading(true);
+    setApiError("");
+    try {
+      // Call the dummy API's loginUser function
+      const response = await loginUser(data);
+
+      console.log("Login successful:", response);
+
+      // Save token to localStorage
+      localStorage.setItem("token", response.token);
+
+      // Redirect to dashboard
+      window.location.href = "/dashboard";
+    } catch (error) {
+      console.error("Login failed:", error.message);
+      setApiError(
+        error.message || "Login failed. Please check your credentials."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -32,6 +56,13 @@ const Login = () => {
         <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">
           Welcome Back 👋
         </h2>
+
+        {/* Error Toast */}
+        {apiError && (
+          <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-3 mb-4 rounded">
+            <p>{apiError}</p>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Email */}
@@ -99,11 +130,11 @@ const Login = () => {
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={isSubmitting}
-            className="w-full bg-indigo-600 text-white font-medium py-2 rounded hover:bg-indigo-700 transition"
+            disabled={loading}
+            className="w-full bg-indigo-600 text-white font-medium py-2 rounded hover:bg-indigo-700 transition disabled:opacity-60 flex justify-center items-center"
           >
-            {isSubmitting ? (
-              <div className="animate-spin border-t-2 border-white w-4 h-4 border-solid rounded-full mx-auto"></div>
+            {loading ? (
+              <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
             ) : (
               "Sign In"
             )}
