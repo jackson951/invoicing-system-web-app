@@ -1,9 +1,9 @@
 import React from "react";
 import { FaGithub, FaTwitter, FaLinkedin } from "react-icons/fa";
 
-export default function Footer() {
+const Footer = () => {
   return (
-    <footer className="bg-gray-900 text-gray-300 py-8 px-4 md:px-12 mt-12">
+    <footer className="bg-gray-900 text-gray-300 py-8 px-4 md:px-12 mt-16">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Company Info */}
         <div className="space-y-4">
@@ -23,32 +23,32 @@ export default function Footer() {
           <ul className="space-y-2 text-sm">
             <li>
               <a
-                href="/features"
-                className="hover:text-indigo-400 hover:underline transition"
+                href="/#features"
+                className="hover:text-indigo-400 transition-colors duration-200 hover:underline"
               >
                 Features
               </a>
             </li>
             <li>
               <a
-                href="/pricing"
-                className="hover:text-indigo-400 hover:underline transition"
+                href="/#pricing"
+                className="hover:text-indigo-400 transition-colors duration-200 hover:underline"
               >
                 Pricing
               </a>
             </li>
             <li>
               <a
-                href="/about"
-                className="hover:text-indigo-400 hover:underline transition"
+                href="/#testimonials"
+                className="hover:text-indigo-400 transition-colors duration-200 hover:underline"
               >
-                About Us
+                Testimonials
               </a>
             </li>
             <li>
               <a
                 href="/contact"
-                className="hover:text-indigo-400 hover:underline transition"
+                className="hover:text-indigo-400 transition-colors duration-200 hover:underline"
               >
                 Contact
               </a>
@@ -64,25 +64,25 @@ export default function Footer() {
               aria-label="GitHub"
               className="hover:text-white transition-all duration-300"
             >
-              <FaGithub size={22} />
+              <FaGithub size={20} />
             </a>
             <a
               href="https://twitter.com"
               aria-label="Twitter"
               className="hover:text-white transition-all duration-300"
             >
-              <FaTwitter size={22} />
+              <FaTwitter size={20} />
             </a>
             <a
               href="https://linkedin.com"
               aria-label="LinkedIn"
               className="hover:text-white transition-all duration-300"
             >
-              <FaLinkedin size={22} />
+              <FaLinkedin size={20} />
             </a>
           </div>
-          <p className="text-xs text-gray-400 text-right mt-6 md:mt-0">
-            &copy; {new Date().getFullYear()} Bill Flow. All rights reserved.
+          <p className="text-xs text-gray-400 mt-4 md:mt-0 text-right">
+            &copy; {new Date().getFullYear()} InvoicePro. All rights reserved.
           </p>
         </div>
       </div>
@@ -90,9 +90,11 @@ export default function Footer() {
       {/* Divider */}
       <div className="border-t border-gray-700 mt-8 pt-4 text-center">
         <p className="text-sm text-gray-500">
-          Powered by Invoice Pro. Designed with love.
+          Powered by InvoicePro • Designed with love ❤️
         </p>
       </div>
     </footer>
   );
-}
+};
+
+export default Footer;

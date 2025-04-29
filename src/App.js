@@ -4,6 +4,7 @@ import { BrowserRouter as Router } from "react-router-dom";
 import AppRoutes from './AppRoutes'; // Import AppRoutes
 import Header from './components/header';
 import Footer from './components/footer';
+import Layout from './components/Layout';
 
 // Optional: Import any context providers you want to wrap your app with
 import { AuthProvider } from './contexts/AuthContext'; // For example, if you have an AuthContext
@@ -14,7 +15,7 @@ function App() {
       <AuthProvider>
         {/* You can add more context providers here if needed */}
         <div className="flex flex-col min-h-screen">
-          <Header />
+          <Layout />
           <main className="flex-grow">
             <AppRoutes /> {/* Render the routes here */}
           </main>
