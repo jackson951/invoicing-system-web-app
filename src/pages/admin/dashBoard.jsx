@@ -7,7 +7,6 @@ import {
   ChartBarIcon,
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
-  ClockIcon,
   CheckCircleIcon,
   XCircleIcon,
   EllipsisHorizontalIcon,
@@ -34,7 +33,6 @@ import { faker } from "@faker-js/faker";
 import { useDarkMode } from "../../hooks/useDarkMode.";
 import { AnimatePresence, motion } from "framer-motion";
 
-// Register ChartJS components
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -48,83 +46,7 @@ ChartJS.register(
   ArcElement
 );
 
-// Utility: Generate fake user data
-const generateUser = () => ({
-  id: faker.string.uuid(),
-  name: faker.person.fullName(),
-  email: faker.internet.email(),
-  avatar: faker.image.avatar(),
-  status: faker.helpers.arrayElement(["active", "inactive", "pending"]),
-  lastLogin: faker.date.recent({ days: 30 }).toISOString(),
-  role: faker.helpers.arrayElement(["admin", "editor", "subscriber"]),
-});
-
-// Utility: Generate fake invoice data
-const generateInvoice = () => ({
-  id: `INV-${faker.string.alphanumeric(8).toUpperCase()}`,
-  client: faker.company.name(),
-  amount: faker.number.float({ min: 50, max: 5000, precision: 0.01 }),
-  status: faker.helpers.arrayElement(["paid", "pending", "overdue"]),
-  dueDate: faker.date.future({ days: 30 }).toISOString().split("T")[0],
-  issuedDate: faker.date.past({ days: 30 }).toISOString().split("T")[0],
-});
-
-// Utility: Generate fake recent activity
-const generateActivityItem = () => {
-  const type = faker.helpers.arrayElement([
-    "invoice",
-    "payment",
-    "user",
-    "system",
-  ]);
-  const date = faker.date.recent({ days: 7 }).toISOString();
-
-  switch (type) {
-    case "invoice":
-      return {
-        id: faker.string.uuid(),
-        type,
-        date,
-        title: `Invoice #${faker.string.alphanumeric(8).toUpperCase()}`,
-        description: `Created for ${faker.company.name()}`,
-        icon: <DocumentCheckIcon className="h-5 w-5 text-blue-500" />,
-      };
-    case "payment":
-      return {
-        id: faker.string.uuid(),
-        type,
-        date,
-        title: `Payment Received`,
-        description: `$${faker.number.float({
-          min: 50,
-          max: 500,
-          precision: 2,
-        })} from ${faker.person.fullName()}`,
-        icon: <CurrencyDollarIcon className="h-5 w-5 text-green-500" />,
-      };
-    case "system":
-      return {
-        id: faker.string.uuid(),
-        type,
-        date,
-        title: `System Update`,
-        description: `Version ${faker.system.semver()} deployed`,
-        icon: <Cog6ToothIcon className="h-5 w-5 text-purple-500" />,
-      };
-    case "user":
-    default:
-      return {
-        id: faker.string.uuid(),
-        type,
-        date,
-        title: `New User`,
-        description: `${faker.person.fullName()} registered (${faker.company.buzzNoun()} ${faker.company.buzzAdjective()})`,
-        icon: <UserGroupIcon className="h-5 w-5 text-indigo-500" />,
-      };
-  }
-};
-
-// Custom components
+// Status Pill Component
 const StatusPill = ({ status }) => {
   const statusMap = {
     active: { color: "bg-green-100 text-green-800", text: "Active" },
@@ -144,6 +66,7 @@ const StatusPill = ({ status }) => {
   );
 };
 
+// Avatar Component
 const Avatar = ({ src, name, size = "md" }) => {
   const sizeClass = {
     sm: "h-8 w-8",
@@ -169,6 +92,7 @@ const Avatar = ({ src, name, size = "md" }) => {
   );
 };
 
+// Data Card Component
 const DataCard = ({ title, value, change, icon, color }) => {
   const isPositive = change >= 0;
   const colorClasses =
@@ -210,6 +134,7 @@ const DataCard = ({ title, value, change, icon, color }) => {
   );
 };
 
+// Activity Item Component
 const ActivityItem = ({ activity }) => {
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -240,6 +165,7 @@ const ActivityItem = ({ activity }) => {
   );
 };
 
+// AdminDashboard Component
 const AdminDashboard = () => {
   const [darkMode, toggleDarkMode] = useDarkMode();
   const [userFullName, setUserFullName] = useState("");
@@ -257,7 +183,170 @@ const AdminDashboard = () => {
   const [notificationCount, setNotificationCount] = useState(3);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Generate chart labels
+  // Modal states
+  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
+  const [isAddInvoiceModalOpen, setIsAddInvoiceModalOpen] = useState(false);
+  const [newUserForm, setNewUserForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    role: "subscriber",
+    status: "active",
+    avatar: "",
+  });
+  const [newInvoiceForm, setNewInvoiceForm] = useState({
+    client: "",
+    amount: "",
+    status: "pending",
+    dueDate: "",
+    issuedDate: "",
+  });
+
+  // Password change states
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  // Filter users and invoices
+  const filteredUsers = useMemo(() => {
+    return users.filter(
+      (user) =>
+        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [users, searchQuery]);
+
+  const filteredInvoices = useMemo(() => {
+    return invoices.filter(
+      (invoice) =>
+        invoice.client.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        invoice.id.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [invoices, searchQuery]);
+
+  // Load data from localStorage
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user")) || {
+      fullName: "Alex Johnson",
+      email: "admin@example.com",
+      password: "password123",
+      avatar: "https://randomuser.me/api/portraits/men/32.jpg",
+    };
+    setUserFullName(storedUser.fullName);
+
+    const storedUsers =
+      JSON.parse(localStorage.getItem("users")) ||
+      Array.from({ length: 12 }, () => generateUser());
+    setUsers(storedUsers);
+
+    const storedInvoices =
+      JSON.parse(localStorage.getItem("invoices")) ||
+      Array.from({ length: 8 }, () => generateInvoice());
+    setInvoices(storedInvoices);
+
+    setLoading(false);
+  }, []);
+
+  // Generate User (for initial load)
+  const generateUser = () => ({
+    id: faker.string.uuid(),
+    name: faker.person.fullName(),
+    email: faker.internet.email(),
+    avatar: faker.image.avatar(),
+    status: faker.helpers.arrayElement(["active", "inactive", "pending"]),
+    lastLogin: faker.date.recent({ days: 30 }).toISOString(),
+    role: faker.helpers.arrayElement(["admin", "editor", "subscriber"]),
+    password: "password123", // for demo
+  });
+
+  // Generate Invoice (for initial load)
+  const generateInvoice = () => ({
+    id: `INV-${faker.string.alphanumeric(8).toUpperCase()}`,
+    client: faker.company.name(),
+    amount: faker.number.float({ min: 50, max: 5000, precision: 0.01 }),
+    status: faker.helpers.arrayElement(["paid", "pending", "overdue"]),
+    dueDate: faker.date.future({ days: 30 }).toISOString().split("T")[0],
+    issuedDate: faker.date.past({ days: 30 }).toISOString().split("T")[0],
+  });
+
+  // Add new user from form
+  const handleAddUser = (e) => {
+    e.preventDefault();
+    const userToAdd = {
+      ...newUserForm,
+      id: faker.string.uuid(),
+      lastLogin: new Date().toISOString(),
+    };
+    const updatedUsers = [userToAdd, ...users];
+    setUsers(updatedUsers);
+    localStorage.setItem("users", JSON.stringify(updatedUsers));
+    setNewUserForm({
+      name: "",
+      email: "",
+      password: "",
+      role: "subscriber",
+      status: "active",
+      avatar: "",
+    });
+    setIsAddUserModalOpen(false);
+  };
+
+  // Add new invoice from form
+  const handleAddInvoice = (e) => {
+    e.preventDefault();
+    const invoiceToAdd = {
+      ...newInvoiceForm,
+      id: `INV-${faker.string.alphanumeric(8).toUpperCase()}`,
+    };
+    const updatedInvoices = [invoiceToAdd, ...invoices];
+    setInvoices(updatedInvoices);
+    localStorage.setItem("invoices", JSON.stringify(updatedInvoices));
+    setNewInvoiceForm({
+      client: "",
+      amount: "",
+      status: "pending",
+      dueDate: "",
+      issuedDate: "",
+    });
+    setIsAddInvoiceModalOpen(false);
+  };
+
+  // Save account settings
+  const handleSaveAccountSettings = (e) => {
+    e.preventDefault();
+    const storedUser = JSON.parse(localStorage.getItem("user")) || {};
+    const updatedUser = {
+      ...storedUser,
+      fullName: userFullName,
+      email: e.target.email.value,
+    };
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+  };
+
+  // Change password
+  const handleChangePassword = (e) => {
+    e.preventDefault();
+    const storedUser = JSON.parse(localStorage.getItem("user")) || {};
+    if (currentPassword !== storedUser.password) {
+      alert("Current password is incorrect.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      alert("New passwords do not match.");
+      return;
+    }
+    const updatedUser = {
+      ...storedUser,
+      password: newPassword,
+    };
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    alert("Password updated successfully.");
+  };
+
+  // Chart Data
   const chartLabels = useMemo(() => {
     return Array.from({ length: 7 }, (_, i) => {
       const date = new Date();
@@ -266,7 +355,6 @@ const AdminDashboard = () => {
     });
   }, []);
 
-  // Revenue chart data
   const revenueChartData = {
     labels: chartLabels,
     datasets: [
@@ -288,7 +376,6 @@ const AdminDashboard = () => {
     ],
   };
 
-  // User growth chart data
   const userGrowthChartData = {
     labels: chartLabels,
     datasets: [
@@ -301,7 +388,6 @@ const AdminDashboard = () => {
     ],
   };
 
-  // User roles pie chart data
   const userRolesChartData = {
     labels: ["Admin", "Editor", "Subscriber"],
     datasets: [
@@ -326,7 +412,6 @@ const AdminDashboard = () => {
     ],
   };
 
-  // Invoice status pie chart data
   const invoiceStatusChartData = {
     labels: ["Paid", "Pending", "Overdue"],
     datasets: [
@@ -349,119 +434,6 @@ const AdminDashboard = () => {
         borderWidth: 1,
       },
     ],
-  };
-
-  // Fetch data
-  useEffect(() => {
-    const fetchDashboardData = () => {
-      setIsRefreshing(true);
-
-      // Get the user's full name from localStorage
-      const user = JSON.parse(localStorage.getItem("user")) || {
-        fullName: "Alex Johnson",
-        email: "admin@example.com",
-        avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-      };
-      setUserFullName(user.fullName);
-
-      // Generate fake data
-      setTotalUsers(faker.number.int({ min: 150, max: 300 }));
-      setActiveInvoices(faker.number.int({ min: 80, max: 150 }));
-      const revenue = faker.number.float({
-        min: 10000,
-        max: 25000,
-        precision: 0,
-      });
-      setMonthlyRevenue(revenue);
-
-      // Generate recent activity
-      setRecentActivity(
-        Array.from({ length: 8 }, () => generateActivityItem())
-      );
-
-      // Generate chart data
-      setRevenueData(
-        Array.from({ length: 7 }, () =>
-          faker.number.float({ min: 1000, max: 4000, precision: 0 })
-        )
-      );
-      setUserGrowthData(
-        Array.from({ length: 7 }, () => faker.number.int({ min: 5, max: 20 }))
-      );
-
-      // Generate users and invoices
-      setUsers(Array.from({ length: 12 }, () => generateUser()));
-      setInvoices(Array.from({ length: 8 }, () => generateInvoice()));
-
-      setTimeout(() => {
-        setLoading(false);
-        setIsRefreshing(false);
-      }, 800);
-    };
-
-    fetchDashboardData();
-
-    // Simulate real-time updates
-    const intervalId = setInterval(() => {
-      setTotalUsers((prev) => prev + faker.number.int({ min: -1, max: 3 }));
-      setActiveInvoices((prev) => prev + faker.number.int({ min: -1, max: 2 }));
-      setMonthlyRevenue(
-        (prev) =>
-          prev + faker.number.float({ min: -50, max: 100, precision: 0 })
-      );
-      setRevenueData((prev) => [
-        ...prev.slice(1),
-        faker.number.float({ min: 1000, max: 4000, precision: 0 }),
-      ]);
-      setUserGrowthData((prev) => [
-        ...prev.slice(1),
-        faker.number.int({ min: 5, max: 20 }),
-      ]);
-      setRecentActivity((prev) => [
-        generateActivityItem(),
-        ...prev.slice(0, 7),
-      ]);
-
-      // Occasionally add a new user or invoice
-      if (Math.random() > 0.7) {
-        setUsers((prev) => [generateUser(), ...prev.slice(0, 11)]);
-      }
-      if (Math.random() > 0.7) {
-        setInvoices((prev) => [generateInvoice(), ...prev.slice(0, 7)]);
-      }
-
-      // Occasionally add a notification
-      if (Math.random() > 0.8 && notificationCount < 10) {
-        setNotificationCount((prev) => prev + 1);
-      }
-    }, 8000);
-
-    return () => clearInterval(intervalId);
-  }, [notificationCount]);
-
-  // Filter users based on search query
-  const filteredUsers = useMemo(() => {
-    return users.filter(
-      (user) =>
-        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [users, searchQuery]);
-
-  // Filter invoices based on search query
-  const filteredInvoices = useMemo(() => {
-    return invoices.filter(
-      (invoice) =>
-        invoice.client.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        invoice.id.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [invoices, searchQuery]);
-
-  const refreshData = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-    }, 1000);
   };
 
   if (loading) {
@@ -499,8 +471,7 @@ const AdminDashboard = () => {
                     : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
                 }`}
               >
-                <ChartBarIcon className="h-5 w-5 mr-3" />
-                Dashboard
+                <ChartBarIcon className="h-5 w-5 mr-3" /> Dashboard
               </button>
               <button
                 onClick={() => setActiveTab("users")}
@@ -510,8 +481,7 @@ const AdminDashboard = () => {
                     : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
                 }`}
               >
-                <UserGroupIcon className="h-5 w-5 mr-3" />
-                Users
+                <UserGroupIcon className="h-5 w-5 mr-3" /> Users
               </button>
               <button
                 onClick={() => setActiveTab("invoices")}
@@ -521,8 +491,7 @@ const AdminDashboard = () => {
                     : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
                 }`}
               >
-                <DocumentCheckIcon className="h-5 w-5 mr-3" />
-                Invoices
+                <DocumentCheckIcon className="h-5 w-5 mr-3" /> Invoices
               </button>
               <button
                 onClick={() => setActiveTab("settings")}
@@ -532,8 +501,7 @@ const AdminDashboard = () => {
                     : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
                 }`}
               >
-                <Cog6ToothIcon className="h-5 w-5 mr-3" />
-                Settings
+                <Cog6ToothIcon className="h-5 w-5 mr-3" /> Settings
               </button>
             </nav>
           </div>
@@ -587,7 +555,7 @@ const AdminDashboard = () => {
             </div>
             <div className="flex items-center space-x-4">
               <button
-                onClick={refreshData}
+                onClick={() => alert("Data refreshed!")}
                 className={`p-2 rounded-full text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 ${
                   isRefreshing ? "animate-spin" : ""
                 }`}
@@ -660,7 +628,7 @@ const AdminDashboard = () => {
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                    Welcome back, {userFullName.split(" ")[0]} 👋
+                    Welcome back, {userFullName} 👋
                   </h1>
                   <p className="text-gray-600 dark:text-gray-400">
                     Here's what's happening with your business today.
@@ -671,8 +639,7 @@ const AdminDashboard = () => {
                     Export
                   </button>
                   <button className="px-4 py-2 bg-indigo-600 rounded-lg text-sm font-medium text-white hover:bg-indigo-700 transition-colors flex items-center">
-                    <PlusIcon className="h-4 w-4 mr-2" />
-                    New Report
+                    <PlusIcon className="h-4 w-4 mr-2" /> New Report
                   </button>
                 </div>
               </div>
@@ -681,33 +648,31 @@ const AdminDashboard = () => {
               <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <DataCard
                   title="Total Users"
-                  value={totalUsers}
-                  change={faker.number.int({ min: -5, max: 15 })}
+                  value={users.length}
+                  change={15}
                   icon={<UserGroupIcon />}
                   color="indigo"
                 />
                 <DataCard
                   title="Active Invoices"
-                  value={activeInvoices}
-                  change={faker.number.int({ min: -10, max: 20 })}
+                  value={invoices.filter((i) => i.status !== "paid").length}
+                  change={20}
                   icon={<DocumentCheckIcon />}
                   color="green"
                 />
                 <DataCard
                   title="Monthly Revenue"
                   value={`$${monthlyRevenue.toLocaleString()}`}
-                  change={faker.number.int({ min: -5, max: 10 })}
+                  change={10}
                   icon={<CurrencyDollarIcon />}
                   color="yellow"
                 />
                 <DataCard
                   title="Avg. Invoice Value"
-                  value={`$${
-                    activeInvoices > 0
-                      ? (monthlyRevenue / activeInvoices).toFixed(2)
-                      : "0.00"
-                  }`}
-                  change={faker.number.int({ min: -2, max: 5 })}
+                  value={`$${(monthlyRevenue / invoices.length || 0).toFixed(
+                    2
+                  )}`}
+                  change={5}
                   icon={<ChartBarIcon />}
                   color="purple"
                 />
@@ -734,18 +699,10 @@ const AdminDashboard = () => {
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
-                          legend: {
-                            display: false,
-                          },
-                          tooltip: {
-                            mode: "index",
-                            intersect: false,
-                          },
+                          legend: { display: false },
+                          tooltip: { mode: "index", intersect: false },
                         },
-                        hover: {
-                          mode: "nearest",
-                          intersect: true,
-                        },
+                        hover: { mode: "nearest", intersect: true },
                         scales: {
                           y: {
                             beginAtZero: false,
@@ -761,9 +718,7 @@ const AdminDashboard = () => {
                             },
                           },
                           x: {
-                            grid: {
-                              display: false,
-                            },
+                            grid: { display: false },
                             ticks: {
                               color: darkMode
                                 ? "rgba(255, 255, 255, 0.6)"
@@ -794,11 +749,7 @@ const AdminDashboard = () => {
                       options={{
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: {
-                          legend: {
-                            display: false,
-                          },
-                        },
+                        plugins: { legend: { display: false } },
                         scales: {
                           y: {
                             beginAtZero: true,
@@ -815,9 +766,7 @@ const AdminDashboard = () => {
                             },
                           },
                           x: {
-                            grid: {
-                              display: false,
-                            },
+                            grid: { display: false },
                             ticks: {
                               color: darkMode
                                 ? "rgba(255, 255, 255, 0.6)"
@@ -837,7 +786,7 @@ const AdminDashboard = () => {
                 <div className="lg:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
-                      <BellIcon className="h-5 w-5 mr-2 text-indigo-500" />
+                      <BellIcon className="h-5 w-5 mr-2 text-indigo-500" />{" "}
                       Recent Activity
                     </h3>
                     <button className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300">
@@ -911,6 +860,7 @@ const AdminDashboard = () => {
             </div>
           )}
 
+          {/* Users Tab */}
           {activeTab === "users" && (
             <div className="px-6 py-6">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
@@ -922,9 +872,11 @@ const AdminDashboard = () => {
                     Manage all registered users and their permissions.
                   </p>
                 </div>
-                <button className="mt-4 md:mt-0 px-4 py-2 bg-indigo-600 rounded-lg text-sm font-medium text-white hover:bg-indigo-700 transition-colors flex items-center">
-                  <PlusIcon className="h-4 w-4 mr-2" />
-                  Add New User
+                <button
+                  onClick={() => setIsAddUserModalOpen(true)}
+                  className="mt-4 md:mt-0 px-4 py-2 bg-indigo-600 rounded-lg text-sm font-medium text-white hover:bg-indigo-700 transition-colors flex items-center"
+                >
+                  <PlusIcon className="h-4 w-4 mr-2" /> Add New User
                 </button>
               </div>
 
@@ -1010,89 +962,11 @@ const AdminDashboard = () => {
                     </tbody>
                   </table>
                 </div>
-                <div className="bg-gray-50 dark:bg-gray-700 px-6 py-3 flex items-center justify-between border-t border-gray-200 dark:border-gray-600">
-                  <div className="flex-1 flex justify-between sm:hidden">
-                    <button className="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                      Previous
-                    </button>
-                    <button className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                      Next
-                    </button>
-                  </div>
-                  <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                    <div>
-                      <p className="text-sm text-gray-700 dark:text-gray-300">
-                        Showing <span className="font-medium">1</span> to{" "}
-                        <span className="font-medium">10</span> of{" "}
-                        <span className="font-medium">
-                          {filteredUsers.length}
-                        </span>{" "}
-                        results
-                      </p>
-                    </div>
-                    <div>
-                      <nav
-                        className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
-                        aria-label="Pagination"
-                      >
-                        <button className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600">
-                          <span className="sr-only">Previous</span>
-                          <svg
-                            className="h-5 w-5"
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                            aria-hidden="true"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        </button>
-                        <button
-                          aria-current="page"
-                          className="z-10 bg-indigo-50 dark:bg-gray-600 border-indigo-500 dark:border-gray-500 text-indigo-600 dark:text-white relative inline-flex items-center px-4 py-2 border text-sm font-medium"
-                        >
-                          1
-                        </button>
-                        <button className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
-                          2
-                        </button>
-                        <button className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
-                          3
-                        </button>
-                        <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300">
-                          ...
-                        </span>
-                        <button className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
-                          8
-                        </button>
-                        <button className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600">
-                          <span className="sr-only">Next</span>
-                          <svg
-                            className="h-5 w-5"
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                            aria-hidden="true"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        </button>
-                      </nav>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           )}
 
+          {/* Invoices Tab */}
           {activeTab === "invoices" && (
             <div className="px-6 py-6">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
@@ -1104,9 +978,11 @@ const AdminDashboard = () => {
                     View and manage all invoices.
                   </p>
                 </div>
-                <button className="mt-4 md:mt-0 px-4 py-2 bg-indigo-600 rounded-lg text-sm font-medium text-white hover:bg-indigo-700 transition-colors flex items-center">
-                  <PlusIcon className="h-4 w-4 mr-2" />
-                  Create Invoice
+                <button
+                  onClick={() => setIsAddInvoiceModalOpen(true)}
+                  className="mt-4 md:mt-0 px-4 py-2 bg-indigo-600 rounded-lg text-sm font-medium text-white hover:bg-indigo-700 transition-colors flex items-center"
+                >
+                  <PlusIcon className="h-4 w-4 mr-2" /> Create Invoice
                 </button>
               </div>
 
@@ -1166,7 +1042,7 @@ const AdminDashboard = () => {
                             {invoice.client}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                            ${invoice.amount.toFixed(2)}
+                            ${Number(invoice?.amount)?.toFixed(2)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <StatusPill status={invoice.status} />
@@ -1195,89 +1071,11 @@ const AdminDashboard = () => {
                     </tbody>
                   </table>
                 </div>
-                <div className="bg-gray-50 dark:bg-gray-700 px-6 py-3 flex items-center justify-between border-t border-gray-200 dark:border-gray-600">
-                  <div className="flex-1 flex justify-between sm:hidden">
-                    <button className="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                      Previous
-                    </button>
-                    <button className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                      Next
-                    </button>
-                  </div>
-                  <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                    <div>
-                      <p className="text-sm text-gray-700 dark:text-gray-300">
-                        Showing <span className="font-medium">1</span> to{" "}
-                        <span className="font-medium">10</span> of{" "}
-                        <span className="font-medium">
-                          {filteredInvoices.length}
-                        </span>{" "}
-                        results
-                      </p>
-                    </div>
-                    <div>
-                      <nav
-                        className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
-                        aria-label="Pagination"
-                      >
-                        <button className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600">
-                          <span className="sr-only">Previous</span>
-                          <svg
-                            className="h-5 w-5"
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                            aria-hidden="true"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        </button>
-                        <button
-                          aria-current="page"
-                          className="z-10 bg-indigo-50 dark:bg-gray-600 border-indigo-500 dark:border-gray-500 text-indigo-600 dark:text-white relative inline-flex items-center px-4 py-2 border text-sm font-medium"
-                        >
-                          1
-                        </button>
-                        <button className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
-                          2
-                        </button>
-                        <button className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
-                          3
-                        </button>
-                        <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300">
-                          ...
-                        </span>
-                        <button className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
-                          8
-                        </button>
-                        <button className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600">
-                          <span className="sr-only">Next</span>
-                          <svg
-                            className="h-5 w-5"
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                            aria-hidden="true"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        </button>
-                      </nav>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           )}
 
+          {/* Settings Tab */}
           {activeTab === "settings" && (
             <div className="px-6 py-6">
               <div className="mb-6">
@@ -1294,8 +1092,10 @@ const AdminDashboard = () => {
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                     Account Settings
                   </h2>
-
-                  <div className="space-y-4">
+                  <form
+                    onSubmit={handleSaveAccountSettings}
+                    className="space-y-4"
+                  >
                     <div className="flex items-center space-x-4">
                       <Avatar
                         src={JSON.parse(localStorage.getItem("user"))?.avatar}
@@ -1303,7 +1103,10 @@ const AdminDashboard = () => {
                         size="lg"
                       />
                       <div>
-                        <button className="px-3 py-1.5 text-sm font-medium rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition-colors">
+                        <button
+                          type="button"
+                          className="px-3 py-1.5 text-sm font-medium rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
+                        >
                           Change Avatar
                         </button>
                         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -1323,8 +1126,10 @@ const AdminDashboard = () => {
                         <input
                           type="text"
                           id="fullName"
-                          defaultValue={userFullName}
                           className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                          value={userFullName}
+                          onChange={(e) => setUserFullName(e.target.value)}
+                          required
                         />
                       </div>
                       <div>
@@ -1337,8 +1142,9 @@ const AdminDashboard = () => {
                         <input
                           type="email"
                           id="email"
-                          defaultValue="admin@example.com"
                           className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                          defaultValue="admin@example.com"
+                          required
                         />
                       </div>
                     </div>
@@ -1396,11 +1202,14 @@ const AdminDashboard = () => {
                     </div>
 
                     <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                      <button className="px-4 py-2 bg-indigo-600 rounded-md text-sm font-medium text-white hover:bg-indigo-700 transition-colors">
+                      <button
+                        type="submit"
+                        className="px-4 py-2 bg-indigo-600 rounded-md text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
+                      >
                         Save Changes
                       </button>
                     </div>
-                  </div>
+                  </form>
                 </div>
 
                 <div className="space-y-6">
@@ -1408,7 +1217,7 @@ const AdminDashboard = () => {
                     <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                       Change Password
                     </h2>
-                    <div className="space-y-4">
+                    <form onSubmit={handleChangePassword} className="space-y-4">
                       <div>
                         <label
                           htmlFor="currentPassword"
@@ -1420,6 +1229,9 @@ const AdminDashboard = () => {
                           type="password"
                           id="currentPassword"
                           className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                          value={currentPassword}
+                          onChange={(e) => setCurrentPassword(e.target.value)}
+                          required
                         />
                       </div>
                       <div>
@@ -1433,6 +1245,9 @@ const AdminDashboard = () => {
                           type="password"
                           id="newPassword"
                           className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          required
                         />
                       </div>
                       <div>
@@ -1446,14 +1261,20 @@ const AdminDashboard = () => {
                           type="password"
                           id="confirmPassword"
                           className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          required
                         />
                       </div>
                       <div className="pt-2">
-                        <button className="px-4 py-2 bg-indigo-600 rounded-md text-sm font-medium text-white hover:bg-indigo-700 transition-colors">
+                        <button
+                          type="submit"
+                          className="px-4 py-2 bg-indigo-600 rounded-md text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
+                        >
                           Update Password
                         </button>
                       </div>
-                    </div>
+                    </form>
                   </div>
 
                   <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
@@ -1549,6 +1370,263 @@ const AdminDashboard = () => {
           )}
         </main>
       </div>
+
+      {/* Add User Modal */}
+      {isAddUserModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+              Add New User
+            </h2>
+            <form onSubmit={handleAddUser} className="space-y-4">
+              <div>
+                <label
+                  htmlFor="name"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Name
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  value={newUserForm.name}
+                  onChange={(e) =>
+                    setNewUserForm({ ...newUserForm, name: e.target.value })
+                  }
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  required
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Email
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  value={newUserForm.email}
+                  onChange={(e) =>
+                    setNewUserForm({ ...newUserForm, email: e.target.value })
+                  }
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  required
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Password
+                </label>
+                <input
+                  type="password"
+                  id="password"
+                  value={newUserForm.password}
+                  onChange={(e) =>
+                    setNewUserForm({ ...newUserForm, password: e.target.value })
+                  }
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  required
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="role"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Role
+                </label>
+                <select
+                  id="role"
+                  value={newUserForm.role}
+                  onChange={(e) =>
+                    setNewUserForm({ ...newUserForm, role: e.target.value })
+                  }
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                >
+                  <option value="admin">Admin</option>
+                  <option value="editor">Editor</option>
+                  <option value="subscriber">Subscriber</option>
+                </select>
+              </div>
+              <div>
+                <label
+                  htmlFor="status"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Status
+                </label>
+                <select
+                  id="status"
+                  value={newUserForm.status}
+                  onChange={(e) =>
+                    setNewUserForm({ ...newUserForm, status: e.target.value })
+                  }
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                  <option value="pending">Pending</option>
+                </select>
+              </div>
+              <div className="flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setIsAddUserModalOpen(false)}
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-indigo-600 rounded-md text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
+                >
+                  Add User
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Invoice Modal */}
+      {isAddInvoiceModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+              Create New Invoice
+            </h2>
+            <form onSubmit={handleAddInvoice} className="space-y-4">
+              <div>
+                <label
+                  htmlFor="client"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Client
+                </label>
+                <input
+                  type="text"
+                  id="client"
+                  value={newInvoiceForm.client}
+                  onChange={(e) =>
+                    setNewInvoiceForm({
+                      ...newInvoiceForm,
+                      client: e.target.value,
+                    })
+                  }
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  required
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="amount"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Amount
+                </label>
+                <input
+                  type="number"
+                  id="amount"
+                  value={newInvoiceForm.amount}
+                  onChange={(e) =>
+                    setNewInvoiceForm({
+                      ...newInvoiceForm,
+                      amount: e.target.value,
+                    })
+                  }
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  required
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="status"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Status
+                </label>
+                <select
+                  id="status"
+                  value={newInvoiceForm.status}
+                  onChange={(e) =>
+                    setNewInvoiceForm({
+                      ...newInvoiceForm,
+                      status: e.target.value,
+                    })
+                  }
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                >
+                  <option value="paid">Paid</option>
+                  <option value="pending">Pending</option>
+                  <option value="overdue">Overdue</option>
+                </select>
+              </div>
+              <div>
+                <label
+                  htmlFor="dueDate"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Due Date
+                </label>
+                <input
+                  type="date"
+                  id="dueDate"
+                  value={newInvoiceForm.dueDate}
+                  onChange={(e) =>
+                    setNewInvoiceForm({
+                      ...newInvoiceForm,
+                      dueDate: e.target.value,
+                    })
+                  }
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  required
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="issuedDate"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Issued Date
+                </label>
+                <input
+                  type="date"
+                  id="issuedDate"
+                  value={newInvoiceForm.issuedDate}
+                  onChange={(e) =>
+                    setNewInvoiceForm({
+                      ...newInvoiceForm,
+                      issuedDate: e.target.value,
+                    })
+                  }
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  required
+                />
+              </div>
+              <div className="flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setIsAddInvoiceModalOpen(false)}
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-indigo-600 rounded-md text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
+                >
+                  Create Invoice
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
