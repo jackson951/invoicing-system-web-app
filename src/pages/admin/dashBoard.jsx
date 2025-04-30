@@ -31,7 +31,7 @@ import {
 } from "chart.js";
 import { Line, Bar, Pie } from "react-chartjs-2";
 import { faker } from "@faker-js/faker";
-import { useDarkMode } from "./hooks/useDarkMode"; // Assume we have this custom hook
+import { useDarkMode } from "../../hooks/useDarkMode.";
 import { AnimatePresence, motion } from "framer-motion";
 
 // Register ChartJS components
