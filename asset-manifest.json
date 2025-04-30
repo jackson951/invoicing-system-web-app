@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/invoicing-system-web-app/static/css/main.3cbcbf1c.css",
-    "main.js": "/invoicing-system-web-app/static/js/main.b894579c.js",
+    "main.css": "/invoicing-system-web-app/static/css/main.b58bfe07.css",
+    "main.js": "/invoicing-system-web-app/static/js/main.2c8d7960.js",
     "static/js/453.9f57a5d7.chunk.js": "/invoicing-system-web-app/static/js/453.9f57a5d7.chunk.js",
     "index.html": "/invoicing-system-web-app/index.html",
-    "main.3cbcbf1c.css.map": "/invoicing-system-web-app/static/css/main.3cbcbf1c.css.map",
-    "main.b894579c.js.map": "/invoicing-system-web-app/static/js/main.b894579c.js.map",
+    "main.b58bfe07.css.map": "/invoicing-system-web-app/static/css/main.b58bfe07.css.map",
+    "main.2c8d7960.js.map": "/invoicing-system-web-app/static/js/main.2c8d7960.js.map",
     "453.9f57a5d7.chunk.js.map": "/invoicing-system-web-app/static/js/453.9f57a5d7.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.3cbcbf1c.css",
-    "static/js/main.b894579c.js"
+    "static/css/main.b58bfe07.css",
+    "static/js/main.2c8d7960.js"
   ]
 }
