@@ -17,11 +17,21 @@ import AdminUsers from "./pages/admin/Users";
 import AdminInvoices from "./pages/admin/Invoices";
 import AdminSettings from "./pages/admin/Settings";
 
-// Protected Route Component
+// Protected Route Component for Admin pages
 const ProtectedAdminRoute = ({ children }) => {
   const user = JSON.parse(localStorage.getItem("user"));
   if (!user || user.role !== "Admin") {
     return <Navigate to="/login" replace />;
+  }
+  return children;
+};
+
+// Protected Route Component for Public pages like Register/Login when logged in
+const ProtectedPublicRoute = ({ children }) => {
+  const user = JSON.parse(localStorage.getItem("user"));
+  if (user) {
+    // If user is logged in, redirect to the dashboard or any other appropriate page
+    return <Navigate to="/admin" replace />;
   }
   return children;
 };
@@ -31,13 +41,29 @@ const AppRoutes = () => {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/home" element={<Home />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/login" element={<Login />} />
+
+      {/* Public Routes (only accessible when not logged in) */}
+      <Route
+        path="/register"
+        element={
+          <ProtectedPublicRoute>
+            <Register />
+          </ProtectedPublicRoute>
+        }
+      />
+      <Route
+        path="/login"
+        element={
+          <ProtectedPublicRoute>
+            <Login />
+          </ProtectedPublicRoute>
+        }
+      />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/contact" element={<Contact />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
 
-      {/* Admin Routes */}
+      {/* Admin Routes (Protected) */}
       <Route
         path="/admin"
         element={
@@ -52,6 +78,7 @@ const AppRoutes = () => {
         <Route path="settings" element={<AdminSettings />} />
       </Route>
 
+      {/* 404 Page */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

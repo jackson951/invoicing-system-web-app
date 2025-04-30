@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { UserIcon } from "@heroicons/react/24/outline"; // Import the user icon
 
 const Header = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -14,7 +15,7 @@ const Header = () => {
     const user = localStorage.getItem("user");
     const token = localStorage.getItem("token");
     setIsLoggedIn(!!(user && token)); // Set isLoggedIn based on user and token presence
-  }, [navigate]); // Re-run effect if navigate changes (though unlikely to cause re-renders of Header)
+  }, [navigate]);
 
   useEffect(() => {
     if (darkMode) {
@@ -101,14 +102,23 @@ const Header = () => {
             ></div>
           </button>
 
-          {/* Login & Signup / Logout */}
+          {/* Profile & Login/Logout */}
           {isLoggedIn ? (
-            <button
-              onClick={handleLogout}
-              className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors duration-200"
-            >
-              Logout
-            </button>
+            <>
+              {/* Profile Button - Navigate to /admin */}
+              <Link
+                to="/admin"
+                className="text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-200"
+              >
+                <UserIcon className="h-6 w-6" />
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors duration-200"
+              >
+                Logout
+              </button>
+            </>
           ) : (
             <>
               <Link
