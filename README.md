@@ -1,189 +1,183 @@
-# SaaS-Based Invoicing System
+# 📇 SaaS-Based Invoicing System
 
-A full-featured, multi-tenant invoicing platform that allows users to create, send, manage, and track invoices in real-time. Built with ASP.NET Core and React.js, this project includes robust authentication, payment integration, and real-time analytics.
+A full-featured, **multi-tenant invoicing platform** that allows users to create, send, manage, and track invoices in real-time. Built with **ASP.NET Core** and **React.js**, this solution offers role-based access control, secure payments, and real-time analytics to support growing businesses.
+
+---
 
 ## 🚀 Tech Stack
 
-- **Backend**: ASP.NET Core (C#), Entity Framework Core, SQL Server
-- **Frontend**: React.js, Tailwind CSS
-- **Authentication**: ASP.NET Identity
-- **Payments**: Stripe API
-- **Real-time Analytics**: SignalR, Chart.js
-- **PDF Generation**: iTextSharp or similar libraries
+| Layer         | Tech                                                     |
+|---------------|----------------------------------------------------------|
+| **Backend**   | ASP.NET Core (C#), Entity Framework Core, SQL Server     |
+| **Frontend**  | React.js, Tailwind CSS                                   |
+| **Auth**      | ASP.NET Identity                                         |
+| **Payments**  | Stripe API                                               |
+| **Analytics** | SignalR (Real-time), Chart.js                            |
+| **PDF**       | iTextSharp or similar                                    |
+
+---
 
 ## 📦 Key Features
 
-- ✅ Create, send, and manage invoices
-- ✅ Multi-tenant user system with role-based access
-- ✅ Secure payment integration via Stripe (one-time + subscription)
-- ✅ Real-time dashboard with analytics and invoice tracking
-- ✅ Email verification and password reset support
-- ✅ PDF invoice generation and download
-- ✅ Admin dashboard to manage users and transactions
-
-# User Roles in SaaS-Based Invoicing System
-
-This document outlines the different user roles within the SaaS-based invoicing platform. Each role has specific responsibilities and access permissions to ensure smooth operation and control over invoicing and payment processes.
+✅ Create, send, and manage invoices  
+✅ Multi-tenant user system with role-based access  
+✅ Secure payment integration via Stripe (one-time + subscription)  
+✅ Real-time dashboard with analytics and invoice tracking  
+✅ Email verification and password reset support  
+✅ PDF invoice generation and download  
+✅ Admin dashboard to manage users and tenants  
 
 ---
 
-## 👥 **User Roles**
+# 👥 User Roles in SaaS-Based Invoicing System
 
-The system supports three main user roles, each with different permissions and responsibilities:
-
-1. **Admin (Platform Administrator)**
-2. **Business Owner (Tenant Owner)**
-3. **Accountant (Financial Role within Tenant)**
+This system includes **role-based access control** to ensure secure and efficient collaboration across organizations. Below are the supported roles and their respective responsibilities.
 
 ---
 
-## 1. **Admin (Platform Administrator)**
+## 🔒 1. Admin (Platform Administrator)
 
-The **Admin** role is responsible for managing the entire platform and overseeing all tenants (organizations) within the system. This role is typically held by the platform owner or a super admin.
+### 🧩 Description:
+Responsible for the entire platform’s configuration, user management, and monitoring across tenants.
 
-### Responsibilities:
-- **User Management**:
-  - Create, update, and delete user accounts across all tenants.
-  - Assign roles (Admin, Business Owner, Accountant) to users within each tenant.
-  - View and manage all users' activities within the platform.
-  
-- **Tenant Management**:
-  - Create and manage new tenant accounts (businesses or organizations).
-  - Manage subscription and billing information for tenants.
-  - Monitor and control tenant access to the platform's features and data.
+### 🛠️ Responsibilities:
+- Manage all users and assign roles
+- Create and manage tenants (business organizations)
+- View and manage all platform-wide invoices
+- Access global analytics (revenue, tenant activity)
+- Handle Stripe API configuration and platform billing
+- Enforce security features (e.g., 2FA, backup)
 
-- **System Configuration**:
-  - Set platform-wide settings such as currency, invoice templates, and payment gateway configuration.
-  - Manage the payment gateway (Stripe) API keys and payment configurations.
-
-- **Analytics and Monitoring**:
-  - Access global platform analytics, such as the total number of active tenants, invoices, and payments.
-  - Monitor platform performance and data health.
-
-- **Security**:
-  - Manage system-level security settings, including enabling/disabling two-factor authentication (2FA).
-  - Perform platform-level data backups and recovery tasks.
-
-### Permissions:
-- Full access to all tenants, users, and platform settings.
-- Ability to manage global system configurations and platform-wide analytics.
+### 🔑 Permissions:
+- Full access to **all tenants**, users, analytics, and system settings
 
 ---
 
-## 2. **Business Owner (Tenant Owner)**
+## 🏢 2. Business Owner (Tenant Owner)
 
-The **Business Owner** is the person responsible for managing the invoicing and financial operations within their own organization (tenant). They have full control over the invoicing process and business-related settings but no administrative control over the platform.
+### 🧩 Description:
+Owner of an organization using the platform. They oversee their business’s invoicing operations.
 
-### Responsibilities:
-- **Invoice Management**:
-  - Create, send, and manage invoices for clients.
-  - Customize and apply different invoice templates.
-  - Generate and download invoices as PDFs for printing or emailing.
-  
-- **Payment Integration**:
-  - Set up and configure payment methods using Stripe (for one-time or subscription payments).
-  - Manage payment statuses of invoices (Paid, Pending, Overdue).
-  
-- **Dashboard Analytics**:
-  - View a real-time dashboard displaying total revenue, unpaid invoices, and payment trends for their organization.
-  - Track overdue invoices and monitor payment history.
+### 🛠️ Responsibilities:
+- Create and manage invoices
+- Manage clients and payment status
+- View financial dashboards
+- Customize invoice templates
+- Configure Stripe for receiving payments
+- Manage their SaaS subscription plan
 
-- **Client Management**:
-  - Add, update, and delete client information (e.g., name, email, company details).
-  
-- **Subscription Management**:
-  - Manage their organization's subscription plan to the platform (if applicable).
-  - View and update billing information related to their platform subscription.
-
-### Permissions:
-- Full access to their organization's invoices, clients, and payment-related data.
-- Ability to view and manage their organization's subscription and financial data.
-- Cannot manage platform-level settings or other tenants.
+### 🔑 Permissions:
+- Full access to their **own tenant’s** clients, invoices, payments, and subscription
+- No access to platform-level or other tenant data
 
 ---
 
-## 3. **Accountant (Financial Role within Tenant)**
+## 💼 3. Accountant (Financial Role within Tenant)
 
-The **Accountant** is primarily responsible for overseeing the financial aspects of the business, including managing invoices, tracking payments, and generating reports. They can view and manage financial data but have limited access to non-financial aspects of the system.
+### 🧩 Description:
+Handles financial tasks within a tenant’s organization, including invoicing, payments, and reports.
 
-### Responsibilities:
-- **Invoice Tracking**:
-  - Monitor the status of all invoices within the organization (Paid, Pending, Overdue).
-  - Assist in creating, updating, and generating invoices as PDFs.
+### 🛠️ Responsibilities:
+- Track paid/pending/overdue invoices
+- Generate and download invoice PDFs
+- Monitor real-time payments
+- Generate monthly/annual financial reports
+- Collaborate with the Business Owner on cash flow and collections
 
-- **Payment Management**:
-  - Ensure that payments are processed correctly through Stripe and that payment statuses are updated in real-time.
-  - Assist with payment reconciliation and resolve discrepancies.
-
-- **Reporting**:
-  - Generate financial reports based on invoice data and payment status (e.g., monthly or yearly revenue).
-  
-- **Client Interaction**:
-  - Contact clients regarding overdue invoices or billing issues.
-  
-- **Assist Business Owner**:
-  - Provide support to the Business Owner by offering financial insights and data for better decision-making.
-
-### Permissions:
-- View and manage invoices, payments, and financial reports for their organization.
-- Access the real-time financial dashboard.
-- Limited access to tenant settings, focused primarily on financial operations (cannot manage clients or subscription plans).
+### 🔑 Permissions:
+- Limited access to **financial modules** (invoices and analytics only)
+- Cannot access clients or subscription management
 
 ---
 
-## Summary of Permissions
+## 📋 Role-Based Permission Matrix
 
-| Role            | Invoice Management | Payment Processing | Client Management | Subscription Management | System Settings | Analytics/Reports |
-|-----------------|--------------------|-------------------|-------------------|-------------------------|-----------------|-------------------|
-| **Admin**       | Full Access        | Full Access       | Full Access       | Full Access             | Full Access     | Full Access       |
-| **Business Owner** | Full Access        | Full Access       | Full Access       | Full Access             | No Access       | Full Access       |
-| **Accountant**  | View/Manage        | View/Manage       | No Access         | No Access               | No Access       | View Reports      |
+| Feature                        | Admin         | Business Owner | Accountant      |
+|-------------------------------|---------------|----------------|-----------------|
+| Manage Users                  | ✅             | ❌              | ❌               |
+| Create & Send Invoices        | ✅             | ✅              | ✅               |
+| View Financial Dashboard      | ✅             | ✅              | ✅               |
+| Manage Clients                | ✅             | ✅              | ❌               |
+| PDF Invoice Generation        | ✅             | ✅              | ✅               |
+| Subscription Management       | ✅             | ✅              | ❌               |
+| Access Other Tenants' Data    | ✅             | ❌              | ❌               |
+| Global Settings & Stripe Keys| ✅             | ❌              | ❌               |
 
 ---
-
-## 🎯 Key Takeaways:
-- **Admins** have full control over the platform and all tenants.
-- **Business Owners** can manage invoices, payments, and client data within their own tenant but do not have control over other tenants or platform-wide settings.
-- **Accountants** focus on financial operations within a tenant, with access to invoices, payments, and reports but no administrative control.
-
-This role-based access control ensures that each user can perform their designated tasks efficiently while maintaining a secure and organized system.
-
 
 ## 📊 Real-Time Dashboard
 
-Users can view invoice trends, payment status, and overall business insights through a dynamic dashboard powered by Chart.js and SignalR.
+The dashboard includes live financial metrics powered by **SignalR** and **Chart.js**:
 
-## 🔐 Authentication
+- 📈 Total revenue trends
+- 🧾 Paid vs. unpaid invoices
+- ⏰ Overdue invoice alerts
+- 🧠 Client activity insights
 
-- User registration and login
-- Email confirmation
-- Roles: Admin, Business Owner, Accountant
-- Permission-based access to different modules
+---
+
+## 🔐 Authentication & Security
+
+- Secure login and registration via **ASP.NET Identity**
+- Email confirmation and verification flows
+- Password reset via secure token
+- Role-based access and session protection
+
+---
 
 ## 💳 Stripe Integration
 
-- Handles secure online payments
-- Subscription billing for SaaS customers
-- Webhook support for billing events
+- Accept credit card and subscription payments
+- Configure payment modes (one-time or recurring)
+- Receive webhook events from Stripe for:
+  - Invoice Paid
+  - Subscription Cancelled
+  - Failed Payment Alerts
 
-## 🗂 Database
+---
 
-- SQL Server with Entity Framework Core Code-First approach
-- Includes invoice templates, client data, user accounts, transactions
+## 🗃️ Database Design
 
-## 🖨️ PDF Generation
+Uses **Entity Framework Core** with a code-first approach.
 
-- Generate professional invoices in PDF format for download or print
+### Entities:
+- Users
+- Tenants (organizations)
+- Clients
+- Invoices
+- Invoice Items
+- Payments
+- Subscriptions
+
+---
+
+## 🖨️ PDF Invoice Generation
+
+- Downloadable PDF invoices generated using **iTextSharp**
+- Professional, printable layout
+- Supports logo, branding, and custom messages
+
+---
 
 ## 🛠️ Future Improvements
 
-- Custom invoice themes
-- Invoice scheduling/reminders
-- Integration with accounting tools (e.g., QuickBooks, Xero)
+- [ ] Custom invoice themes
+- [ ] Scheduled invoicing
+- [ ] Recurring billing cycles
+- [ ] Multi-currency support
+- [ ] Integration with QuickBooks / Xero
+
+---
 
 ## 📌 Project Timeline
 
-- **Start Date**: April 2025
-- **Status**: In Progress
+| Phase               | Date          | Status        |
+|--------------------|---------------|---------------|
+| Project Kickoff    | April 2025    | ✅ In Progress |
+| MVP Completion     | May 2025      | ⏳ Planned     |
+| Public Beta Launch | June 2025     | ⏳ Planned     |
 
 ---
+
+## 📁 Folder Structure (Preview)
+
