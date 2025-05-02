@@ -1,46 +1,86 @@
-// Register.jsx
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 
-// Import UI components
+// Components
 import OtpInput from "../components/OtpInput";
+import PasswordStrengthMeter from "../components/PasswordStrengthMeter";
+import RoleInfoCard from "../components/RoleInfoCard";
 
-// Import dummy API methods
+// Icons
+import { FiEye, FiEyeOff, FiCheck, FiX, FiInfo } from "react-icons/fi";
+
+// Services
 import { registerUser, sendOtp, verifyOtp } from "../utils/api";
 
-// Define roles
-const roles = ["Admin", "Business Owner", "Accountant"];
+// Constants
+const ROLE_TYPES = {
+  ADMIN: "Admin",
+  BUSINESS_OWNER: "Business Owner",
+  ACCOUNTANT: "Accountant",
+};
 
-// Zod validation schema with custom error messages
+const ROLE_DESCRIPTIONS = {
+  [ROLE_TYPES.ADMIN]:
+    "Full platform access, user management, and system configuration.",
+  [ROLE_TYPES.BUSINESS_OWNER]:
+    "Manage your business, invoices, and team members.",
+  [ROLE_TYPES.ACCOUNTANT]: "Financial access to view and manage invoices.",
+};
+
+// Zod validation schema with enhanced validations
 const registerSchema = z
   .object({
     fullName: z
-      .string({ required_error: "Please provide your full name." })
-      .min(2, { message: "Full name must be at least 2 characters." }),
+      .string()
+      .min(2, { message: "Full name must be at least 2 characters." })
+      .max(50, { message: "Full name cannot exceed 50 characters." })
+      .regex(/^[a-zA-Z\s'-]+$/, {
+        message:
+          "Name can only contain letters, spaces, hyphens, and apostrophes.",
+      }),
     email: z
-      .string({ required_error: "Email address is required." })
-      .email("Please enter a valid email."),
+      .string()
+      .email("Please enter a valid email.")
+      .endsWith(".com", { message: "Email must be a .com domain." }),
     companyName: z
-      .string({ required_error: "Company name is required." })
-      .min(2, {
-        message: "Company name must be at least 2 characters.",
+      .string()
+      .min(2, { message: "Company name must be at least 2 characters." })
+      .max(50, { message: "Company name cannot exceed 50 characters." }),
+    phone: z
+      .string()
+      .regex(/^[+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]*$/, {
+        message: "Please enter a valid phone number.",
+      })
+      .optional(),
+    role: z.enum(
+      [ROLE_TYPES.ADMIN, ROLE_TYPES.BUSINESS_OWNER, ROLE_TYPES.ACCOUNTANT],
+      {
+        errorMap: () => ({ message: "Please select a valid role." }),
+      }
+    ),
+    password: z
+      .string()
+      .min(8, { message: "Password must be at least 8 characters long." })
+      .regex(/[A-Z]/, {
+        message: "Password must contain at least one uppercase letter.",
+      })
+      .regex(/[a-z]/, {
+        message: "Password must contain at least one lowercase letter.",
+      })
+      .regex(/[0-9]/, { message: "Password must contain at least one number." })
+      .regex(/[^A-Za-z0-9]/, {
+        message: "Password must contain at least one special character.",
       }),
-    phone: z.string().optional(),
-    role: z.enum(["Admin", "Business Owner", "Accountant"], {
-      errorMap: () => ({ message: "Please select a valid role." }),
-    }),
-    password: z.string({ required_error: "Password is required." }).min(6, {
-      message: "Password must be at least 6 characters long.",
-    }),
-    confirmPassword: z
-      .string({ required_error: "Please confirm your password." })
-      .min(6, {
-        message: "Password confirmation must be at least 6 characters long.",
+    confirmPassword: z.string(),
+    terms: z.literal(true, {
+      errorMap: () => ({
+        message: "You must accept the terms and conditions.",
       }),
+    }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     path: ["confirmPassword"],
@@ -48,34 +88,62 @@ const registerSchema = z
   });
 
 const Register = () => {
+  const [currentStep, setCurrentStep] = useState(1);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [selectedRole, setSelectedRole] = useState(null);
   const [formSuccess, setFormSuccess] = useState(false);
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [otpSuccess, setOtpSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState("");
+  const [timer, setTimer] = useState(0);
+  const [resendOtpDisabled, setResendOtpDisabled] = useState(false);
 
   const {
     control,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isValid },
     watch,
+    setValue,
+    trigger,
   } = useForm({
     resolver: zodResolver(registerSchema),
     mode: "onChange",
+    defaultValues: {
+      terms: false,
+    },
   });
 
   const email = watch("email");
+  const password = watch("password");
   const navigate = useNavigate();
+
+  // Handle OTP timer
+  useEffect(() => {
+    let interval;
+    if (timer > 0) {
+      interval = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+    } else if (timer === 0 && resendOtpDisabled) {
+      setResendOtpDisabled(false);
+    }
+    return () => clearInterval(interval);
+  }, [timer, resendOtpDisabled]);
 
   const onSubmit = async (data) => {
     setLoading(true);
     setApiError("");
     try {
+      // Simulate API calls
       await registerUser(data);
       await sendOtp(data.email);
       console.log("Registration successful");
       setFormSuccess(true);
-      setShowOtpInput(true); // Show OTP after registration
+      setShowOtpInput(true);
+      setTimer(60); // 60 seconds timer
+      setResendOtpDisabled(true);
     } catch (error) {
       setApiError(error.message || "Registration failed. Please try again.");
     } finally {
@@ -101,250 +169,479 @@ const Register = () => {
     }
   };
 
+  const handleResendOtp = async () => {
+    try {
+      setResendOtpDisabled(true);
+      setTimer(60);
+      await sendOtp(email);
+    } catch (error) {
+      setApiError(error.message || "Failed to resend OTP. Please try again.");
+    }
+  };
+
   const handleSocialLogin = (provider) => {
     console.log(`Logging in with ${provider}`);
   };
 
+  const handleRoleSelect = (role) => {
+    setSelectedRole(role);
+    setValue("role", role);
+    trigger("role");
+  };
+
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
-      <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg">
-        {/* Conditional title based on step */}
-        <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">
-          {showOtpInput ? "Verify OTP" : "Create Your Account"}
-        </h2>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4 py-8">
+      <div className="max-w-4xl w-full bg-white p-8 rounded-xl shadow-xl">
+        {/* Progress Steps */}
+        <div className="flex justify-between mb-8 relative">
+          {[1, 2, 3].map((step) => (
+            <React.Fragment key={step}>
+              <div
+                className={`flex flex-col items-center ${
+                  currentStep >= step ? "text-indigo-600" : "text-gray-400"
+                }`}
+              >
+                <div
+                  className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${
+                    currentStep >= step
+                      ? "border-indigo-600 bg-indigo-100"
+                      : "border-gray-300"
+                  }`}
+                >
+                  {currentStep > step ? (
+                    <FiCheck className="text-indigo-600" />
+                  ) : (
+                    step
+                  )}
+                </div>
+                <span className="mt-2 text-sm font-medium">
+                  {step === 1
+                    ? "Account"
+                    : step === 2
+                    ? "Verification"
+                    : "Complete"}
+                </span>
+              </div>
+              {step < 3 && (
+                <div
+                  className={`absolute top-1/2 h-1 w-1/3 ${
+                    currentStep > step ? "bg-indigo-600" : "bg-gray-300"
+                  }`}
+                  style={{ left: `${step * 33.33 - 16.66}%` }}
+                />
+              )}
+            </React.Fragment>
+          ))}
+        </div>
 
-        {/* Error Toast */}
-        {apiError && (
-          <div className="bg-red-500 text-white p-3 mb-4 rounded-lg text-center">
-            {apiError}
-          </div>
-        )}
+        <div className="grid md:grid-cols-2 gap-8">
+          {/* Left Column - Form */}
+          <div>
+            <h2 className="text-3xl font-bold mb-6 text-gray-800">
+              {showOtpInput ? "Verify Your Email" : "Create Your Account"}
+            </h2>
 
-        {/* Success Toast - Registration */}
-        {formSuccess && !showOtpInput && (
-          <div className="bg-green-500 text-white p-3 mb-4 rounded-lg text-center">
-            Registration successful! Please verify your OTP.
-          </div>
-        )}
+            {/* Error Toast */}
+            <AnimatePresence>
+              {apiError && (
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded"
+                >
+                  <div className="flex items-center">
+                    <FiX className="mr-2" />
+                    <p>{apiError}</p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-        {/* Success Toast - OTP Verified */}
-        {otpSuccess && (
-          <div className="bg-green-500 text-white p-3 mb-4 rounded-lg text-center">
-            OTP verified successfully! You can now log in.
-          </div>
-        )}
+            {/* Success Toast - Registration */}
+            {formSuccess && !showOtpInput && (
+              <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded">
+                <div className="flex items-center">
+                  <FiCheck className="mr-2" />
+                  Registration successful! Please verify your OTP.
+                </div>
+              </div>
+            )}
 
-        {/* Main Form or OTP Step */}
-        {!showOtpInput ? (
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Full Name */}
-            <Controller
-              name="fullName"
-              control={control}
-              render={({ field }) => (
+            {/* Main Form or OTP Step */}
+            {!showOtpInput ? (
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+                {/* Full Name */}
                 <div>
-                  <input
-                    {...field}
-                    placeholder="Full Name"
-                    className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 transition-all ease-in-out hover:scale-105"
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Full Name
+                  </label>
+                  <Controller
+                    name="fullName"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        placeholder="John Doe"
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all ${
+                          errors.fullName ? "border-red-500" : "border-gray-300"
+                        }`}
+                      />
+                    )}
                   />
                   {errors.fullName && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.fullName.message}
+                    <p className="text-red-500 text-sm mt-1 flex items-center">
+                      <FiInfo className="mr-1" /> {errors.fullName.message}
                     </p>
                   )}
                 </div>
-              )}
-            />
 
-            {/* Email */}
-            <Controller
-              name="email"
-              control={control}
-              render={({ field }) => (
+                {/* Email */}
                 <div>
-                  <input
-                    {...field}
-                    type="email"
-                    placeholder="Email Address"
-                    className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 transition-all ease-in-out hover:scale-105"
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Email Address
+                  </label>
+                  <Controller
+                    name="email"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="email"
+                        placeholder="john@example.com"
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all ${
+                          errors.email ? "border-red-500" : "border-gray-300"
+                        }`}
+                      />
+                    )}
                   />
                   {errors.email && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.email.message}
+                    <p className="text-red-500 text-sm mt-1 flex items-center">
+                      <FiInfo className="mr-1" /> {errors.email.message}
                     </p>
                   )}
                 </div>
-              )}
-            />
 
-            {/* Company Name */}
-            <Controller
-              name="companyName"
-              control={control}
-              render={({ field }) => (
+                {/* Company Name */}
                 <div>
-                  <input
-                    {...field}
-                    placeholder="Company Name"
-                    className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 transition-all ease-in-out hover:scale-105"
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Company Name
+                  </label>
+                  <Controller
+                    name="companyName"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        placeholder="Acme Inc"
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all ${
+                          errors.companyName
+                            ? "border-red-500"
+                            : "border-gray-300"
+                        }`}
+                      />
+                    )}
                   />
                   {errors.companyName && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.companyName.message}
+                    <p className="text-red-500 text-sm mt-1 flex items-center">
+                      <FiInfo className="mr-1" /> {errors.companyName.message}
                     </p>
                   )}
                 </div>
-              )}
-            />
 
-            {/* Phone */}
-            <Controller
-              name="phone"
-              control={control}
-              render={({ field }) => (
+                {/* Phone */}
                 <div>
-                  <input
-                    {...field}
-                    type="tel"
-                    placeholder="Phone Number (optional)"
-                    className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 transition-all ease-in-out hover:scale-105"
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone Number{" "}
+                    <span className="text-gray-500">(optional)</span>
+                  </label>
+                  <Controller
+                    name="phone"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="tel"
+                        placeholder="+1 (555) 123-4567"
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all ${
+                          errors.phone ? "border-red-500" : "border-gray-300"
+                        }`}
+                      />
+                    )}
                   />
-                </div>
-              )}
-            />
-
-            {/* Role */}
-            <Controller
-              name="role"
-              control={control}
-              render={({ field }) => (
-                <div>
-                  <select
-                    {...field}
-                    className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 transition-all ease-in-out hover:scale-105"
-                  >
-                    <option value="">Select Role</option>
-                    {roles.map((role) => (
-                      <option key={role} value={role}>
-                        {role}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.role && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.role.message}
+                  {errors.phone && (
+                    <p className="text-red-500 text-sm mt-1 flex items-center">
+                      <FiInfo className="mr-1" /> {errors.phone.message}
                     </p>
                   )}
                 </div>
-              )}
-            />
 
-            {/* Password */}
-            <Controller
-              name="password"
-              control={control}
-              render={({ field }) => (
+                {/* Password */}
                 <div>
-                  <input
-                    {...field}
-                    type="password"
-                    placeholder="Password"
-                    className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 transition-all ease-in-out hover:scale-105"
-                  />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <Controller
+                      name="password"
+                      control={control}
+                      render={({ field }) => (
+                        <input
+                          {...field}
+                          type={showPassword ? "text" : "password"}
+                          placeholder="••••••••"
+                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all ${
+                            errors.password
+                              ? "border-red-500"
+                              : "border-gray-300"
+                          }`}
+                        />
+                      )}
+                    />
+                    <button
+                      type="button"
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <FiEyeOff /> : <FiEye />}
+                    </button>
+                  </div>
+                  {password && <PasswordStrengthMeter password={password} />}
                   {errors.password && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.password.message}
+                    <p className="text-red-500 text-sm mt-1 flex items-center">
+                      <FiInfo className="mr-1" /> {errors.password.message}
                     </p>
                   )}
                 </div>
-              )}
-            />
 
-            {/* Confirm Password */}
-            <Controller
-              name="confirmPassword"
-              control={control}
-              render={({ field }) => (
+                {/* Confirm Password */}
                 <div>
-                  <input
-                    {...field}
-                    type="password"
-                    placeholder="Confirm Password"
-                    className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 transition-all ease-in-out hover:scale-105"
-                  />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Confirm Password
+                  </label>
+                  <div className="relative">
+                    <Controller
+                      name="confirmPassword"
+                      control={control}
+                      render={({ field }) => (
+                        <input
+                          {...field}
+                          type={showConfirmPassword ? "text" : "password"}
+                          placeholder="••••••••"
+                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all ${
+                            errors.confirmPassword
+                              ? "border-red-500"
+                              : "border-gray-300"
+                          }`}
+                        />
+                      )}
+                    />
+                    <button
+                      type="button"
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
+                    >
+                      {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
+                    </button>
+                  </div>
                   {errors.confirmPassword && (
-                    <p className="text-red-500 text-sm mt-1">
+                    <p className="text-red-500 text-sm mt-1 flex items-center">
+                      <FiInfo className="mr-1" />{" "}
                       {errors.confirmPassword.message}
                     </p>
                   )}
                 </div>
-              )}
-            />
 
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className={`w-full bg-indigo-600 text-white font-semibold py-2 rounded-md hover:bg-indigo-700 transition-all ${
-                loading ? "opacity-50 cursor-not-allowed" : ""
-              }`}
-            >
-              {loading ? "Creating account..." : "Register"}
-            </button>
-          </form>
-        ) : (
-          // When showOtpInput is true, only show OTP component + hide social buttons
-          <>
-            <OtpInput
-              control={control}
-              errors={errors}
-              onSubmit={handleOtpSubmit}
-              isSubmitting={loading}
-              email={email}
-            />
-          </>
-        )}
+                {/* Role Selection */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Select Your Role
+                  </label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {Object.values(ROLE_TYPES).map((role) => (
+                      <button
+                        key={role}
+                        type="button"
+                        onClick={() => handleRoleSelect(role)}
+                        className={`p-3 border rounded-lg text-center transition-all ${
+                          selectedRole === role
+                            ? "border-indigo-500 bg-indigo-50 text-indigo-700"
+                            : "border-gray-300 hover:border-indigo-300"
+                        }`}
+                      >
+                        {role}
+                      </button>
+                    ))}
+                  </div>
+                  <input type="hidden" {...control.register("role")} />
+                  {errors.role && (
+                    <p className="text-red-500 text-sm mt-1 flex items-center">
+                      <FiInfo className="mr-1" /> {errors.role.message}
+                    </p>
+                  )}
+                </div>
 
-        {/* Hide social login when OTP input is shown */}
-        {!showOtpInput && (
-          <div className="mt-6 flex justify-center space-x-4">
-            <button
-              onClick={() => handleSocialLogin("Google")}
-              className="flex items-center bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600 transition-all ease-in-out"
-            >
-              <span className="mr-2">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
+                {/* Terms Checkbox */}
+                <div className="flex items-start">
+                  <div className="flex items-center h-5">
+                    <Controller
+                      name="terms"
+                      control={control}
+                      render={({ field }) => (
+                        <input
+                          type="checkbox"
+                          id="terms"
+                          checked={field.value}
+                          onChange={(e) => field.onChange(e.target.checked)}
+                          className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                        />
+                      )}
+                    />
+                  </div>
+                  <div className="ml-3 text-sm">
+                    <label
+                      htmlFor="terms"
+                      className="font-medium text-gray-700"
+                    >
+                      I agree to the{" "}
+                      <a
+                        href="#"
+                        className="text-indigo-600 hover:text-indigo-500"
+                      >
+                        Terms of Service
+                      </a>{" "}
+                      and{" "}
+                      <a
+                        href="#"
+                        className="text-indigo-600 hover:text-indigo-500"
+                      >
+                        Privacy Policy
+                      </a>
+                    </label>
+                    {errors.terms && (
+                      <p className="text-red-500 text-sm mt-1 flex items-center">
+                        <FiInfo className="mr-1" /> {errors.terms.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={loading || !isValid}
+                  className={`w-full py-3 px-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-all flex justify-center items-center ${
+                    loading || !isValid ? "opacity-70 cursor-not-allowed" : ""
+                  }`}
                 >
-                  <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.4 0 5.373 0 .667 4.707.667 11.693s4.707 11.693 11.693 11.693c6.627 0 11.173-5.267 11.173-9.453 0-.427-.033-.84-.107-1.253H12.48z" />
-                </svg>
-              </span>
-              Continue with Google
-            </button>
-            <button
-              onClick={() => handleSocialLogin("Facebook")}
-              className="flex items-center bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-all ease-in-out"
-            >
-              <span className="mr-2">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
+                  {loading ? (
+                    <>
+                      <svg
+                        className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Creating Account...
+                    </>
+                  ) : (
+                    "Register"
+                  )}
+                </button>
+              </form>
+            ) : (
+              // OTP Verification Step
+              <OtpInput
+                control={control}
+                errors={errors}
+                onSubmit={handleOtpSubmit}
+                isSubmitting={loading}
+                email={email}
+                onResendOtp={handleResendOtp}
+                resendDisabled={resendOtpDisabled}
+                timer={timer}
+              />
+            )}
+
+            {/* Login Link */}
+            <div className="mt-6 text-center">
+              <p className="text-sm text-gray-600">
+                Already have an account?{" "}
+                <a
+                  href="/login"
+                  className="font-medium text-indigo-600 hover:text-indigo-500"
                 >
-                  <path d="M22.675 0H1.325C.593 0 0 .593 0 1.325v21.351C0 23.407.593 24 1.325 24H12.82v-9.294H9.692v-3.622h3.128V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12V24h6.116c.73 0 1.323-.593 1.323-1.325V1.325C24 .593 23.407 0 22.675 0z" />
-                </svg>
-              </span>
-              Continue with Facebook
-            </button>
+                  Sign in
+                </a>
+              </p>
+            </div>
           </div>
-        )}
+
+          {/* Right Column - Info/Illustration */}
+          <div className="hidden md:block">
+            {selectedRole ? (
+              <RoleInfoCard
+                role={selectedRole}
+                description={ROLE_DESCRIPTIONS[selectedRole]}
+                permissions={
+                  selectedRole === ROLE_TYPES.ADMIN
+                    ? [
+                        "Full platform access",
+                        "User management",
+                        "System configuration",
+                      ]
+                    : selectedRole === ROLE_TYPES.BUSINESS_OWNER
+                    ? ["Manage business", "Create invoices", "Team management"]
+                    : [
+                        "View financial data",
+                        "Manage invoices",
+                        "Generate reports",
+                      ]
+                }
+              />
+            ) : (
+              <div className="h-full flex flex-col justify-center items-center bg-indigo-50 rounded-lg p-6">
+                <div className="text-center">
+                  <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                    Select Your Role
+                  </h3>
+                  <p className="text-gray-600 mb-6">
+                    Choose the role that best describes your responsibilities to
+                    get started.
+                  </p>
+                  <div className="space-y-4">
+                    {Object.values(ROLE_TYPES).map((role) => (
+                      <button
+                        key={role}
+                        type="button"
+                        onClick={() => handleRoleSelect(role)}
+                        className="w-full p-3 bg-white border border-gray-200 rounded-lg text-center hover:border-indigo-300 transition-all"
+                      >
+                        {role}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

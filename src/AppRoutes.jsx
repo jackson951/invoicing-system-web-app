@@ -11,11 +11,12 @@ import Contact from "./pages/contact";
 import VerifyEmail from "./pages/verifyEmail";
 
 // Admin Pages
-import AdminLayout from "./components/AdminLayout";
 import AdminDashboard from "./pages/admin/dashBoard";
 import AdminUsers from "./pages/admin/Users";
 import AdminInvoices from "./pages/admin/Invoices";
 import AdminSettings from "./pages/admin/Settings";
+import CreateInvoice from "./pages/admin/createInvoice";
+import CreateUser from "./pages/admin/CreateUser";
 
 // Protected Route Component for Admin pages
 const ProtectedAdminRoute = ({ children }) => {
@@ -26,11 +27,10 @@ const ProtectedAdminRoute = ({ children }) => {
   return children;
 };
 
-// Protected Route Component for Public pages like Register/Login when logged in
+// Protected Route Component for Public pages when logged in
 const ProtectedPublicRoute = ({ children }) => {
   const user = JSON.parse(localStorage.getItem("user"));
   if (user) {
-    // If user is logged in, redirect to the dashboard or any other appropriate page
     return <Navigate to="/admin" replace />;
   }
   return children;
@@ -39,10 +39,9 @@ const ProtectedPublicRoute = ({ children }) => {
 const AppRoutes = () => {
   return (
     <Routes>
+      {/* Public Routes */}
       <Route path="/" element={<Home />} />
       <Route path="/home" element={<Home />} />
-
-      {/* Public Routes (only accessible when not logged in) */}
       <Route
         path="/register"
         element={
@@ -68,17 +67,19 @@ const AppRoutes = () => {
         path="/admin"
         element={
           <ProtectedAdminRoute>
-            <AdminLayout />
+            <AdminDashboard />
           </ProtectedAdminRoute>
         }
       >
         <Route index element={<AdminDashboard />} />
         <Route path="users" element={<AdminUsers />} />
+        <Route path="users/create" element={<CreateUser />} />
         <Route path="invoices" element={<AdminInvoices />} />
+        <Route path="invoices/create" element={<CreateInvoice />} />
         <Route path="settings" element={<AdminSettings />} />
       </Route>
 
-      {/* 404 Page */}
+      {/* 404 Not Found */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
