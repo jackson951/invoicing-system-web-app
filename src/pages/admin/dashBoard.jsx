@@ -85,7 +85,7 @@ const Avatar = ({ src, name, size = "md" }) => {
       ) : (
         <span className="text-gray-600 font-medium">
           {name
-            .split(" ")
+            ?.split(" ")
             .map((n) => n[0])
             .join("")}
         </span>
@@ -244,6 +244,8 @@ const AdminDashboard = () => {
       avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     };
     setUserFullName(storedUser.fullName);
+
+    console.log(storedUser, "yeeeeeeeeeeeeeepy");
 
     const storedUsers =
       JSON.parse(localStorage.getItem("users")) ||

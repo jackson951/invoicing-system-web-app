@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiEye, FiEyeOff, FiAlertCircle, FiCheckCircle } from "react-icons/fi";
+import { GoogleLogin, useGoogleLogin } from "@react-oauth/google";
 
 // Import loginUser from dummy API
 import { loginUser } from "../utils/api";
@@ -88,6 +89,57 @@ const Login = () => {
       setLoading(false);
     }
   };
+
+  const loginWithGoogle = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        const userInfoResponse = await fetch(
+          "https://www.googleapis.com/oauth2/v3/userinfo",
+          {
+            headers: {
+              Authorization: `Bearer ${tokenResponse.access_token}`,
+            },
+          }
+        );
+
+        const userInfo = await userInfoResponse.json();
+        console.log("Google user info:", userInfo);
+        const fullName = `${userInfo.given_name} ${userInfo.family_name}`;
+
+        // Simulate or send this to your backend to verify/create user session
+        const user = {
+          email: userInfo?.email,
+          name: userInfo?.name,
+          picture: userInfo?.picture,
+          fullName: fullName,
+          role: "Admin", // or infer dynamically from your DB if connected
+        };
+
+        localStorage.setItem("token", tokenResponse.access_token);
+        localStorage.setItem("user", JSON.stringify(user));
+        setLoginSuccess(true);
+
+        // Redirect based on role
+        setTimeout(() => {
+          if (user.role === "Admin") {
+            navigate("/admin");
+          } else if (user.role === "Business Owner") {
+            navigate("/business");
+          } else if (user.role === "Accountant") {
+            navigate("/accountant");
+          } else {
+            navigate("/");
+          }
+        }, 1500);
+      } catch (err) {
+        console.error("Google login failed:", err);
+        setApiError("Failed to fetch user info from Google.");
+      }
+    },
+    onError: () => {
+      setApiError("Google login was cancelled or failed.");
+    },
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center px-4 py-12">
@@ -292,7 +344,7 @@ const Login = () => {
           <div className="mt-6 grid grid-cols-2 gap-3">
             <button
               type="button"
-              onClick={() => console.log("Google login")}
+              onClick={() => loginWithGoogle()}
               className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
             >
               <svg
