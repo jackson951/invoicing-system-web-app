@@ -1,4 +1,6 @@
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const FORMSPREE_URL = 'https://formspree.io/f/xjkbdeqp'; // Replace with your real Formspree endpoint
+
 
 // Load or initialize mock data from localStorage
 const loadMockData = () => {
@@ -133,17 +135,46 @@ export const sendOtp = async (email) => {
   if (!user) throw new Error("No user found with this email");
 
   const otp = generateOtp();
-  console.log(otp,"my otppppppppppp")
-  const otpData = {
-    email,
-    otp,
-    expiresAt: Date.now() + 5 * 60 * 1000, // 5 minutes
-  };
+  const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes
 
+  // Save OTP locally for verification later
+  const otpData = { email, otp, expiresAt };
   localStorage.setItem("mockOtp", JSON.stringify(otpData));
-  return { success: true, message: "OTP sent successfully" };
-};
 
+  // Format the message
+  const message = `
+    Hello,
+
+    Your one-time password (OTP) is: ${otp}
+    It will expire in 5 minutes.
+
+    If you did not request this OTP, please ignore this email.
+
+    Thanks,
+    Your Website Team
+  `;
+
+  // Send email using Formspree
+  const res = await fetch(FORMSPREE_URL, {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      email,
+      message
+    })
+  });
+
+  const json = await res.json();
+
+  if (json.ok || res.ok) {
+    return { success: true, message: "OTP sent successfully to email" };
+  } else {
+    throw new Error("Failed to send OTP via email");
+  }
+};
 export const verifyOtp = async (email, otp) => {
   await delay(1000);
 

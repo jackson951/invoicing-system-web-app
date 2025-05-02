@@ -6,7 +6,6 @@ const OtpInput = ({ email, onSubmit, isSubmitting, errors, control }) => {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const inputs = useRef([]);
 
-  // Auto-focus first input when mounted
   useEffect(() => {
     if (inputs.current[0]) {
       inputs.current[0].focus();
@@ -22,12 +21,10 @@ const OtpInput = ({ email, onSubmit, isSubmitting, errors, control }) => {
     newOtp[index] = value;
     setOtp(newOtp);
 
-    // Move to next input
     if (value && index < 5) {
       inputs.current[index + 1].focus();
     }
 
-    // Auto-submit
     const fullOtp = newOtp.join("");
     if (fullOtp.length === 6) {
       onSubmit({ email, otp: fullOtp });
@@ -49,7 +46,12 @@ const OtpInput = ({ email, onSubmit, isSubmitting, errors, control }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="text-center text-sm text-gray-600 dark:text-gray-300">
+        An OTP has been sent to <span className="font-medium">{email}</span>.
+        Please enter it below.
+      </div>
+
       <div>
         <label className="block text-sm font-medium mb-2 text-center">
           Enter 6-digit Verification Code
@@ -70,7 +72,6 @@ const OtpInput = ({ email, onSubmit, isSubmitting, errors, control }) => {
           ))}
         </div>
 
-        {/* Display validation error */}
         {errors?.otp && (
           <p className="mt-2 text-sm text-red-500 text-center">
             {errors.otp.message}

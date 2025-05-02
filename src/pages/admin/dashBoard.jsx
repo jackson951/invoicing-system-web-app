@@ -14,6 +14,8 @@ import {
   Cog6ToothIcon,
   ArrowPathIcon,
   PlusIcon,
+  XMarkIcon,
+  Bars3Icon,
 } from "@heroicons/react/24/outline";
 import {
   Chart as ChartJS,
@@ -182,10 +184,18 @@ const AdminDashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [notificationCount, setNotificationCount] = useState(3);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Modal states
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
   const [isAddInvoiceModalOpen, setIsAddInvoiceModalOpen] = useState(false);
+  const [isViewUserModalOpen, setIsViewUserModalOpen] = useState(false);
+  const [isViewInvoiceModalOpen, setIsViewInvoiceModalOpen] = useState(false);
+  const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false);
+  const [isEditInvoiceModalOpen, setIsEditInvoiceModalOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [currentInvoice, setCurrentInvoice] = useState(null);
+
   const [newUserForm, setNewUserForm] = useState({
     name: "",
     email: "",
@@ -194,6 +204,7 @@ const AdminDashboard = () => {
     status: "active",
     avatar: "",
   });
+
   const [newInvoiceForm, setNewInvoiceForm] = useState({
     client: "",
     amount: "",
@@ -244,6 +255,17 @@ const AdminDashboard = () => {
       Array.from({ length: 8 }, () => generateInvoice());
     setInvoices(storedInvoices);
 
+    // Generate some random data for charts
+    setRevenueData(
+      Array.from({ length: 7 }, () =>
+        faker.number.float({ min: 1000, max: 5000 })
+      )
+    );
+    setUserGrowthData(
+      Array.from({ length: 7 }, () => faker.number.int({ min: 1, max: 20 }))
+    );
+    setMonthlyRevenue(faker.number.float({ min: 5000, max: 20000 }));
+
     setLoading(false);
   }, []);
 
@@ -276,6 +298,7 @@ const AdminDashboard = () => {
       ...newUserForm,
       id: faker.string.uuid(),
       lastLogin: new Date().toISOString(),
+      avatar: newUserForm.avatar || faker.image.avatar(),
     };
     const updatedUsers = [userToAdd, ...users];
     setUsers(updatedUsers);
@@ -311,6 +334,70 @@ const AdminDashboard = () => {
     setIsAddInvoiceModalOpen(false);
   };
 
+  // View user details
+  const handleViewUser = (user) => {
+    setCurrentUser(user);
+    setIsViewUserModalOpen(true);
+  };
+
+  // View invoice details
+  const handleViewInvoice = (invoice) => {
+    setCurrentInvoice(invoice);
+    setIsViewInvoiceModalOpen(true);
+  };
+
+  // Edit user
+  const handleEditUser = (user) => {
+    setCurrentUser(user);
+    setIsEditUserModalOpen(true);
+  };
+
+  // Save edited user
+  const handleSaveEditedUser = (e) => {
+    e.preventDefault();
+    const updatedUsers = users.map((u) =>
+      u.id === currentUser.id ? currentUser : u
+    );
+    setUsers(updatedUsers);
+    localStorage.setItem("users", JSON.stringify(updatedUsers));
+    setIsEditUserModalOpen(false);
+  };
+
+  // Edit invoice
+  const handleEditInvoice = (invoice) => {
+    setCurrentInvoice(invoice);
+    setIsEditInvoiceModalOpen(true);
+  };
+
+  // Save edited invoice
+  const handleSaveEditedInvoice = (e) => {
+    e.preventDefault();
+    const updatedInvoices = invoices.map((i) =>
+      i.id === currentInvoice.id ? currentInvoice : i
+    );
+    setInvoices(updatedInvoices);
+    localStorage.setItem("invoices", JSON.stringify(updatedInvoices));
+    setIsEditInvoiceModalOpen(false);
+  };
+
+  // Delete user
+  const handleDeleteUser = (userId) => {
+    if (window.confirm("Are you sure you want to delete this user?")) {
+      const updatedUsers = users.filter((u) => u.id !== userId);
+      setUsers(updatedUsers);
+      localStorage.setItem("users", JSON.stringify(updatedUsers));
+    }
+  };
+
+  // Delete invoice
+  const handleDeleteInvoice = (invoiceId) => {
+    if (window.confirm("Are you sure you want to delete this invoice?")) {
+      const updatedInvoices = invoices.filter((i) => i.id !== invoiceId);
+      setInvoices(updatedInvoices);
+      localStorage.setItem("invoices", JSON.stringify(updatedInvoices));
+    }
+  };
+
   // Save account settings
   const handleSaveAccountSettings = (e) => {
     e.preventDefault();
@@ -321,6 +408,7 @@ const AdminDashboard = () => {
       email: e.target.email.value,
     };
     localStorage.setItem("user", JSON.stringify(updatedUser));
+    alert("Account settings saved successfully!");
   };
 
   // Change password
@@ -453,7 +541,91 @@ const AdminDashboard = () => {
     <div
       className={`min-h-screen ${darkMode ? "dark bg-gray-900" : "bg-gray-50"}`}
     >
-      {/* Sidebar */}
+      {/* Mobile Sidebar */}
+      <div className="md:hidden">
+        <div
+          className={`fixed inset-0 z-40 bg-black bg-opacity-50 transition-opacity ${
+            sidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
+          onClick={() => setSidebarOpen(false)}
+        ></div>
+
+        <div
+          className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transform transition-transform duration-300 ease-in-out ${
+            sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
+          <div className="flex items-center justify-between px-4 py-5 border-b border-gray-200 dark:border-gray-700">
+            <div className="text-indigo-600 dark:text-indigo-400 font-bold text-xl">
+              AdminPro
+            </div>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+            >
+              <XMarkIcon className="h-6 w-6" />
+            </button>
+          </div>
+          <div className="h-full overflow-y-auto">
+            <nav className="px-2 py-4 space-y-1">
+              <button
+                onClick={() => {
+                  setActiveTab("dashboard");
+                  setSidebarOpen(false);
+                }}
+                className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg w-full transition-colors ${
+                  activeTab === "dashboard"
+                    ? "bg-indigo-100 text-indigo-800 dark:bg-gray-700 dark:text-white"
+                    : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                }`}
+              >
+                <ChartBarIcon className="h-5 w-5 mr-3" /> Dashboard
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab("users");
+                  setSidebarOpen(false);
+                }}
+                className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg w-full transition-colors ${
+                  activeTab === "users"
+                    ? "bg-indigo-100 text-indigo-800 dark:bg-gray-700 dark:text-white"
+                    : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                }`}
+              >
+                <UserGroupIcon className="h-5 w-5 mr-3" /> Users
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab("invoices");
+                  setSidebarOpen(false);
+                }}
+                className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg w-full transition-colors ${
+                  activeTab === "invoices"
+                    ? "bg-indigo-100 text-indigo-800 dark:bg-gray-700 dark:text-white"
+                    : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                }`}
+              >
+                <DocumentCheckIcon className="h-5 w-5 mr-3" /> Invoices
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab("settings");
+                  setSidebarOpen(false);
+                }}
+                className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg w-full transition-colors ${
+                  activeTab === "settings"
+                    ? "bg-indigo-100 text-indigo-800 dark:bg-gray-700 dark:text-white"
+                    : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                }`}
+              >
+                <Cog6ToothIcon className="h-5 w-5 mr-3" /> Settings
+              </button>
+            </nav>
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop Sidebar */}
       <div className="hidden md:flex md:w-64 md:flex-col fixed inset-y-0">
         <div className="flex flex-col flex-grow pt-5 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-y-auto">
           <div className="flex items-center flex-shrink-0 px-4 mb-8">
@@ -531,20 +703,11 @@ const AdminDashboard = () => {
         <header className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
           <div className="flex items-center justify-between px-4 py-4">
             <div className="flex items-center">
-              <button className="md:hidden mr-2 text-gray-500 dark:text-gray-400">
-                <svg
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                </svg>
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="md:hidden mr-2 text-gray-500 dark:text-gray-400"
+              >
+                <Bars3Icon className="h-6 w-6" />
               </button>
               <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
                 {activeTab === "dashboard" && "Dashboard"}
@@ -737,7 +900,7 @@ const AdminDashboard = () => {
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                       User Growth (Last 7 Days)
                     </h3>
-                    <select className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    <select className="border border-gray-300 dark:border-gray-600 rounded-lg px 3 py-1 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
                       <option>Last 7 Days</option>
                       <option>Last 30 Days</option>
                       <option>Last Quarter</option>
@@ -950,10 +1113,22 @@ const AdminDashboard = () => {
                             {new Date(user.lastLogin).toLocaleDateString()}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <button className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 mr-3">
+                            <button
+                              onClick={() => handleViewUser(user)}
+                              className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 mr-3"
+                            >
+                              View
+                            </button>
+                            <button
+                              onClick={() => handleEditUser(user)}
+                              className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 mr-3"
+                            >
                               Edit
                             </button>
-                            <button className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300">
+                            <button
+                              onClick={() => handleDeleteUser(user.id)}
+                              className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
+                            >
                               Delete
                             </button>
                           </td>
@@ -1056,13 +1231,22 @@ const AdminDashboard = () => {
                             )}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <button className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 mr-3">
+                            <button
+                              onClick={() => handleViewInvoice(invoice)}
+                              className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 mr-3"
+                            >
                               View
                             </button>
-                            <button className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300 mr-3">
+                            <button
+                              onClick={() => handleEditInvoice(invoice)}
+                              className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 mr-3"
+                            >
                               Edit
                             </button>
-                            <button className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300">
+                            <button
+                              onClick={() => handleDeleteInvoice(invoice.id)}
+                              className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
+                            >
                               Delete
                             </button>
                           </td>
@@ -1079,7 +1263,7 @@ const AdminDashboard = () => {
           {activeTab === "settings" && (
             <div className="px-6 py-6">
               <div className="mb-6">
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
+                <h1 className="text-2xl font-bold text-gray-90 0 dark:text-white mb-1">
                   Settings
                 </h1>
                 <p className="text-gray-600 dark:text-gray-400">
@@ -1400,7 +1584,7 @@ const AdminDashboard = () => {
               <div>
                 <label
                   htmlFor="email"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  className="block text-sm font-medium text-gray-7 00 dark:text-gray-300 mb-1"
                 >
                   Email
                 </label>
@@ -1429,7 +1613,7 @@ const AdminDashboard = () => {
                   onChange={(e) =>
                     setNewUserForm({ ...newUserForm, password: e.target.value })
                   }
-                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring indigo-500 sm:text-sm"
                   required
                 />
               </div>
@@ -1496,7 +1680,7 @@ const AdminDashboard = () => {
       {/* Add Invoice Modal */}
       {isAddInvoiceModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
+          <div className="bg-white dark:bg-gray-8 00 p-6 rounded-lg shadow-lg w-full max-w-md">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
               Create New Invoice
             </h2>
@@ -1546,7 +1730,7 @@ const AdminDashboard = () => {
               <div>
                 <label
                   htmlFor="status"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  className="block text-sm font medium text-gray-700 dark:text-gray-300 mb-1"
                 >
                   Status
                 </label>
@@ -1621,6 +1805,374 @@ const AdminDashboard = () => {
                   className="px-4 py-2 bg-indigo-600 rounded-md text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
                 >
                   Create Invoice
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* View User Modal */}
+      {isViewUserModalOpen && currentUser && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                User Details
+              </h2>
+              <button
+                onClick={() => setIsViewUserModalOpen(false)}
+                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+              >
+                <XMarkIcon className="h-6 w-6" />
+              </button>
+            </div>
+
+            <div className="flex items-center space-x-4 mb-6">
+              <Avatar
+                src={currentUser.avatar}
+                name={currentUser.name}
+                size="lg"
+              />
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  {currentUser.name}
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400">
+                  {currentUser.email}
+                </p>
+                <div className="mt-2">
+                  <StatusPill status={currentUser.status} />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">Role:</span>
+                <span className="font-medium text-gray-900 dark:text-white capitalize">
+                  {currentUser.role}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">
+                  Last Login:
+                </span>
+                <span className="font-medium text-gray-900 dark:text-white">
+                  {new Date(currentUser.lastLogin).toLocaleString()}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">
+                  Account Created:
+                </span>
+                <span className="font-medium text-gray-900 dark:text-white">
+                  {new Date().toLocaleDateString()}
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => {
+                  setIsViewUserModalOpen(false);
+                  handleEditUser(currentUser);
+                }}
+                className="px-4 py-2 bg-indigo-600 rounded-md text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
+              >
+                Edit User
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Invoice Modal */}
+      {isViewInvoiceModalOpen && currentInvoice && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Invoice Details
+              </h2>
+              <button
+                onClick={() => setIsViewInvoiceModalOpen(false)}
+                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+              >
+                <XMarkIcon className="h-6 w-6" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  {currentInvoice.id}
+                </h3>
+                <StatusPill status={currentInvoice.status} />
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Client:
+                  </span>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {currentInvoice.client}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Amount:
+                  </span>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    ${Number(currentInvoice.amount).toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Issued Date:
+                  </span>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {new Date(currentInvoice.issuedDate).toLocaleDateString()}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Due Date:
+                  </span>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {new Date(currentInvoice.dueDate).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setIsViewInvoiceModalOpen(false);
+                  handleEditInvoice(currentInvoice);
+                }}
+                className="px-4 py-2 bg-indigo-600 rounded-md text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
+              >
+                Edit Invoice
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit User Modal */}
+      {isEditUserModalOpen && currentUser && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+              Edit User
+            </h2>
+            <form onSubmit={handleSaveEditedUser} className="space-y-4">
+              <div>
+                <label
+                  htmlFor="editName"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Name
+                </label>
+                <input
+                  type="text"
+                  id="editName"
+                  value={currentUser.name}
+                  onChange={(e) =>
+                    setCurrentUser({ ...currentUser, name: e.target.value })
+                  }
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  required
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="editEmail"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Email
+                </label>
+                <input
+                  type="email"
+                  id="editEmail"
+                  value={currentUser.email}
+                  onChange={(e) =>
+                    setCurrentUser({ ...currentUser, email: e.target.value })
+                  }
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  required
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="editRole"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Role
+                </label>
+                <select
+                  id="editRole"
+                  value={currentUser.role}
+                  onChange={(e) =>
+                    setCurrentUser({ ...currentUser, role: e.target.value })
+                  }
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                >
+                  <option value="admin">Admin</option>
+                  <option value="editor">Editor</option>
+                  <option value="subscriber">Subscriber</option>
+                </select>
+              </div>
+              <div>
+                <label
+                  htmlFor="editStatus"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Status
+                </label>
+                <select
+                  id="editStatus"
+                  value={currentUser.status}
+                  onChange={(e) =>
+                    setCurrentUser({ ...currentUser, status: e.target.value })
+                  }
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                  <option value="pending">Pending</option>
+                </select>
+              </div>
+              <div className="flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setIsEditUserModalOpen(false)}
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-indigo-600 rounded-md text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Invoice Modal */}
+      {isEditInvoiceModalOpen && currentInvoice && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+              Edit Invoice
+            </h2>
+            <form onSubmit={handleSaveEditedInvoice} className="space-y-4">
+              <div>
+                <label
+                  htmlFor="editClient"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Client
+                </label>
+                <input
+                  type="text"
+                  id="editClient"
+                  value={currentInvoice.client}
+                  onChange={(e) =>
+                    setCurrentInvoice({
+                      ...currentInvoice,
+                      client: e.target.value,
+                    })
+                  }
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  required
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="editAmount"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Amount
+                </label>
+                <input
+                  type="number"
+                  id="editAmount"
+                  value={currentInvoice.amount}
+                  onChange={(e) =>
+                    setCurrentInvoice({
+                      ...currentInvoice,
+                      amount: e.target.value,
+                    })
+                  }
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  required
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="editStatus"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Status
+                </label>
+                <select
+                  id="editStatus"
+                  value={currentInvoice.status}
+                  onChange={(e) =>
+                    setCurrentInvoice({
+                      ...currentInvoice,
+                      status: e.target.value,
+                    })
+                  }
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                >
+                  <option value="paid">Paid</option>
+                  <option value="pending">Pending</option>
+                  <option value="overdue">Overdue</option>
+                </select>
+              </div>
+              <div>
+                <label
+                  htmlFor="editDueDate"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Due Date
+                </label>
+                <input
+                  type="date"
+                  id="editDueDate"
+                  value={currentInvoice.dueDate}
+                  onChange={(e) =>
+                    setCurrentInvoice({
+                      ...currentInvoice,
+                      dueDate: e.target.value,
+                    })
+                  }
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  required
+                />
+              </div>
+              <div className="flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setIsEditInvoiceModalOpen(false)}
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-indigo-600 rounded-md text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
+                >
+                  Save Changes
                 </button>
               </div>
             </form>
