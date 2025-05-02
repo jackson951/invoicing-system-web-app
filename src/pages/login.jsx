@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiEye, FiEyeOff, FiAlertCircle, FiCheckCircle } from "react-icons/fi";
+import { GoogleLogin, useGoogleLogin } from "@react-oauth/google";
 
 // Import loginUser from dummy API
 import { loginUser } from "../utils/api";
@@ -88,6 +89,28 @@ const Login = () => {
       setLoading(false);
     }
   };
+
+  const loginWithGoogle = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        console.log("Google login success:", tokenResponse);
+
+        // Example: send token to your backend to verify and create a session
+        // const res = await yourApi.googleLogin(tokenResponse.access_token);
+
+        // Simulate login success
+        localStorage.setItem("token", tokenResponse.access_token);
+        setLoginSuccess(true);
+        setTimeout(() => navigate("/admin"), 1500);
+      } catch (err) {
+        console.error("Google login failed:", err);
+        setApiError("Google login failed.");
+      }
+    },
+    onError: () => {
+      setApiError("Google login was cancelled or failed.");
+    },
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center px-4 py-12">
@@ -292,7 +315,7 @@ const Login = () => {
           <div className="mt-6 grid grid-cols-2 gap-3">
             <button
               type="button"
-              onClick={() => console.log("Google login")}
+              onClick={() => loginWithGoogle()}
               className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
             >
               <svg
