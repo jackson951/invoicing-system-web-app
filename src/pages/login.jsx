@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { FiEye, FiEyeOff, FiAlertCircle, FiCheckCircle } from "react-icons/fi";
 
 // Import loginUser from dummy API
 import { loginUser } from "../utils/api";
@@ -16,16 +18,32 @@ const loginSchema = z.object({
 const Login = () => {
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginSuccess, setLoginSuccess] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Check for redirected message
+  const redirectedFrom = location.state?.from || "/";
+  const redirectMessage = location.state?.message;
 
   const {
     control,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isValid },
+    reset,
   } = useForm({
     resolver: zodResolver(loginSchema),
     mode: "onChange",
   });
+
+  useEffect(() => {
+    if (redirectMessage) {
+      setApiError(redirectMessage);
+      // Clear the state to prevent showing the message again
+      window.history.replaceState({}, document.title);
+    }
+  }, [redirectMessage]);
 
   const onSubmit = async (data) => {
     setLoading(true);
@@ -39,134 +57,288 @@ const Login = () => {
       // Save token to localStorage
       localStorage.setItem("token", response.token);
       localStorage.setItem("user", JSON.stringify(response.user));
-      // Role-based redirect
-      if (response.user.role === "Admin") {
-        navigate("/admin"); // ✅ Admin route
-      } else {
-        navigate("/dashboard"); // ✅ User dashboard
-      }
+
+      // Set success state
+      setLoginSuccess(true);
+
+      // Small delay before redirect
+      setTimeout(() => {
+        // Role-based redirect
+        if (response.user.role === "Admin") {
+          navigate("/admin", { replace: true });
+        } else if (response.user.role === "Business Owner") {
+          navigate("/business", { replace: true });
+        } else if (response.user.role === "Accountant") {
+          navigate("/accountant", { replace: true });
+        } else {
+          navigate(redirectedFrom, { replace: true });
+        }
+      }, 1500);
     } catch (error) {
       console.error("Login failed:", error.message);
       setApiError(
         error.message || "Login failed. Please check your credentials."
       );
+      // Reset form on error
+      reset({
+        email: control._formValues.email,
+        password: "",
+      });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-blue-50 to-gray-100 flex items-center justify-center px-4">
-      <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg transform transition-all duration-300 ease-in-out hover:scale-105">
-        <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">
-          Welcome Back 👋
-        </h2>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center px-4 py-12">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="max-w-md w-full bg-white p-8 rounded-xl shadow-2xl border border-gray-100"
+      >
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+            Welcome Back
+          </h1>
+          <p className="text-gray-600">Sign in to access your account</p>
+        </div>
 
         {/* Error Toast */}
-        {apiError && (
-          <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-3 mb-4 rounded">
-            <p>{apiError}</p>
-          </div>
-        )}
+        <AnimatePresence>
+          {apiError && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded"
+            >
+              <div className="flex items-center">
+                <FiAlertCircle className="text-red-500 mr-2" />
+                <p className="text-red-700">{apiError}</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Success Toast */}
+        <AnimatePresence>
+          {loginSuccess && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded"
+            >
+              <div className="flex items-center">
+                <FiCheckCircle className="text-green-500 mr-2" />
+                <p className="text-green-700">
+                  Login successful! Redirecting...
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Email */}
-          <Controller
-            name="email"
-            control={control}
-            defaultValue=""
-            render={({ field }) => (
-              <div className="relative">
+          <div>
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Email Address
+            </label>
+            <Controller
+              name="email"
+              control={control}
+              defaultValue=""
+              render={({ field }) => (
                 <input
                   {...field}
                   type="email"
                   id="email"
-                  placeholder=" "
-                  className={`peer w-full px-4 pt-5 pb-2 border ${
+                  placeholder="you@example.com"
+                  autoComplete="username"
+                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all ${
                     errors.email ? "border-red-500" : "border-gray-300"
-                  } rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300 ease-in-out`}
+                  }`}
                 />
-                <label
-                  htmlFor="email"
-                  className="absolute left-4 top-2 text-sm text-gray-500 transition-all peer-placeholder-shown:top-3 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-indigo-500"
-                >
-                  Email Address
-                </label>
-                {errors.email && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.email.message}
-                  </p>
-                )}
-              </div>
+              )}
+            />
+            {errors.email && (
+              <p className="text-red-500 text-xs mt-1 flex items-center">
+                <FiAlertCircle className="mr-1" /> {errors.email.message}
+              </p>
             )}
-          />
+          </div>
 
           {/* Password */}
-          <Controller
-            name="password"
-            control={control}
-            defaultValue=""
-            render={({ field }) => (
-              <div className="relative">
-                <input
-                  {...field}
-                  type="password"
-                  id="password"
-                  placeholder=" "
-                  className={`peer w-full px-4 pt-5 pb-2 border ${
-                    errors.password ? "border-red-500" : "border-gray-300"
-                  } rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300 ease-in-out`}
-                />
-                <label
-                  htmlFor="password"
-                  className="absolute left-4 top-2 text-sm text-gray-500 transition-all peer-placeholder-shown:top-3 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-indigo-500"
-                >
-                  Password
-                </label>
-                {errors.password && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.password.message}
-                  </p>
+          <div>
+            <div className="flex justify-between items-center mb-1">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Password
+              </label>
+              <Link
+                to="/forgot-password"
+                className="text-xs text-indigo-600 hover:underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
+            <div className="relative">
+              <Controller
+                name="password"
+                control={control}
+                defaultValue=""
+                render={({ field }) => (
+                  <input
+                    {...field}
+                    type={showPassword ? "text" : "password"}
+                    id="password"
+                    placeholder="••••••••"
+                    autoComplete="current-password"
+                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all pr-10 ${
+                      errors.password ? "border-red-500" : "border-gray-300"
+                    }`}
+                  />
                 )}
-              </div>
+              />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <FiEyeOff /> : <FiEye />}
+              </button>
+            </div>
+            {errors.password && (
+              <p className="text-red-500 text-xs mt-1 flex items-center">
+                <FiAlertCircle className="mr-1" /> {errors.password.message}
+              </p>
             )}
-          />
+          </div>
+
+          {/* Remember Me */}
+          <div className="flex items-center">
+            <input
+              id="remember-me"
+              name="remember-me"
+              type="checkbox"
+              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+            />
+            <label
+              htmlFor="remember-me"
+              className="ml-2 block text-sm text-gray-700"
+            >
+              Remember me
+            </label>
+          </div>
 
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={loading}
-            className="w-full bg-indigo-600 text-white font-medium py-2 rounded hover:bg-indigo-700 transition disabled:opacity-60 flex justify-center items-center"
+            disabled={loading || !isValid}
+            className={`w-full py-3 px-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-all flex justify-center items-center ${
+              loading || !isValid ? "opacity-70 cursor-not-allowed" : ""
+            }`}
           >
             {loading ? (
-              <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
+              <>
+                <svg
+                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                Signing In...
+              </>
             ) : (
               "Sign In"
             )}
           </button>
         </form>
 
-        {/* Forgot Password Link */}
-        <div className="text-sm text-center text-gray-600 mt-6">
-          <Link
-            to="/forgot-password"
-            className="text-indigo-600 hover:underline"
-          >
-            Forgot your password?
-          </Link>
+        {/* Social Login */}
+        <div className="mt-8">
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">
+                Or continue with
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-6 grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => console.log("Google login")}
+              className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
+              </svg>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => console.log("GitHub login")}
+              className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* Register Link */}
-        <p className="text-center text-sm text-gray-500 mt-4">
-          Don't have an account?{" "}
-          <Link
-            to="/register"
-            className="text-indigo-600 hover:underline font-medium"
-          >
-            Register
-          </Link>
-        </p>
-      </div>
+        <div className="mt-8 text-center text-sm text-gray-500">
+          <p>
+            Don't have an account?{" "}
+            <Link
+              to="/register"
+              className="font-medium text-indigo-600 hover:text-indigo-500"
+            >
+              Sign up
+            </Link>
+          </p>
+        </div>
+      </motion.div>
     </div>
   );
 };
