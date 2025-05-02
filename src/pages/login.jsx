@@ -93,18 +93,47 @@ const Login = () => {
   const loginWithGoogle = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       try {
-        console.log("Google login success:", tokenResponse);
+        const userInfoResponse = await fetch(
+          "https://www.googleapis.com/oauth2/v3/userinfo",
+          {
+            headers: {
+              Authorization: `Bearer ${tokenResponse.access_token}`,
+            },
+          }
+        );
 
-        // Example: send token to your backend to verify and create a session
-        // const res = await yourApi.googleLogin(tokenResponse.access_token);
+        const userInfo = await userInfoResponse.json();
+        console.log("Google user info:", userInfo);
+        const fullName = `${userInfo.given_name} ${userInfo.family_name}`;
 
-        // Simulate login success
+        // Simulate or send this to your backend to verify/create user session
+        const user = {
+          email: userInfo?.email,
+          name: userInfo?.name,
+          picture: userInfo?.picture,
+          fullName: fullName,
+          role: "Admin", // or infer dynamically from your DB if connected
+        };
+
         localStorage.setItem("token", tokenResponse.access_token);
+        localStorage.setItem("user", JSON.stringify(user));
         setLoginSuccess(true);
-        setTimeout(() => navigate("/admin"), 1500);
+
+        // Redirect based on role
+        setTimeout(() => {
+          if (user.role === "Admin") {
+            navigate("/admin");
+          } else if (user.role === "Business Owner") {
+            navigate("/business");
+          } else if (user.role === "Accountant") {
+            navigate("/accountant");
+          } else {
+            navigate("/");
+          }
+        }, 1500);
       } catch (err) {
         console.error("Google login failed:", err);
-        setApiError("Google login failed.");
+        setApiError("Failed to fetch user info from Google.");
       }
     },
     onError: () => {
