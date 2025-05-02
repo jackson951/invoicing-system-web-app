@@ -14,7 +14,12 @@ import RoleInfoCard from "../components/RoleInfoCard";
 import { FiEye, FiEyeOff, FiCheck, FiX, FiInfo } from "react-icons/fi";
 
 // Services
-import { registerUser, sendOtp, verifyOtp } from "../utils/api";
+import {
+  registerUser,
+  sendOtp,
+  verifyOtp,
+  sendVerificationEmail,
+} from "../utils/api";
 
 // Constants
 const ROLE_TYPES = {
@@ -31,7 +36,7 @@ const ROLE_DESCRIPTIONS = {
   [ROLE_TYPES.ACCOUNTANT]: "Financial access to view and manage invoices.",
 };
 
-// Zod validation schema with enhanced validations
+// Zod Validation Schema
 const registerSchema = z
   .object({
     fullName: z
@@ -110,39 +115,36 @@ const Register = () => {
   } = useForm({
     resolver: zodResolver(registerSchema),
     mode: "onChange",
-    defaultValues: {
-      terms: false,
-    },
+    defaultValues: { terms: false },
   });
 
   const email = watch("email");
-  const password = watch("password");
   const navigate = useNavigate();
 
-  // Handle OTP timer
+  // OTP Timer
   useEffect(() => {
     let interval;
     if (timer > 0) {
-      interval = setInterval(() => {
-        setTimer((prev) => prev - 1);
-      }, 1000);
+      interval = setInterval(() => setTimer((prev) => prev - 1), 1000);
     } else if (timer === 0 && resendOtpDisabled) {
       setResendOtpDisabled(false);
     }
     return () => clearInterval(interval);
   }, [timer, resendOtpDisabled]);
 
+  // Handle Registration
   const onSubmit = async (data) => {
     setLoading(true);
     setApiError("");
     try {
-      // Simulate API calls
       await registerUser(data);
-      await sendOtp(data.email);
-      console.log("Registration successful");
+      const res = await sendOtp(data.email);
+
+      setCurrentStep(2);
+
       setFormSuccess(true);
       setShowOtpInput(true);
-      setTimer(60); // 60 seconds timer
+      setTimer(60);
       setResendOtpDisabled(true);
     } catch (error) {
       setApiError(error.message || "Registration failed. Please try again.");
@@ -151,24 +153,33 @@ const Register = () => {
     }
   };
 
+  // Handle OTP Submission
   const handleOtpSubmit = async (otpData) => {
     setLoading(true);
     setApiError("");
-
     try {
       const result = await verifyOtp(otpData.email, otpData.otp);
-
       if (result.success && result.token) {
         setOtpSuccess(true);
-        navigate(`/verify-email?token=${result.token}`);
+
+        // Send verification email
+        const emailRes = await sendVerificationEmail(otpData.email);
+        if (emailRes.success) {
+          setCurrentStep(3); // Move to completion step
+        } else {
+          setApiError("Failed to send verification email.");
+        }
+      } else {
+        setApiError("Invalid OTP. Please try again.");
       }
     } catch (error) {
-      setApiError(error.message || "Invalid OTP. Please try again.");
+      setApiError(error.message || "An unexpected error occurred.");
     } finally {
       setLoading(false);
     }
   };
 
+  // Resend OTP
   const handleResendOtp = async () => {
     try {
       setResendOtpDisabled(true);
@@ -179,10 +190,7 @@ const Register = () => {
     }
   };
 
-  const handleSocialLogin = (provider) => {
-    console.log(`Logging in with ${provider}`);
-  };
-
+  // Role Selection
   const handleRoleSelect = (role) => {
     setSelectedRole(role);
     setValue("role", role);
@@ -268,7 +276,7 @@ const Register = () => {
               </div>
             )}
 
-            {/* Main Form or OTP Step */}
+            {/* Form or OTP Step */}
             {!showOtpInput ? (
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
                 {/* Full Name */}
@@ -406,7 +414,9 @@ const Register = () => {
                       {showPassword ? <FiEyeOff /> : <FiEye />}
                     </button>
                   </div>
-                  {password && <PasswordStrengthMeter password={password} />}
+                  {watch("password") && (
+                    <PasswordStrengthMeter password={watch("password")} />
+                  )}
                   {errors.password && (
                     <p className="text-red-500 text-sm mt-1 flex items-center">
                       <FiInfo className="mr-1" /> {errors.password.message}
@@ -467,7 +477,7 @@ const Register = () => {
                         onClick={() => handleRoleSelect(role)}
                         className={`p-3 border rounded-lg text-center transition-all ${
                           selectedRole === role
-                            ? "border-indigo-500 bg-indigo-50 text-indigo-700"
+                            ? "border-indigo-500 bg-indigo-100"
                             : "border-gray-300 hover:border-indigo-300"
                         }`}
                       >
@@ -565,8 +575,7 @@ const Register = () => {
                   )}
                 </button>
               </form>
-            ) : (
-              // OTP Verification Step
+            ) : currentStep === 2 ? (
               <OtpInput
                 control={control}
                 errors={errors}
@@ -577,6 +586,24 @@ const Register = () => {
                 resendDisabled={resendOtpDisabled}
                 timer={timer}
               />
+            ) : (
+              <div className="text-center py-8">
+                <div className="flex justify-center mb-4">
+                  <FiCheck className="text-green-500 text-5xl" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Email Sent</h3>
+                <p className="text-gray-600">
+                  A verification link has been sent to your email address.
+                  Please check your inbox (and spam/junk folder) and click the
+                  link to complete your registration.
+                </p>
+                <button
+                  onClick={() => navigate("/login")}
+                  className="mt-6 w-full py-3 px-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-all"
+                >
+                  Go to Login
+                </button>
+              </div>
             )}
 
             {/* Login Link */}

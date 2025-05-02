@@ -69,6 +69,51 @@ const loadMockData = () => {
   return { users, invoices };
 };
 
+export const sendVerificationEmail = async (email) => {
+  await delay(1000);
+
+  const user = mockUsers.find((u) => u.email === email);
+  if (!user) throw new Error("User not found");
+
+  const token = btoa(JSON.stringify({ id: user.id, email: user.email }));
+  const verifyLink = `${window.location.origin}/verify-email?token=${token}`;
+
+  const htmlMessage = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+      <h2 style="color: #4F46E5;">Verify Your Email</h2>
+      <p>Hello ${user.fullName},</p>
+      <p>Please click the button below to verify your email address:</p>
+      <a href="${verifyLink}"
+         style="display: inline-block; margin: 20px 0; padding: 12px 24px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 6px;">
+        Verify Email
+      </a>
+      <p>If you did not request this email, please ignore it.</p>
+      <p>Thanks,<br/>Your Website Team</p>
+    </div>
+  `;
+
+  const res = await fetch(FORMSPREE_URL, {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      email,
+      message: htmlMessage,
+      subject: "Verify Your Email - Invoicing App"
+    })
+  });
+
+  const json = await res.json();
+
+  if (json.ok || res.ok) {
+    return { success: true, message: "Verification email sent successfully." };
+  } else {
+    throw new Error("Failed to send verification email.");
+  }
+};
+
 // Save mock data to localStorage
 const saveMockData = (users, invoices) => {
   localStorage.setItem("mockUsers", JSON.stringify(users));
