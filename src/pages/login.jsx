@@ -7,10 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FiEye, FiEyeOff, FiAlertCircle, FiCheckCircle } from "react-icons/fi";
 import { GoogleLogin, useGoogleLogin } from "@react-oauth/google";
 
-// Import loginUser from dummy API
-import { loginUser } from "../utils/api";
-
-// Schema definition
+import axios from "axios"; // Schema definition
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email."),
   password: z.string().min(4, "Password must be at least 4 characters."),
@@ -46,11 +43,20 @@ const Login = () => {
     }
   }, [redirectMessage]);
 
+  const loginUser = async (credentials) => {
+    const res = await axios.post(
+      "https://localhost:7221/api/auth/login",
+      credentials
+    );
+    return res.data;
+  };
+
   const onSubmit = async (data) => {
     setLoading(true);
     setApiError("");
     try {
       const response = await loginUser(data);
+
       console.log("Login successful:", response);
 
       localStorage.setItem("token", response.token);

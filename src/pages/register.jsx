@@ -4,6 +4,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import axios from "axios";
 
 // Components
 import OtpInput from "../components/OtpInput";
@@ -81,6 +82,7 @@ const Register = () => {
   const [apiError, setApiError] = useState("");
   const [timer, setTimer] = useState(0);
   const [resendOtpDisabled, setResendOtpDisabled] = useState(false);
+  const API_URL = "https://localhost:7221/api/auth/register";
 
   const {
     control,
@@ -117,8 +119,22 @@ const Register = () => {
       // Add admin role to the data
       const registrationData = { ...data, role: "Admin" };
 
-      await registerUser(registrationData);
-      const res = await sendOtp(data.email);
+      try {
+        const res = await axios.post(API_URL, registrationData);
+        console.log(res, "resuuuuuuuuuuuuuuuuuuult");
+        if (
+          res.status === 200 ||
+          res.data === "User registered successfully."
+        ) {
+          const result = await sendOtp(data.email);
+        }
+      } catch (error) {
+        console.error(
+          "Registration failed:",
+          error.response?.data || error.message
+        );
+        alert("Registration failed");
+      }
 
       setCurrentStep(2);
       setFormSuccess(true);
