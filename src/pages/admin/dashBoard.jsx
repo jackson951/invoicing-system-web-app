@@ -40,6 +40,7 @@ import { useDarkMode } from "../../hooks/useDarkMode.";
 import { AnimatePresence, motion } from "framer-motion";
 import { registerUser } from "../../utils/api";
 import { generatePermissions } from "../../utils/permissions";
+import axios from "axios";
 
 ChartJS.register(
   CategoryScale,
@@ -232,7 +233,7 @@ const AdminDashboard = () => {
     dueDate: "",
     issuedDate: "",
   });
-
+  const BASE_URL = "https://localhost:7221/api";
   // Password change states
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -445,6 +446,28 @@ const AdminDashboard = () => {
     } catch (err) {
       console.error("Failed to register user:", err.message);
       alert("Failed to add user: " + err.message);
+    }
+  };
+
+  const addEmployee = async (employeeData) => {
+    employeeData = { ...newUserForm };
+    const userToAdd = {
+      ...employeeData,
+      lastLogin: new Date().toISOString(),
+      avatar: newUserForm.avatar || faker.image.avatar(),
+      permissions: generatePermissions(newUserForm.role),
+    };
+    try {
+      const response = await axios.post(`${BASE_URL}/Employee`, userToAdd);
+      const updatedUsers = [response.data, ...users];
+      setUsers(updatedUsers);
+      localStorage.setItem("users", JSON.stringify(updatedUsers));
+    } catch (error) {
+      console.error(
+        "Error adding employee:",
+        error.response?.data || error.message
+      );
+      throw new Error(error.response?.data || "Failed to add employee");
     }
   };
 
@@ -1919,7 +1942,7 @@ const AdminDashboard = () => {
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
               Add New User
             </h2>
-            <form onSubmit={handleAddUser} className="space-y-4">
+            <form onSubmit={addEmployee} className="space-y-4">
               <div>
                 <label
                   htmlFor="name"
