@@ -1,6 +1,6 @@
 # 📇 SaaS-Based Invoicing System
 
-A full-featured, **multi-tenant invoicing platform** that allows users to create, send, manage, and track invoices in real-time. Built with **ASP.NET Core** and **React.js**, this solution offers role-based access control, secure payments, and real-time analytics to support growing businesses.
+A robust, multi-tenant **SaaS invoicing platform** built with **ASP.NET Core** and **React.js**, designed for business scalability, real-time operations, and secure invoice management. The system supports fine-grained role-based access for employees, Stripe payments, and PDF invoice generation.
 
 ---
 
@@ -13,171 +13,133 @@ A full-featured, **multi-tenant invoicing platform** that allows users to create
 | **Auth**      | ASP.NET Identity                                         |
 | **Payments**  | Stripe API                                               |
 | **Analytics** | SignalR (Real-time), Chart.js                            |
-| **PDF**       | iTextSharp or similar                                    |
+| **PDF**       | iTextSharp                                               |
 
 ---
 
 ## 📦 Key Features
 
-✅ Create, send, and manage invoices  
-✅ Multi-tenant user system with role-based access  
-✅ Secure payment integration via Stripe (one-time + subscription)  
-✅ Real-time dashboard with analytics and invoice tracking  
-✅ Email verification and password reset support  
-✅ PDF invoice generation and download  
-✅ Admin dashboard to manage users and tenants  
+- ✅ Create, send, and manage invoices
+- ✅ Multi-tenant architecture with user-scoped data
+- ✅ Role-based access control (Admin, Editor, Subscriber)
+- ✅ Secure payments via Stripe (one-time + subscription)
+- ✅ Real-time financial dashboard (SignalR)
+- ✅ PDF invoice generation and download
+- ✅ Email verification & password reset
+- ✅ Admin panel for managing employees and permissions
 
 ---
 
-# 👥 User Roles in SaaS-Based Invoicing System
+## 👤 User Model & Access Control
 
-This system includes **role-based access control** to ensure secure and efficient collaboration across organizations. Below are the supported roles and their respective responsibilities.
+### 🧑‍💼 User (Platform Admin)
+- Creates and manages employees (with defined roles)
+- Manages clients, invoices, and Stripe settings
+- Has full access to all data within their account scope
 
----
+### 👥 Employees
+Employees are created by the User (Admin) and assigned a role:
 
-## 🔒 1. Admin (Platform Administrator)
+| Role        | Permissions                                                                 |
+|-------------|------------------------------------------------------------------------------|
+| **Admin**   | Full access to clients, invoices, payments, and settings                    |
+| **Editor**  | Can create/edit invoices, view clients, but no access to settings           |
+| **Subscriber** | Read-only access to invoices and analytics                                |
 
-### 🧩 Description:
-Responsible for the entire platform’s configuration, user management, and monitoring across tenants.
+> 🔐 Passwords are auto-generated for employees upon creation by the admin. These can be reset by the employee later.
 
-### 🛠️ Responsibilities:
-- Manage all users and assign roles
-- Create and manage tenants (business organizations)
-- View and manage all platform-wide invoices
-- Access global analytics (revenue, tenant activity)
-- Handle Stripe API configuration and platform billing
-- Enforce security features (e.g., 2FA, backup)
-
-### 🔑 Permissions:
-- Full access to **all tenants**, users, analytics, and system settings
-
----
-
-## 🏢 2. Business Owner (Tenant Owner)
-
-### 🧩 Description:
-Owner of an organization using the platform. They oversee their business’s invoicing operations.
-
-### 🛠️ Responsibilities:
-- Create and manage invoices
-- Manage clients and payment status
-- View financial dashboards
-- Customize invoice templates
-- Configure Stripe for receiving payments
-- Manage their SaaS subscription plan
-
-### 🔑 Permissions:
-- Full access to their **own tenant’s** clients, invoices, payments, and subscription
-- No access to platform-level or other tenant data
+### 🧾 Customers
+- Can be individuals or companies
+- Associated with a User and visible to authorized employees
+- Recipients of invoices
 
 ---
 
-## 💼 3. Accountant (Financial Role within Tenant)
+## 🧩 Permission Scope
 
-### 🧩 Description:
-Handles financial tasks within a tenant’s organization, including invoicing, payments, and reports.
-
-### 🛠️ Responsibilities:
-- Track paid/pending/overdue invoices
-- Generate and download invoice PDFs
-- Monitor real-time payments
-- Generate monthly/annual financial reports
-- Collaborate with the Business Owner on cash flow and collections
-
-### 🔑 Permissions:
-- Limited access to **financial modules** (invoices and analytics only)
-- Cannot access clients or subscription management
-
----
-
-## 📋 Role-Based Permission Matrix
-
-| Feature                        | Admin         | Business Owner | Accountant      |
-|-------------------------------|---------------|----------------|-----------------|
-| Manage Users                  | ✅             | ❌              | ❌               |
-| Create & Send Invoices        | ✅             | ✅              | ✅               |
-| View Financial Dashboard      | ✅             | ✅              | ✅               |
-| Manage Clients                | ✅             | ✅              | ❌               |
-| PDF Invoice Generation        | ✅             | ✅              | ✅               |
-| Subscription Management       | ✅             | ✅              | ❌               |
-| Access Other Tenants' Data    | ✅             | ❌              | ❌               |
-| Global Settings & Stripe Keys| ✅             | ❌              | ❌               |
-
----
-
-## 📊 Real-Time Dashboard
-
-The dashboard includes live financial metrics powered by **SignalR** and **Chart.js**:
-
-- 📈 Total revenue trends
-- 🧾 Paid vs. unpaid invoices
-- ⏰ Overdue invoice alerts
-- 🧠 Client activity insights
-
----
-
-## 🔐 Authentication & Security
-
-- Secure login and registration via **ASP.NET Identity**
-- Email confirmation and verification flows
-- Password reset via secure token
-- Role-based access and session protection
+| Feature                        | User (Admin) | Employee (Admin) | Employee (Editor) | Employee (Subscriber) |
+|-------------------------------|--------------|------------------|-------------------|------------------------|
+| Create & Manage Invoices      | ✅            | ✅                | ✅                 | ❌                      |
+| View Invoices & Analytics     | ✅            | ✅                | ✅                 | ✅                      |
+| Manage Clients                | ✅            | ✅                | ❌                 | ❌                      |
+| Employee Management           | ✅            | ❌                | ❌                 | ❌                      |
+| Subscription Settings         | ✅            | ❌                | ❌                 | ❌                      |
+| Stripe Configuration          | ✅            | ❌                | ❌                 | ❌                      |
 
 ---
 
 ## 💳 Stripe Integration
 
-- Accept credit card and subscription payments
-- Configure payment modes (one-time or recurring)
-- Receive webhook events from Stripe for:
-  - Invoice Paid
-  - Subscription Cancelled
-  - Failed Payment Alerts
+- Accepts credit card and subscription payments
+- One-time & recurring billing support
+- Webhooks to track:
+  - `invoice.paid`
+  - `invoice.payment_failed`
+  - `customer.subscription.deleted`
 
 ---
 
-## 🗃️ Database Design
+## 🔐 Authentication & Security
 
-Uses **Entity Framework Core** with a code-first approach.
+- Email verification & confirmation
+- Password reset via secure token
+- Session-based auth with token expiration
+- Role-based access enforced on API and UI
+- Two-Factor Authentication (optional)
 
-### Entities:
-- Users
-- Tenants (organizations)
-- Clients
-- Invoices
-- Invoice Items
-- Payments
-- Subscriptions
+---
+
+## 📊 Real-Time Dashboard
+
+Powered by **SignalR** and **Chart.js**:
+
+- 📈 Revenue trends
+- 🧾 Paid vs. unpaid invoices
+- ⏰ Overdue invoice alerts
+- 👥 Client activity
 
 ---
 
 ## 🖨️ PDF Invoice Generation
 
-- Downloadable PDF invoices generated using **iTextSharp**
-- Professional, printable layout
-- Supports logo, branding, and custom messages
+- Built using **iTextSharp**
+- Downloadable and print-ready
+- Supports logos, business branding, and custom footer messages
 
 ---
 
-## 🛠️ Future Improvements
+## 🗃️ Database Design (EF Core)
 
-- [ ] Custom invoice themes
-- [ ] Scheduled invoicing
-- [ ] Recurring billing cycles
-- [ ] Multi-currency support
-- [ ] Integration with QuickBooks / Xero
+Entities:
 
----
-
-## 📌 Project Timeline
-
-| Phase               | Date          | Status        |
-|--------------------|---------------|---------------|
-| Project Kickoff    | April 2025    | ✅ In Progress |
-| MVP Completion     | May 2025      | ⏳ Planned     |
-| Public Beta Launch | June 2025     | ⏳ Planned     |
+- `User` (admin)
+- `Employee` (with roles)
+- `Customer` (individual or company)
+- `Invoice` / `InvoiceItem`
+- `Payment`
+- `Subscription`
 
 ---
 
-## 📁 Folder Structure (Preview)
+## 📁 Folder Structure (Simplified)
 
+```bash
+SaaS-Invoicing/
+├── backend/
+│   ├── Controllers/
+│   ├── Models/
+│   ├── Services/
+│   ├── Data/
+│   └── Program.cs
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── services/
+│   │   ├── auth/
+│   │   └── App.jsx
+│   └── public/
+├── docs/
+│   └── api-spec.md
+├── README.md
+└── .env.example
