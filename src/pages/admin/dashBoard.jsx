@@ -39,6 +39,7 @@ import { faker } from "@faker-js/faker";
 import { useDarkMode } from "../../hooks/useDarkMode.";
 import { AnimatePresence, motion } from "framer-motion";
 import { registerUser } from "../../utils/api";
+import { generatePermissions } from "../../utils/permissions";
 
 ChartJS.register(
   CategoryScale,
@@ -341,51 +342,51 @@ const AdminDashboard = () => {
     password: "password123", // for demo
   });
 
-  // Generate permissions based on role
-  const generatePermissions = (role) => {
-    const basePermissions = {
-      dashboard: true,
-      profile: true,
-    };
+  // // Generate permissions based on role
+  // const generatePermissions = (role) => {
+  //   const basePermissions = {
+  //     dashboard: true,
+  //     profile: true,
+  //   };
 
-    switch (role) {
-      case "admin":
-        return {
-          ...basePermissions,
-          users: true,
-          customers: true,
-          invoices: true,
-          settings: true,
-          canEdit: true,
-          canDelete: true,
-          canCreate: true,
-        };
-      case "editor":
-        return {
-          ...basePermissions,
-          users: false,
-          customers: true,
-          invoices: true,
-          settings: false,
-          canEdit: true,
-          canDelete: false,
-          canCreate: true,
-        };
-      case "subscriber":
-        return {
-          ...basePermissions,
-          users: false,
-          customers: false,
-          invoices: true,
-          settings: false,
-          canEdit: false,
-          canDelete: false,
-          canCreate: false,
-        };
-      default:
-        return basePermissions;
-    }
-  };
+  //   switch (role) {
+  //     case "admin":
+  //       return {
+  //         ...basePermissions,
+  //         users: true,
+  //         customers: true,
+  //         invoices: true,
+  //         settings: true,
+  //         canEdit: true,
+  //         canDelete: true,
+  //         canCreate: true,
+  //       };
+  //     case "editor":
+  //       return {
+  //         ...basePermissions,
+  //         users: false,
+  //         customers: true,
+  //         invoices: true,
+  //         settings: false,
+  //         canEdit: true,
+  //         canDelete: false,
+  //         canCreate: true,
+  //       };
+  //     case "subscriber":
+  //       return {
+  //         ...basePermissions,
+  //         users: false,
+  //         customers: false,
+  //         invoices: true,
+  //         settings: false,
+  //         canEdit: false,
+  //         canDelete: false,
+  //         canCreate: false,
+  //       };
+  //     default:
+  //       return basePermissions;
+  //   }
+  // };
 
   // Generate Customer (for initial load)
   const generateCustomer = () => ({

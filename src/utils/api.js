@@ -1,5 +1,7 @@
+import { generatePermissions } from "./permissions";
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const FORMSPREE_URL = 'https://formspree.io/f/xjkbdeqp'; // Replace with your real Formspree endpoint
+
 
 
 // Load or initialize mock data from localStorage
@@ -22,6 +24,7 @@ const loadMockData = () => {
         role: "Admin",
         verified: true,
         createdAt: new Date().toISOString(),
+        
       },
       {
         id: "2",
@@ -34,7 +37,12 @@ const loadMockData = () => {
         createdAt: new Date().toISOString(),
       },
     ];
-
+    
+     // Add permissions based on role
+    users = users.map((user) => ({
+      ...user,
+      permissions: generatePermissions(user.role),
+    }));
     invoices = [
       {
         id: "INV-001",
