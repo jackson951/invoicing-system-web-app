@@ -449,17 +449,29 @@ const AdminDashboard = () => {
     }
   };
 
-  const addEmployee = async (employeeData) => {
-    employeeData = { ...newUserForm };
-    const userToAdd = {
-      ...employeeData,
-      lastLogin: new Date().toISOString(),
+  const addEmployee = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("User is not authenticated.");
+
+    const employeeData = {
+      fullName: newUserForm.fullName,
+      email: newUserForm.email,
+      password: newUserForm.password,
+      role: newUserForm.role,
       avatar: newUserForm.avatar || faker.image.avatar(),
+      lastLogin: new Date().toISOString(),
       permissions: generatePermissions(newUserForm.role),
     };
+
     try {
-      const response = await axios.post(`${BASE_URL}/Employee`, userToAdd);
-      const updatedUsers = [response.data, ...users];
+      const response = await axios.post(`${BASE_URL}/Employee`, employeeData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const newEmployee = response.data;
+      const updatedUsers = [newEmployee, ...users];
       setUsers(updatedUsers);
       localStorage.setItem("users", JSON.stringify(updatedUsers));
     } catch (error) {
@@ -467,10 +479,14 @@ const AdminDashboard = () => {
         "Error adding employee:",
         error.response?.data || error.message
       );
-      throw new Error(error.response?.data || "Failed to add employee");
+      throw new Error(error.response?.data?.error || "Failed to add employee");
     }
   };
 
+  const handleAddEmployee = (e) => {
+    e.preventDefault(); // ⛔ Prevent form from refreshing the page
+    addEmployee();
+  };
   // Add new customer from form
   const handleAddCustomer = (e) => {
     e.preventDefault();
@@ -1942,7 +1958,7 @@ const AdminDashboard = () => {
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
               Add New User
             </h2>
-            <form onSubmit={addEmployee} className="space-y-4">
+            <form onSubmit={handleAddEmployee} className="space-y-4">
               <div>
                 <label
                   htmlFor="name"

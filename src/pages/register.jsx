@@ -115,33 +115,29 @@ const Register = () => {
   const onSubmit = async (data) => {
     setLoading(true);
     setApiError("");
+
+    const registrationData = { ...data, role: "Admin" };
+
     try {
-      // Add admin role to the data
-      const registrationData = { ...data, role: "Admin" };
+      const res = await axios.post(API_URL, registrationData);
+      console.log(res, "resuuuuuuuuuuuuuuuuuuult");
 
-      try {
-        const res = await axios.post(API_URL, registrationData);
-        console.log(res, "resuuuuuuuuuuuuuuuuuuult");
-        if (
-          res.status === 200 ||
-          res.data === "User registered successfully."
-        ) {
-          const result = await sendOtp(data.email);
-        }
-      } catch (error) {
-        console.error(
-          "Registration failed:",
-          error.response?.data || error.message
-        );
-        alert("Registration failed");
+      if (res.status === 200 || res.data === "User registered successfully.") {
+        await sendOtp(data.email);
+        setShowOtpInput(true);
+        setCurrentStep(2);
+        setFormSuccess(true);
+        setTimer(60);
+        setResendOtpDisabled(true);
+      } else {
+        throw new Error("Unexpected registration response");
       }
-
-      setCurrentStep(2);
-      setFormSuccess(true);
-      setShowOtpInput(true);
-      setTimer(60);
-      setResendOtpDisabled(true);
     } catch (error) {
+      console.error(
+        "Registration failed:",
+        error.response?.data || error.message
+      );
+      alert("Registration failed");
       setApiError(error.message || "Registration failed. Please try again.");
     } finally {
       setLoading(false);

@@ -44,11 +44,26 @@ const Login = () => {
   }, [redirectMessage]);
 
   const loginUser = async (credentials) => {
-    const res = await axios.post(
-      "https://localhost:7221/api/auth/login",
-      credentials
-    );
-    return res.data;
+    try {
+      const res = await axios.post(
+        "https://localhost:7221/api/auth/login",
+        credentials
+      );
+      return res.data;
+    } catch (error) {
+      if (error.response) {
+        console.error(
+          "Server error:",
+          error.response.status,
+          error.response.data
+        );
+      } else if (error.request) {
+        console.error("No response received:", error.request);
+      } else {
+        console.error("Axios config error:", error.message);
+      }
+      throw error;
+    }
   };
 
   const onSubmit = async (data) => {
@@ -70,6 +85,7 @@ const Login = () => {
       }, 1500);
     } catch (error) {
       console.error("Login failed:", error.message);
+      console.log(error.response, "the login error");
       setApiError(
         error.message || "Login failed. Please check your credentials."
       );
