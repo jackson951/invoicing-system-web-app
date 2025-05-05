@@ -8,7 +8,6 @@ import { motion, AnimatePresence } from "framer-motion";
 // Components
 import OtpInput from "../components/OtpInput";
 import PasswordStrengthMeter from "../components/PasswordStrengthMeter";
-import RoleInfoCard from "../components/RoleInfoCard";
 
 // Icons
 import { FiEye, FiEyeOff, FiCheck, FiX, FiInfo } from "react-icons/fi";
@@ -20,21 +19,6 @@ import {
   verifyOtp,
   sendVerificationEmail,
 } from "../utils/api";
-
-// Constants
-const ROLE_TYPES = {
-  ADMIN: "Admin",
-  BUSINESS_OWNER: "Business Owner",
-  ACCOUNTANT: "Accountant",
-};
-
-const ROLE_DESCRIPTIONS = {
-  [ROLE_TYPES.ADMIN]:
-    "Full platform access, user management, and system configuration.",
-  [ROLE_TYPES.BUSINESS_OWNER]:
-    "Manage your business, invoices, and team members.",
-  [ROLE_TYPES.ACCOUNTANT]: "Financial access to view and manage invoices.",
-};
 
 // Zod Validation Schema
 const registerSchema = z
@@ -61,12 +45,6 @@ const registerSchema = z
         message: "Please enter a valid phone number.",
       })
       .optional(),
-    role: z.enum(
-      [ROLE_TYPES.ADMIN, ROLE_TYPES.BUSINESS_OWNER, ROLE_TYPES.ACCOUNTANT],
-      {
-        errorMap: () => ({ message: "Please select a valid role." }),
-      }
-    ),
     password: z
       .string()
       .min(8, { message: "Password must be at least 8 characters long." })
@@ -96,7 +74,6 @@ const Register = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [selectedRole, setSelectedRole] = useState(null);
   const [formSuccess, setFormSuccess] = useState(false);
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [otpSuccess, setOtpSuccess] = useState(false);
@@ -137,11 +114,13 @@ const Register = () => {
     setLoading(true);
     setApiError("");
     try {
-      await registerUser(data);
+      // Add admin role to the data
+      const registrationData = { ...data, role: "Admin" };
+
+      await registerUser(registrationData);
       const res = await sendOtp(data.email);
 
       setCurrentStep(2);
-
       setFormSuccess(true);
       setShowOtpInput(true);
       setTimer(60);
@@ -188,13 +167,6 @@ const Register = () => {
     } catch (error) {
       setApiError(error.message || "Failed to resend OTP. Please try again.");
     }
-  };
-
-  // Role Selection
-  const handleRoleSelect = (role) => {
-    setSelectedRole(role);
-    setValue("role", role);
-    trigger("role");
   };
 
   return (
@@ -246,7 +218,7 @@ const Register = () => {
           {/* Left Column - Form */}
           <div>
             <h2 className="text-3xl font-bold mb-6 text-gray-800">
-              {showOtpInput ? "Verify Your Email" : "Create Your Account"}
+              {showOtpInput ? "Verify Your Email" : "Create Owner Account"}
             </h2>
 
             {/* Error Toast */}
@@ -464,35 +436,6 @@ const Register = () => {
                   )}
                 </div>
 
-                {/* Role Selection */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Select Your Role
-                  </label>
-                  <div className="grid grid-cols-3 gap-3">
-                    {Object.values(ROLE_TYPES).map((role) => (
-                      <button
-                        key={role}
-                        type="button"
-                        onClick={() => handleRoleSelect(role)}
-                        className={`p-3 border rounded-lg text-center transition-all ${
-                          selectedRole === role
-                            ? "border-indigo-500 bg-indigo-100"
-                            : "border-gray-300 hover:border-indigo-300"
-                        }`}
-                      >
-                        {role}
-                      </button>
-                    ))}
-                  </div>
-                  <input type="hidden" {...control.register("role")} />
-                  {errors.role && (
-                    <p className="text-red-500 text-sm mt-1 flex items-center">
-                      <FiInfo className="mr-1" /> {errors.role.message}
-                    </p>
-                  )}
-                </div>
-
                 {/* Terms Checkbox */}
                 <div className="flex items-start">
                   <div className="flex items-center h-5">
@@ -571,7 +514,7 @@ const Register = () => {
                       Creating Account...
                     </>
                   ) : (
-                    "Register"
+                    "Register as Owner"
                   )}
                 </button>
               </form>
@@ -622,51 +565,35 @@ const Register = () => {
 
           {/* Right Column - Info/Illustration */}
           <div className="hidden md:block">
-            {selectedRole ? (
-              <RoleInfoCard
-                role={selectedRole}
-                description={ROLE_DESCRIPTIONS[selectedRole]}
-                permissions={
-                  selectedRole === ROLE_TYPES.ADMIN
-                    ? [
-                        "Full platform access",
-                        "User management",
-                        "System configuration",
-                      ]
-                    : selectedRole === ROLE_TYPES.BUSINESS_OWNER
-                    ? ["Manage business", "Create invoices", "Team management"]
-                    : [
-                        "View financial data",
-                        "Manage invoices",
-                        "Generate reports",
-                      ]
-                }
-              />
-            ) : (
-              <div className="h-full flex flex-col justify-center items-center bg-indigo-50 rounded-lg p-6">
-                <div className="text-center">
-                  <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                    Select Your Role
-                  </h3>
-                  <p className="text-gray-600 mb-6">
-                    Choose the role that best describes your responsibilities to
-                    get started.
-                  </p>
-                  <div className="space-y-4">
-                    {Object.values(ROLE_TYPES).map((role) => (
-                      <button
-                        key={role}
-                        type="button"
-                        onClick={() => handleRoleSelect(role)}
-                        className="w-full p-3 bg-white border border-gray-200 rounded-lg text-center hover:border-indigo-300 transition-all"
-                      >
-                        {role}
-                      </button>
-                    ))}
+            <div className="h-full flex flex-col justify-center items-center bg-indigo-50 rounded-lg p-6">
+              <div className="text-center">
+                <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                  Owner Account
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  As the owner, you'll have full access to manage users,
+                  settings, and all aspects of the application.
+                </p>
+                <div className="space-y-3 text-left">
+                  <div className="flex items-start">
+                    <FiCheck className="text-green-500 mt-1 mr-2" />
+                    <span>Full administrative privileges</span>
+                  </div>
+                  <div className="flex items-start">
+                    <FiCheck className="text-green-500 mt-1 mr-2" />
+                    <span>Add and manage other users</span>
+                  </div>
+                  <div className="flex items-start">
+                    <FiCheck className="text-green-500 mt-1 mr-2" />
+                    <span>Configure system settings</span>
+                  </div>
+                  <div className="flex items-start">
+                    <FiCheck className="text-green-500 mt-1 mr-2" />
+                    <span>Access all features and data</span>
                   </div>
                 </div>
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>

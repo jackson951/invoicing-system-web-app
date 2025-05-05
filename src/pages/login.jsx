@@ -50,37 +50,23 @@ const Login = () => {
     setLoading(true);
     setApiError("");
     try {
-      // Call the dummy API's loginUser function
       const response = await loginUser(data);
-
       console.log("Login successful:", response);
 
-      // Save token to localStorage
       localStorage.setItem("token", response.token);
       localStorage.setItem("user", JSON.stringify(response.user));
 
-      // Set success state
       setLoginSuccess(true);
 
-      // Small delay before redirect
       setTimeout(() => {
-        // Role-based redirect
-        if (response.user.role === "Admin") {
-          navigate("/admin", { replace: true });
-        } else if (response.user.role === "Business Owner") {
-          navigate("/business", { replace: true });
-        } else if (response.user.role === "Accountant") {
-          navigate("/accountant", { replace: true });
-        } else {
-          navigate(redirectedFrom, { replace: true });
-        }
+        // Always redirect to admin
+        navigate("/admin", { replace: true });
       }, 1500);
     } catch (error) {
       console.error("Login failed:", error.message);
       setApiError(
         error.message || "Login failed. Please check your credentials."
       );
-      // Reset form on error
       reset({
         email: control._formValues.email,
         password: "",

@@ -21,9 +21,12 @@ import CreateUser from "./pages/admin/CreateUser";
 // Protected Route Component for Admin pages
 const ProtectedAdminRoute = ({ children }) => {
   const user = JSON.parse(localStorage.getItem("user"));
-  if (!user || user.role !== "Admin") {
+  const allowedRoles = ["Admin", "editor", "subscriber"]; // extend roles here
+
+  if (!user || !allowedRoles.includes(user.role)) {
     return <Navigate to="/login" replace />;
   }
+
   return children;
 };
 

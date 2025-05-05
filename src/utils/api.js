@@ -115,7 +115,7 @@ export const sendVerificationEmail = async (email) => {
 };
 
 // Save mock data to localStorage
-const saveMockData = (users, invoices) => {
+export const saveMockData = (users, invoices) => {
   localStorage.setItem("mockUsers", JSON.stringify(users));
   localStorage.setItem("mockInvoices", JSON.stringify(invoices));
 };
@@ -143,11 +143,12 @@ export const registerUser = async (userData) => {
   const newUser = {
     id: (mockUsers.length + 1).toString(),
     ...userData,
-    verified: false,
+    verified: true,
     createdAt: new Date().toISOString(),
   };
 
   mockUsers.push(newUser);
+  console.log(mockUsers,"userrrrrrrrrrrrr")
   saveMockData(mockUsers, mockInvoices);
 
   const token = Math.random().toString(36).substring(2, 10);
@@ -274,6 +275,7 @@ export const loginUser = async ({ email, password }) => {
       email: user.email,
       companyName: user.companyName,
       role: user.role,
+      password:user.password
     },
   };
 };

@@ -16,6 +16,10 @@ import {
   PlusIcon,
   XMarkIcon,
   Bars3Icon,
+  UserIcon,
+  BuildingOfficeIcon,
+  EnvelopeIcon,
+  PhoneIcon,
 } from "@heroicons/react/24/outline";
 import {
   Chart as ChartJS,
@@ -34,6 +38,7 @@ import { Line, Bar, Pie } from "react-chartjs-2";
 import { faker } from "@faker-js/faker";
 import { useDarkMode } from "../../hooks/useDarkMode.";
 import { AnimatePresence, motion } from "framer-motion";
+import { registerUser } from "../../utils/api";
 
 ChartJS.register(
   CategoryScale,
@@ -178,6 +183,7 @@ const AdminDashboard = () => {
   const [revenueData, setRevenueData] = useState([]);
   const [userGrowthData, setUserGrowthData] = useState([]);
   const [users, setUsers] = useState([]);
+  const [customers, setCustomers] = useState([]);
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -188,16 +194,20 @@ const AdminDashboard = () => {
 
   // Modal states
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
+  const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false);
   const [isAddInvoiceModalOpen, setIsAddInvoiceModalOpen] = useState(false);
   const [isViewUserModalOpen, setIsViewUserModalOpen] = useState(false);
+  const [isViewCustomerModalOpen, setIsViewCustomerModalOpen] = useState(false);
   const [isViewInvoiceModalOpen, setIsViewInvoiceModalOpen] = useState(false);
   const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false);
+  const [isEditCustomerModalOpen, setIsEditCustomerModalOpen] = useState(false);
   const [isEditInvoiceModalOpen, setIsEditInvoiceModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [currentCustomer, setCurrentCustomer] = useState(null);
   const [currentInvoice, setCurrentInvoice] = useState(null);
 
   const [newUserForm, setNewUserForm] = useState({
-    name: "",
+    fullName: "",
     email: "",
     password: "",
     role: "subscriber",
@@ -205,8 +215,17 @@ const AdminDashboard = () => {
     avatar: "",
   });
 
+  const [newCustomerForm, setNewCustomerForm] = useState({
+    name: "",
+    company: "",
+    email: "",
+    phone: "",
+    address: "",
+  });
+
   const [newInvoiceForm, setNewInvoiceForm] = useState({
     client: "",
+    customerId: "",
     amount: "",
     status: "pending",
     dueDate: "",
@@ -218,14 +237,26 @@ const AdminDashboard = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  // Filter users and invoices
+  // Filter users, customers and invoices
   const filteredUsers = useMemo(() => {
-    return users.filter(
-      (user) =>
-        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    return users?.filter((user) => {
+      const name = user?.name || "";
+      const email = user?.email || "";
+      return (
+        name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        email.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    });
   }, [users, searchQuery]);
+
+  const filteredCustomers = useMemo(() => {
+    return customers.filter(
+      (customer) =>
+        customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        customer.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        customer.email.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [customers, searchQuery]);
 
   const filteredInvoices = useMemo(() => {
     return invoices.filter(
@@ -236,25 +267,30 @@ const AdminDashboard = () => {
   }, [invoices, searchQuery]);
 
   // Load data from localStorage
+  const [storedUser, setStoredUser] = useState({});
   useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem("user")) || {
+    const user = JSON.parse(localStorage.getItem("user")) || {
       fullName: "Alex Johnson",
       email: "admin@example.com",
       password: "password123",
       avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     };
-    setUserFullName(storedUser.fullName);
-
-    console.log(storedUser, "yeeeeeeeeeeeeeepy");
+    setStoredUser(user);
+    setUserFullName(user.fullName); // now uses the correct updated value
 
     const storedUsers =
       JSON.parse(localStorage.getItem("users")) ||
-      Array.from({ length: 12 }, () => generateUser());
+      Array.from({ length: 5 }, () => generateUser());
     setUsers(storedUsers);
+
+    const storedCustomers =
+      JSON.parse(localStorage.getItem("customers")) ||
+      Array.from({ length: 8 }, () => generateCustomer());
+    setCustomers(storedCustomers);
 
     const storedInvoices =
       JSON.parse(localStorage.getItem("invoices")) ||
-      Array.from({ length: 8 }, () => generateInvoice());
+      Array.from({ length: 8 }, () => generateInvoice(storedCustomers));
     setInvoices(storedInvoices);
 
     // Generate some random data for charts
@@ -268,66 +304,188 @@ const AdminDashboard = () => {
     );
     setMonthlyRevenue(faker.number.float({ min: 5000, max: 20000 }));
 
+    // Generate some recent activity
+    setRecentActivity(
+      Array.from({ length: 5 }, () => ({
+        id: faker.string.uuid(),
+        title: faker.helpers.arrayElement([
+          "New user registered",
+          "Invoice paid",
+          "New customer added",
+          "System updated",
+          "Password changed",
+        ]),
+        description: faker.lorem.sentence(),
+        date: faker.date.recent({ days: 1 }).toISOString(),
+        icon: (
+          <div className="p-2 rounded-full bg-indigo-100 text-indigo-600 dark:bg-gray-700 dark:text-indigo-400">
+            <BellIcon className="h-4 w-4" />
+          </div>
+        ),
+      }))
+    );
+
     setLoading(false);
   }, []);
 
   // Generate User (for initial load)
   const generateUser = () => ({
     id: faker.string.uuid(),
-    name: faker.person.fullName(),
+    fullName: faker.person.fullName(),
     email: faker.internet.email(),
     avatar: faker.image.avatar(),
     status: faker.helpers.arrayElement(["active", "inactive", "pending"]),
     lastLogin: faker.date.recent({ days: 30 }).toISOString(),
     role: faker.helpers.arrayElement(["admin", "editor", "subscriber"]),
+    permissions: generatePermissions(),
     password: "password123", // for demo
   });
 
-  // Generate Invoice (for initial load)
-  const generateInvoice = () => ({
-    id: `INV-${faker.string.alphanumeric(8).toUpperCase()}`,
-    client: faker.company.name(),
-    amount: faker.number.float({ min: 50, max: 5000, precision: 0.01 }),
-    status: faker.helpers.arrayElement(["paid", "pending", "overdue"]),
-    dueDate: faker.date.future({ days: 30 }).toISOString().split("T")[0],
-    issuedDate: faker.date.past({ days: 30 }).toISOString().split("T")[0],
+  // Generate permissions based on role
+  const generatePermissions = (role) => {
+    const basePermissions = {
+      dashboard: true,
+      profile: true,
+    };
+
+    switch (role) {
+      case "admin":
+        return {
+          ...basePermissions,
+          users: true,
+          customers: true,
+          invoices: true,
+          settings: true,
+          canEdit: true,
+          canDelete: true,
+          canCreate: true,
+        };
+      case "editor":
+        return {
+          ...basePermissions,
+          users: false,
+          customers: true,
+          invoices: true,
+          settings: false,
+          canEdit: true,
+          canDelete: false,
+          canCreate: true,
+        };
+      case "subscriber":
+        return {
+          ...basePermissions,
+          users: false,
+          customers: false,
+          invoices: true,
+          settings: false,
+          canEdit: false,
+          canDelete: false,
+          canCreate: false,
+        };
+      default:
+        return basePermissions;
+    }
+  };
+
+  // Generate Customer (for initial load)
+  const generateCustomer = () => ({
+    id: faker.string.uuid(),
+    name: faker.person.fullName(),
+    company: faker.company.name(),
+    email: faker.internet.email(),
+    phone: faker.phone.number(),
+    address: `${faker.location.streetAddress()}, ${faker.location.city()}`,
+    createdAt: faker.date.past({ years: 1 }).toISOString(),
   });
 
-  // Add new user from form
-  const handleAddUser = (e) => {
+  // Generate Invoice (for initial load)
+  const generateInvoice = (customerList) => {
+    const customer = faker.helpers.arrayElement(customerList);
+    return {
+      id: `INV-${faker.string.alphanumeric(8).toUpperCase()}`,
+      client: customer.name,
+      customerId: customer.id,
+      company: customer.company,
+      amount: faker.number.float({ min: 50, max: 5000, precision: 0.01 }),
+      status: faker.helpers.arrayElement(["paid", "pending", "overdue"]),
+      dueDate: faker.date.future({ days: 30 }).toISOString().split("T")[0],
+      issuedDate: faker.date.past({ days: 30 }).toISOString().split("T")[0],
+    };
+  };
+
+  const handleAddUser = async (e) => {
     e.preventDefault();
+
     const userToAdd = {
       ...newUserForm,
-      id: faker.string.uuid(),
       lastLogin: new Date().toISOString(),
       avatar: newUserForm.avatar || faker.image.avatar(),
+      permissions: generatePermissions(newUserForm.role),
     };
-    const updatedUsers = [userToAdd, ...users];
-    setUsers(updatedUsers);
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
-    setNewUserForm({
+
+    console.log(userToAdd, "userTo add");
+
+    try {
+      const { user } = await registerUser(userToAdd); // ID is set inside here
+      console.log(user, "random user");
+      const updatedUsers = [user, ...users];
+
+      setUsers(updatedUsers);
+      localStorage.setItem("users", JSON.stringify(updatedUsers));
+      setNewUserForm({
+        name: "",
+        email: "",
+        password: "",
+        role: "subscriber",
+        status: "active",
+        avatar: "",
+      });
+      setIsAddUserModalOpen(false);
+    } catch (err) {
+      console.error("Failed to register user:", err.message);
+      alert("Failed to add user: " + err.message);
+    }
+  };
+
+  // Add new customer from form
+  const handleAddCustomer = (e) => {
+    e.preventDefault();
+    const customerToAdd = {
+      ...newCustomerForm,
+      id: faker.string.uuid(),
+      createdAt: new Date().toISOString(),
+    };
+    const updatedCustomers = [customerToAdd, ...customers];
+    setCustomers(updatedCustomers);
+    localStorage.setItem("customers", JSON.stringify(updatedCustomers));
+    setNewCustomerForm({
       name: "",
+      company: "",
       email: "",
-      password: "",
-      role: "subscriber",
-      status: "active",
-      avatar: "",
+      phone: "",
+      address: "",
     });
-    setIsAddUserModalOpen(false);
+    setIsAddCustomerModalOpen(false);
   };
 
   // Add new invoice from form
   const handleAddInvoice = (e) => {
     e.preventDefault();
+    const selectedCustomer = customers.find(
+      (c) => c.id === newInvoiceForm.customerId
+    );
     const invoiceToAdd = {
       ...newInvoiceForm,
       id: `INV-${faker.string.alphanumeric(8).toUpperCase()}`,
+      client: selectedCustomer?.name || newInvoiceForm.client,
+      company: selectedCustomer?.company || "",
     };
     const updatedInvoices = [invoiceToAdd, ...invoices];
     setInvoices(updatedInvoices);
     localStorage.setItem("invoices", JSON.stringify(updatedInvoices));
     setNewInvoiceForm({
       client: "",
+      customerId: "",
       amount: "",
       status: "pending",
       dueDate: "",
@@ -342,6 +500,12 @@ const AdminDashboard = () => {
     setIsViewUserModalOpen(true);
   };
 
+  // View customer details
+  const handleViewCustomer = (customer) => {
+    setCurrentCustomer(customer);
+    setIsViewCustomerModalOpen(true);
+  };
+
   // View invoice details
   const handleViewInvoice = (invoice) => {
     setCurrentInvoice(invoice);
@@ -354,11 +518,21 @@ const AdminDashboard = () => {
     setIsEditUserModalOpen(true);
   };
 
+  // Edit customer
+  const handleEditCustomer = (customer) => {
+    setCurrentCustomer(customer);
+    setIsEditCustomerModalOpen(true);
+  };
+
   // Save edited user
   const handleSaveEditedUser = (e) => {
     e.preventDefault();
+    const updatedUser = {
+      ...currentUser,
+      permissions: generatePermissions(currentUser.role),
+    };
     const updatedUsers = users.map((u) =>
-      u.id === currentUser.id ? currentUser : u
+      u.id === updatedUser.id ? updatedUser : u
     );
     setUsers(updatedUsers);
     localStorage.setItem("users", JSON.stringify(updatedUsers));
@@ -371,11 +545,30 @@ const AdminDashboard = () => {
     setIsEditInvoiceModalOpen(true);
   };
 
+  // Save edited customer
+  const handleSaveEditedCustomer = (e) => {
+    e.preventDefault();
+    const updatedCustomers = customers.map((c) =>
+      c.id === currentCustomer.id ? currentCustomer : c
+    );
+    setCustomers(updatedCustomers);
+    localStorage.setItem("customers", JSON.stringify(updatedCustomers));
+    setIsEditCustomerModalOpen(false);
+  };
+
   // Save edited invoice
   const handleSaveEditedInvoice = (e) => {
     e.preventDefault();
+    const selectedCustomer = customers.find(
+      (c) => c.id === currentInvoice.customerId
+    );
+    const updatedInvoice = {
+      ...currentInvoice,
+      client: selectedCustomer?.name || currentInvoice.client,
+      company: selectedCustomer?.company || currentInvoice.company,
+    };
     const updatedInvoices = invoices.map((i) =>
-      i.id === currentInvoice.id ? currentInvoice : i
+      i.id === updatedInvoice.id ? updatedInvoice : i
     );
     setInvoices(updatedInvoices);
     localStorage.setItem("invoices", JSON.stringify(updatedInvoices));
@@ -388,6 +581,19 @@ const AdminDashboard = () => {
       const updatedUsers = users.filter((u) => u.id !== userId);
       setUsers(updatedUsers);
       localStorage.setItem("users", JSON.stringify(updatedUsers));
+    }
+  };
+
+  // Delete customer
+  const handleDeleteCustomer = (customerId) => {
+    if (
+      window.confirm(
+        "Are you sure you want to delete this customer? Any associated invoices will be kept but unlinked."
+      )
+    ) {
+      const updatedCustomers = customers.filter((c) => c.id !== customerId);
+      setCustomers(updatedCustomers);
+      localStorage.setItem("customers", JSON.stringify(updatedCustomers));
     }
   };
 
@@ -417,6 +623,7 @@ const AdminDashboard = () => {
   const handleChangePassword = (e) => {
     e.preventDefault();
     const storedUser = JSON.parse(localStorage.getItem("user")) || {};
+    console.log(storedUser, "userrrr");
     if (currentPassword !== storedUser.password) {
       alert("Current password is incorrect.");
       return;
@@ -483,9 +690,9 @@ const AdminDashboard = () => {
     datasets: [
       {
         data: [
-          users.filter((u) => u.role === "admin").length,
-          users.filter((u) => u.role === "editor").length,
-          users.filter((u) => u.role === "subscriber").length,
+          users.filter((u) => u?.role === "admin").length,
+          users.filter((u) => u?.role === "editor").length,
+          users.filter((u) => u?.role === "subscriber").length,
         ],
         backgroundColor: [
           "rgba(99, 102, 241, 0.7)",
@@ -590,11 +797,24 @@ const AdminDashboard = () => {
                 }}
                 className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg w-full transition-colors ${
                   activeTab === "users"
-                    ? "bg-indigo-100 text-indigo-800 dark:bg-gray-700 dark:text-white"
+                    ? "bg-indigo-100 text-indigo-800 dark:bg-gray-7 00 dark:text-white"
                     : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
                 }`}
               >
                 <UserGroupIcon className="h-5 w-5 mr-3" /> Users
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab("customers");
+                  setSidebarOpen(false);
+                }}
+                className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg w-full transition-colors ${
+                  activeTab === "customers"
+                    ? "bg-indigo-100 text-indigo-800 dark:bg-gray-700 dark:text-white"
+                    : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                }`}
+              >
+                <BuildingOfficeIcon className="h-5 w-5 mr-3" /> Customers
               </button>
               <button
                 onClick={() => {
@@ -658,6 +878,16 @@ const AdminDashboard = () => {
                 <UserGroupIcon className="h-5 w-5 mr-3" /> Users
               </button>
               <button
+                onClick={() => setActiveTab("customers")}
+                className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg w-full transition-colors ${
+                  activeTab === "customers"
+                    ? "bg-indigo-100 text-indigo-800 dark:bg-gray-700 dark:text-white"
+                    : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                }`}
+              >
+                <BuildingOfficeIcon className="h-5 w-5 mr-3" /> Customers
+              </button>
+              <button
                 onClick={() => setActiveTab("invoices")}
                 className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg w-full transition-colors ${
                   activeTab === "invoices"
@@ -687,11 +917,11 @@ const AdminDashboard = () => {
                 size="sm"
               />
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                <p className="text-sm font-medium text-gray-90 0 dark:text-white">
                   {userFullName}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Admin
+                  {storedUser?.role}
                 </p>
               </div>
             </div>
@@ -714,13 +944,17 @@ const AdminDashboard = () => {
               <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
                 {activeTab === "dashboard" && "Dashboard"}
                 {activeTab === "users" && "User Management"}
+                {activeTab === "customers" && "Customer Management"}
                 {activeTab === "invoices" && "Invoice Management"}
                 {activeTab === "settings" && "Settings"}
               </h1>
             </div>
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => alert("Data refreshed!")}
+                onClick={() => {
+                  setIsRefreshing(true);
+                  setTimeout(() => setIsRefreshing(false), 1000);
+                }}
                 className={`p-2 rounded-full text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 ${
                   isRefreshing ? "animate-spin" : ""
                 }`}
@@ -819,6 +1053,13 @@ const AdminDashboard = () => {
                   color="indigo"
                 />
                 <DataCard
+                  title="Total Customers"
+                  value={customers.length}
+                  change={25}
+                  icon={<BuildingOfficeIcon />}
+                  color="blue"
+                />
+                <DataCard
                   title="Active Invoices"
                   value={invoices.filter((i) => i.status !== "paid").length}
                   change={20}
@@ -831,15 +1072,6 @@ const AdminDashboard = () => {
                   change={10}
                   icon={<CurrencyDollarIcon />}
                   color="yellow"
-                />
-                <DataCard
-                  title="Avg. Invoice Value"
-                  value={`$${(monthlyRevenue / invoices.length || 0).toFixed(
-                    2
-                  )}`}
-                  change={5}
-                  icon={<ChartBarIcon />}
-                  color="purple"
                 />
               </section>
 
@@ -902,7 +1134,7 @@ const AdminDashboard = () => {
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                       User Growth (Last 7 Days)
                     </h3>
-                    <select className="border border-gray-300 dark:border-gray-600 rounded-lg px 3 py-1 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    <select className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
                       <option>Last 7 Days</option>
                       <option>Last 30 Days</option>
                       <option>Last Quarter</option>
@@ -1092,12 +1324,12 @@ const AdminDashboard = () => {
                             <div className="flex items-center">
                               <Avatar
                                 src={user.avatar}
-                                name={user.name}
+                                name={user.name || user?.fullName}
                                 size="sm"
                               />
                               <div className="ml-4">
                                 <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                  {user.name}
+                                  {user.name || user?.fullName}
                                 </div>
                                 <div className="text-sm text-gray-500 dark:text-gray-400">
                                   {user.email}
@@ -1129,6 +1361,123 @@ const AdminDashboard = () => {
                             </button>
                             <button
                               onClick={() => handleDeleteUser(user.id)}
+                              className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
+                            >
+                              Delete
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Customers Tab */}
+          {activeTab === "customers" && (
+            <div className="px-6 py-6">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
+                    Customer Management
+                  </h1>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    Manage all your customers and their information.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setIsAddCustomerModalOpen(true)}
+                  className="mt-4 md:mt-0 px-4 py-2 bg-indigo-600 rounded-lg text-sm font-medium text-white hover:bg-indigo-700 transition-colors flex items-center"
+                >
+                  <PlusIcon className="h-4 w-4 mr-2" /> Add New Customer
+                </button>
+              </div>
+
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead className="bg-gray-50 dark:bg-gray-700">
+                      <tr>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                        >
+                          Customer
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                        >
+                          Company
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                        >
+                          Email
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                        >
+                          Phone
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                        >
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                      {filteredCustomers.map((customer) => (
+                        <tr
+                          key={customer.id}
+                          className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                        >
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <Avatar name={customer.name} size="sm" />
+                              <div className="ml-4">
+                                <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                  {customer.name}
+                                </div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                  Added{" "}
+                                  {new Date(
+                                    customer.createdAt
+                                  ).toLocaleDateString()}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                            {customer.company}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                            {customer.email}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                            {customer.phone}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button
+                              onClick={() => handleViewCustomer(customer)}
+                              className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 mr-3"
+                            >
+                              View
+                            </button>
+                            <button
+                              onClick={() => handleEditCustomer(customer)}
+                              className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 mr-3"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteCustomer(customer.id)}
                               className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
                             >
                               Delete
@@ -1217,6 +1566,11 @@ const AdminDashboard = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                             {invoice.client}
+                            {invoice.company && (
+                              <div className="text-xs text-gray-400 dark:text-gray-500">
+                                {invoice.company}
+                              </div>
+                            )}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                             ${Number(invoice?.amount)?.toFixed(2)}
@@ -1265,7 +1619,7 @@ const AdminDashboard = () => {
           {activeTab === "settings" && (
             <div className="px-6 py-6">
               <div className="mb-6">
-                <h1 className="text-2xl font-bold text-gray-90 0 dark:text-white mb-1">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
                   Settings
                 </h1>
                 <p className="text-gray-600 dark:text-gray-400">
@@ -1321,7 +1675,7 @@ const AdminDashboard = () => {
                       <div>
                         <label
                           htmlFor="email"
-                          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                          className="block text-sm font-medium text-gray-7 00 dark:text-gray-300 mb-1"
                         >
                           Email Address
                         </label>
@@ -1399,7 +1753,7 @@ const AdminDashboard = () => {
                 </div>
 
                 <div className="space-y-6">
-                  <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                  <div className="bg-white dark:bg-gray-8 00 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
                     <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                       Change Password
                     </h2>
@@ -1526,7 +1880,7 @@ const AdminDashboard = () => {
                         <div>
                           <label
                             htmlFor="smsNotifications"
-                            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                            className="block text-sm font-medium text-gray-7 00 dark:text-gray-300"
                           >
                             SMS Notifications
                           </label>
@@ -1575,9 +1929,9 @@ const AdminDashboard = () => {
                 <input
                   type="text"
                   id="name"
-                  value={newUserForm.name}
+                  value={newUserForm.fullName}
                   onChange={(e) =>
-                    setNewUserForm({ ...newUserForm, name: e.target.value })
+                    setNewUserForm({ ...newUserForm, fullName: e.target.value })
                   }
                   className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
                   required
@@ -1586,7 +1940,7 @@ const AdminDashboard = () => {
               <div>
                 <label
                   htmlFor="email"
-                  className="block text-sm font-medium text-gray-7 00 dark:text-gray-300 mb-1"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                 >
                   Email
                 </label>
@@ -1615,14 +1969,14 @@ const AdminDashboard = () => {
                   onChange={(e) =>
                     setNewUserForm({ ...newUserForm, password: e.target.value })
                   }
-                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring indigo-500 sm:text-sm"
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
                   required
                 />
               </div>
               <div>
                 <label
                   htmlFor="role"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-3 00 mb-1"
                 >
                   Role
                 </label>
@@ -1648,11 +2002,11 @@ const AdminDashboard = () => {
                 </label>
                 <select
                   id="status"
-                  value={newUserForm.status}
+                  value="active"
                   onChange={(e) =>
                     setNewUserForm({ ...newUserForm, status: e.target.value })
                   }
-                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-7 00 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
                 >
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
@@ -1669,9 +2023,139 @@ const AdminDashboard = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-indigo-600 rounded-md text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
+                  className="px-4 py-2 bg-indigo-600 rounded-md text-sm font-medium text-white hover:bg-indigo-7 00 transition-colors"
                 >
                   Add User
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Customer Modal */}
+      {isAddCustomerModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+              Add New Customer
+            </h2>
+            <form onSubmit={handleAddCustomer} className="space-y-4">
+              <div>
+                <label
+                  htmlFor="customerName"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Name
+                </label>
+                <input
+                  type="text"
+                  id="customerName"
+                  value={newCustomerForm.name}
+                  onChange={(e) =>
+                    setNewCustomerForm({
+                      ...newCustomerForm,
+                      name: e.target.value,
+                    })
+                  }
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  required
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="company"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Company
+                </label>
+                <input
+                  type="text"
+                  id="company"
+                  value={newCustomerForm.company}
+                  onChange={(e) =>
+                    setNewCustomerForm({
+                      ...newCustomerForm,
+                      company: e.target.value,
+                    })
+                  }
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="customerEmail"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Email
+                </label>
+                <input
+                  type="email"
+                  id="customerEmail"
+                  value={newCustomerForm.email}
+                  onChange={(e) =>
+                    setNewCustomerForm({
+                      ...newCustomerForm,
+                      email: e.target.value,
+                    })
+                  }
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  required
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="phone"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Phone
+                </label>
+                <input
+                  type="tel"
+                  id="phone"
+                  value={newCustomerForm.phone}
+                  onChange={(e) =>
+                    setNewCustomerForm({
+                      ...newCustomerForm,
+                      phone: e.target.value,
+                    })
+                  }
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="address"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Address
+                </label>
+                <textarea
+                  id="address"
+                  value={newCustomerForm.address}
+                  onChange={(e) =>
+                    setNewCustomerForm({
+                      ...newCustomerForm,
+                      address: e.target.value,
+                    })
+                  }
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  rows={3}
+                />
+              </div>
+              <div className="flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setIsAddCustomerModalOpen(false)}
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-indigo-600 rounded-md text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
+                >
+                  Add Customer
                 </button>
               </div>
             </form>
@@ -1682,32 +2166,59 @@ const AdminDashboard = () => {
       {/* Add Invoice Modal */}
       {isAddInvoiceModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-          <div className="bg-white dark:bg-gray-8 00 p-6 rounded-lg shadow-lg w-full max-w-md">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
               Create New Invoice
             </h2>
             <form onSubmit={handleAddInvoice} className="space-y-4">
               <div>
                 <label
-                  htmlFor="client"
+                  htmlFor="invoiceCustomer"
                   className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                 >
-                  Client
+                  Customer
                 </label>
-                <input
-                  type="text"
-                  id="client"
-                  value={newInvoiceForm.client}
+                <select
+                  id="invoiceCustomer"
+                  value={newInvoiceForm.customerId}
                   onChange={(e) =>
                     setNewInvoiceForm({
                       ...newInvoiceForm,
-                      client: e.target.value,
+                      customerId: e.target.value,
                     })
                   }
                   className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                  required
-                />
+                >
+                  <option value="">Select a customer</option>
+                  {customers.map((customer) => (
+                    <option key={customer.id} value={customer.id}>
+                      {customer.name} ({customer.company})
+                    </option>
+                  ))}
+                </select>
               </div>
+              {!newInvoiceForm.customerId && (
+                <div>
+                  <label
+                    htmlFor="client"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  >
+                    Or enter client name manually
+                  </label>
+                  <input
+                    type="text"
+                    id="client"
+                    value={newInvoiceForm.client}
+                    onChange={(e) =>
+                      setNewInvoiceForm({
+                        ...newInvoiceForm,
+                        client: e.target.value,
+                      })
+                    }
+                    className="block w-full rounded-md border border-gray-300 dark:border-gray-6 00 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  />
+                </div>
+              )}
               <div>
                 <label
                   htmlFor="amount"
@@ -1732,7 +2243,7 @@ const AdminDashboard = () => {
               <div>
                 <label
                   htmlFor="status"
-                  className="block text-sm font medium text-gray-700 dark:text-gray-300 mb-1"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                 >
                   Status
                 </label>
@@ -1866,11 +2377,20 @@ const AdminDashboard = () => {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">
-                  Account Created:
+                  Permissions:
                 </span>
-                <span className="font-medium text-gray-900 dark:text-white">
-                  {new Date().toLocaleDateString()}
-                </span>
+                <div className="text-right">
+                  {Object.entries(currentUser.permissions || {})
+                    .filter(([_, value]) => value)
+                    .map(([key]) => (
+                      <span
+                        key={key}
+                        className="inline-block bg-gray-100 dark:bg-gray-700 rounded-full px-2 py-1 text-xs font-semibold text-gray-700 dark:text-gray-300 mr-1 mb-1 capitalize"
+                      >
+                        {key}
+                      </span>
+                    ))}
+                </div>
               </div>
             </div>
 
@@ -1878,13 +2398,384 @@ const AdminDashboard = () => {
               <button
                 onClick={() => {
                   setIsViewUserModalOpen(false);
-                  handleEditUser(currentUser);
+                  setIsEditUserModalOpen(true);
                 }}
                 className="px-4 py-2 bg-indigo-600 rounded-md text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
               >
                 Edit User
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit User Modal */}
+      {isEditUserModalOpen && currentUser && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Edit User
+              </h2>
+              <button
+                onClick={() => setIsEditUserModalOpen(false)}
+                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+              >
+                <XMarkIcon className="h-6 w-6" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditedUser} className="space-y-4">
+              <div className="flex items-center space-x-4 mb-4">
+                <Avatar
+                  src={currentUser.avatar}
+                  name={currentUser.name}
+                  size="lg"
+                />
+                <div>
+                  <button
+                    type="button"
+                    className="px-3 py-1.5 text-sm font-medium rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
+                  >
+                    Change Avatar
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="editName"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Name
+                </label>
+                <input
+                  type="text"
+                  id="editName"
+                  value={currentUser.name}
+                  onChange={(e) =>
+                    setCurrentUser({
+                      ...currentUser,
+                      name: e.target.value,
+                    })
+                  }
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  required
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="editEmail"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Email
+                </label>
+                <input
+                  type="email"
+                  id="editEmail"
+                  value={currentUser.email}
+                  onChange={(e) =>
+                    setCurrentUser({
+                      ...currentUser,
+                      email: e.target.value,
+                    })
+                  }
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  required
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="editRole"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Role
+                </label>
+                <select
+                  id="editRole"
+                  value={currentUser.role}
+                  onChange={(e) =>
+                    setCurrentUser({
+                      ...currentUser,
+                      role: e.target.value,
+                    })
+                  }
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                >
+                  <option value="admin">Admin</option>
+                  <option value="editor">Editor</option>
+                  <option value="subscriber">Subscriber</option>
+                </select>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="editStatus"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Status
+                </label>
+                <select
+                  id="editStatus"
+                  value={currentUser.status}
+                  onChange={(e) =>
+                    setCurrentUser({
+                      ...currentUser,
+                      status: e.target.value,
+                    })
+                  }
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                  <option value="pending">Pending</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setIsEditUserModalOpen(false)}
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-indigo-600 rounded-md text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* View Customer Modal */}
+      {isViewCustomerModalOpen && currentCustomer && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Customer Details
+              </h2>
+              <button
+                onClick={() => setIsViewCustomerModalOpen(false)}
+                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+              >
+                <XMarkIcon className="h-6 w-6" />
+              </button>
+            </div>
+
+            <div className="flex items-center space-x-4 mb-6">
+              <Avatar name={currentCustomer.name} size="lg" />
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  {currentCustomer.name}
+                </h3>
+                {currentCustomer.company && (
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {currentCustomer.company}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">Email:</span>
+                <span className="font-medium text-gray-900 dark:text-white">
+                  {currentCustomer.email}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">Phone:</span>
+                <span className="font-medium text-gray-900 dark:text-white">
+                  {currentCustomer.phone || "N/A"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">
+                  Address:
+                </span>
+                <span className="font-medium text-gray-900 dark:text-white text-right">
+                  {currentCustomer.address || "N/A"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">
+                  Member Since:
+                </span>
+                <span className="font-medium text-gray-900 dark:text-white">
+                  {new Date(currentCustomer.createdAt).toLocaleDateString()}
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end space-x-3">
+              <button
+                onClick={() => setIsViewCustomerModalOpen(false)}
+                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  setIsViewCustomerModalOpen(false);
+                  setIsEditCustomerModalOpen(true);
+                }}
+                className="px-4 py-2 bg-indigo-600 rounded-md text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
+              >
+                Edit Customer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Customer Modal */}
+      {isEditCustomerModalOpen && currentCustomer && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Edit Customer
+              </h2>
+              <button
+                onClick={() => setIsEditCustomerModalOpen(false)}
+                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+              >
+                <XMarkIcon className="h-6 w-6" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditedCustomer} className="space-y-4">
+              <div>
+                <label
+                  htmlFor="editCustomerName"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Name
+                </label>
+                <input
+                  type="text"
+                  id="editCustomerName"
+                  value={currentCustomer.name}
+                  onChange={(e) =>
+                    setCurrentCustomer({
+                      ...currentCustomer,
+                      name: e.target.value,
+                    })
+                  }
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  required
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="editCompany"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Company
+                </label>
+                <input
+                  type="text"
+                  id="editCompany"
+                  value={currentCustomer.company}
+                  onChange={(e) =>
+                    setCurrentCustomer({
+                      ...currentCustomer,
+                      company: e.target.value,
+                    })
+                  }
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="editCustomerEmail"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Email
+                </label>
+                <input
+                  type="email"
+                  id="editCustomerEmail"
+                  value={currentCustomer.email}
+                  onChange={(e) =>
+                    setCurrentCustomer({
+                      ...currentCustomer,
+                      email: e.target.value,
+                    })
+                  }
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  required
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="editPhone"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Phone
+                </label>
+                <input
+                  type="tel"
+                  id="editPhone"
+                  value={currentCustomer.phone}
+                  onChange={(e) =>
+                    setCurrentCustomer({
+                      ...currentCustomer,
+                      phone: e.target.value,
+                    })
+                  }
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="editAddress"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Address
+                </label>
+                <textarea
+                  id="editAddress"
+                  value={currentCustomer.address}
+                  onChange={(e) =>
+                    setCurrentCustomer({
+                      ...currentCustomer,
+                      address: e.target.value,
+                    })
+                  }
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  rows={3}
+                />
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setIsEditCustomerModalOpen(false)}
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-indigo-600 rounded-md text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
@@ -1905,16 +2796,26 @@ const AdminDashboard = () => {
               </button>
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                  {currentInvoice.id}
-                </h3>
-                <StatusPill status={currentInvoice.status} />
+            <div className="mb-6">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                    Invoice #{currentInvoice.id}
+                  </h3>
+                  <StatusPill status={currentInvoice.status} />
+                </div>
+                <div className="text-right">
+                  <p className="text-gray-600 dark:text-gray-400">
+                    Issued: {currentInvoice.issuedDate}
+                  </p>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    Due: {currentInvoice.dueDate}
+                  </p>
+                </div>
               </div>
 
-              <div className="space-y-3">
-                <div className="flex justify-between">
+              <div className="border-t border-b border-gray-200 dark:border-gray-700 py-4 my-4">
+                <div className="flex justify-between mb-2">
                   <span className="text-gray-600 dark:text-gray-400">
                     Client:
                   </span>
@@ -1922,38 +2823,37 @@ const AdminDashboard = () => {
                     {currentInvoice.client}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">
-                    Amount:
-                  </span>
-                  <span className="font-medium text-gray-900 dark:text-white">
-                    ${Number(currentInvoice.amount).toFixed(2)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">
-                    Issued Date:
-                  </span>
-                  <span className="font-medium text-gray-900 dark:text-white">
-                    {new Date(currentInvoice.issuedDate).toLocaleDateString()}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">
-                    Due Date:
-                  </span>
-                  <span className="font-medium text-gray-900 dark:text-white">
-                    {new Date(currentInvoice.dueDate).toLocaleDateString()}
-                  </span>
+                {currentInvoice.company && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Company:
+                    </span>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {currentInvoice.company}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div className="mb-4">
+                <div className="flex justify-between font-bold text-gray-900 dark:text-white">
+                  <span>Amount:</span>
+                  <span>${Number(currentInvoice.amount).toFixed(2)}</span>
                 </div>
               </div>
             </div>
 
-            <div className="mt-6 flex justify-end space-x-3">
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setIsViewInvoiceModalOpen(false)}
+                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+              >
+                Close
+              </button>
               <button
                 onClick={() => {
                   setIsViewInvoiceModalOpen(false);
-                  handleEditInvoice(currentInvoice);
+                  setIsEditInvoiceModalOpen(true);
                 }}
                 className="px-4 py-2 bg-indigo-600 rounded-md text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
               >
@@ -1964,139 +2864,73 @@ const AdminDashboard = () => {
         </div>
       )}
 
-      {/* Edit User Modal */}
-      {isEditUserModalOpen && currentUser && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-              Edit User
-            </h2>
-            <form onSubmit={handleSaveEditedUser} className="space-y-4">
-              <div>
-                <label
-                  htmlFor="editName"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
-                  Name
-                </label>
-                <input
-                  type="text"
-                  id="editName"
-                  value={currentUser.name}
-                  onChange={(e) =>
-                    setCurrentUser({ ...currentUser, name: e.target.value })
-                  }
-                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                  required
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="editEmail"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
-                  Email
-                </label>
-                <input
-                  type="email"
-                  id="editEmail"
-                  value={currentUser.email}
-                  onChange={(e) =>
-                    setCurrentUser({ ...currentUser, email: e.target.value })
-                  }
-                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                  required
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="editRole"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
-                  Role
-                </label>
-                <select
-                  id="editRole"
-                  value={currentUser.role}
-                  onChange={(e) =>
-                    setCurrentUser({ ...currentUser, role: e.target.value })
-                  }
-                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                >
-                  <option value="admin">Admin</option>
-                  <option value="editor">Editor</option>
-                  <option value="subscriber">Subscriber</option>
-                </select>
-              </div>
-              <div>
-                <label
-                  htmlFor="editStatus"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
-                  Status
-                </label>
-                <select
-                  id="editStatus"
-                  value={currentUser.status}
-                  onChange={(e) =>
-                    setCurrentUser({ ...currentUser, status: e.target.value })
-                  }
-                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                >
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                  <option value="pending">Pending</option>
-                </select>
-              </div>
-              <div className="flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={() => setIsEditUserModalOpen(false)}
-                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-indigo-600 rounded-md text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
-                >
-                  Save Changes
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
       {/* Edit Invoice Modal */}
       {isEditInvoiceModalOpen && currentInvoice && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-              Edit Invoice
-            </h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Edit Invoice
+              </h2>
+              <button
+                onClick={() => setIsEditInvoiceModalOpen(false)}
+                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+              >
+                <XMarkIcon className="h-6 w-6" />
+              </button>
+            </div>
+
             <form onSubmit={handleSaveEditedInvoice} className="space-y-4">
               <div>
                 <label
-                  htmlFor="editClient"
+                  htmlFor="editInvoiceClient"
                   className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                 >
                   Client
                 </label>
-                <input
-                  type="text"
-                  id="editClient"
-                  value={currentInvoice.client}
+                <select
+                  id="editInvoiceClient"
+                  value={currentInvoice.customerId || ""}
                   onChange={(e) =>
                     setCurrentInvoice({
                       ...currentInvoice,
-                      client: e.target.value,
+                      customerId: e.target.value,
                     })
                   }
                   className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                  required
-                />
+                >
+                  <option value="">Select a customer</option>
+                  {customers.map((customer) => (
+                    <option key={customer.id} value={customer.id}>
+                      {customer.name} ({customer.company})
+                    </option>
+                  ))}
+                </select>
               </div>
+
+              {!currentInvoice.customerId && (
+                <div>
+                  <label
+                    htmlFor="editClientName"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  >
+                    Or enter client name manually
+                  </label>
+                  <input
+                    type="text"
+                    id="editClientName"
+                    value={currentInvoice.client}
+                    onChange={(e) =>
+                      setCurrentInvoice({
+                        ...currentInvoice,
+                        client: e.target.value,
+                      })
+                    }
+                    className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  />
+                </div>
+              )}
+
               <div>
                 <label
                   htmlFor="editAmount"
@@ -2118,6 +2952,7 @@ const AdminDashboard = () => {
                   required
                 />
               </div>
+
               <div>
                 <label
                   htmlFor="editStatus"
@@ -2141,6 +2976,7 @@ const AdminDashboard = () => {
                   <option value="overdue">Overdue</option>
                 </select>
               </div>
+
               <div>
                 <label
                   htmlFor="editDueDate"
@@ -2162,7 +2998,30 @@ const AdminDashboard = () => {
                   required
                 />
               </div>
-              <div className="flex justify-end space-x-3">
+
+              <div>
+                <label
+                  htmlFor="editIssuedDate"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Issued Date
+                </label>
+                <input
+                  type="date"
+                  id="editIssuedDate"
+                  value={currentInvoice.issuedDate}
+                  onChange={(e) =>
+                    setCurrentInvoice({
+                      ...currentInvoice,
+                      issuedDate: e.target.value,
+                    })
+                  }
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  required
+                />
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
                 <button
                   type="button"
                   onClick={() => setIsEditInvoiceModalOpen(false)}
