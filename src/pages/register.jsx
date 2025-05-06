@@ -21,6 +21,8 @@ import {
   sendVerificationEmail,
 } from "../utils/api";
 
+import { ApiService } from "../api/web-api-service";
+
 // Zod Validation Schema
 const registerSchema = z
   .object({
@@ -119,7 +121,7 @@ const Register = () => {
     const registrationData = { ...data, role: "Admin" };
 
     try {
-      const res = await axios.post(API_URL, registrationData);
+      const res = await ApiService.post("/auth/register", registrationData);
       console.log(res, "resuuuuuuuuuuuuuuuuuuult");
 
       if (res.status === 200 || res.data === "User registered successfully.") {

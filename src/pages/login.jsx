@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -6,6 +6,8 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiEye, FiEyeOff, FiAlertCircle, FiCheckCircle } from "react-icons/fi";
 import { GoogleLogin, useGoogleLogin } from "@react-oauth/google";
+import { useAuth } from "../contexts/AuthContext";
+import { ApiService } from "../api/web-api-service";
 
 import axios from "axios"; // Schema definition
 const loginSchema = z.object({
@@ -20,6 +22,7 @@ const Login = () => {
   const [loginSuccess, setLoginSuccess] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, setUser, saveToken } = useAuth();
 
   // Check for redirected message
   const redirectedFrom = location.state?.from || "/";
@@ -36,6 +39,11 @@ const Login = () => {
   });
 
   useEffect(() => {
+    if (user) {
+      console.log(user, "the user logging in");
+    }
+  }, [user]);
+  useEffect(() => {
     if (redirectMessage) {
       setApiError(redirectMessage);
       // Clear the state to prevent showing the message again
@@ -45,10 +53,7 @@ const Login = () => {
 
   const loginUser = async (credentials) => {
     try {
-      const res = await axios.post(
-        "https://localhost:7221/api/auth/login",
-        credentials
-      );
+      const res = await ApiService.post("/auth/login", credentials);
       return res.data;
     } catch (error) {
       if (error.response) {
@@ -77,6 +82,8 @@ const Login = () => {
       localStorage.setItem("token", response.token);
       localStorage.setItem("user", JSON.stringify(response.user));
 
+      setUser(response.user);
+      saveToken(response.token);
       setLoginSuccess(true);
 
       setTimeout(() => {

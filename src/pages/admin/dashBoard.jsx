@@ -38,9 +38,10 @@ import { Line, Bar, Pie } from "react-chartjs-2";
 import { faker } from "@faker-js/faker";
 import { useDarkMode } from "../../hooks/useDarkMode.";
 import { AnimatePresence, motion } from "framer-motion";
-import { registerUser } from "../../utils/api";
 import { generatePermissions } from "../../utils/permissions";
-import axios from "axios";
+import { useAuth } from "../../contexts/AuthContext";
+import { ApiService } from "../../api/web-api-service";
+import { toast } from "react-toastify";
 
 ChartJS.register(
   CategoryScale,
@@ -208,21 +209,24 @@ const AdminDashboard = () => {
   const [currentCustomer, setCurrentCustomer] = useState(null);
   const [currentInvoice, setCurrentInvoice] = useState(null);
 
+  const { user, authToken } = useAuth();
+
   const [newUserForm, setNewUserForm] = useState({
     fullName: "",
     email: "",
     password: "",
-    role: "subscriber",
-    status: "active",
-    avatar: "",
+    role: "subscriber", // or "editor", "admin"
+    status: "active", // e.g., "active", "inactive"
+    permissions: "", // e.g., "view_invoices,edit_customers"
+    avatar: "", // optional, for profile picture uploads
   });
 
   const [newCustomerForm, setNewCustomerForm] = useState({
     name: "",
-    company: "",
     email: "",
     phone: "",
     address: "",
+    type: "individual", // or "company", depending on your default
   });
 
   const [newInvoiceForm, setNewInvoiceForm] = useState({
@@ -239,6 +243,45 @@ const AdminDashboard = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const res = await ApiService.get("/employee", {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        });
+
+        const parsedUsers = res.data.map((emp) => ({
+          ...emp,
+          permissions:
+            typeof emp.permissions === "string"
+              ? JSON.parse(emp.permissions)
+              : emp.permissions,
+        }));
+        console.log(parsedUsers, "those users i love");
+
+        setUsers(parsedUsers);
+      } catch (error) {
+        if (error.response) {
+          console.error(
+            "Server error:",
+            error.response.status,
+            error.response.data
+          );
+        } else if (error.request) {
+          console.error("No response received:", error.request);
+        } else {
+          console.error("Axios config error:", error.message);
+        }
+      }
+    };
+    console.log(authToken, "the auth token");
+    if (authToken) {
+      fetchEmployees();
+    }
+  }, [authToken]);
+
   // Filter users, customers and invoices
   const filteredUsers = useMemo(() => {
     return users?.filter((user) => {
@@ -254,36 +297,42 @@ const AdminDashboard = () => {
   const filteredCustomers = useMemo(() => {
     return customers.filter(
       (customer) =>
-        customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        customer.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        customer.email.toLowerCase().includes(searchQuery.toLowerCase())
+        (customer.name || "")
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase()) ||
+        (customer.company || "")
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase()) ||
+        (customer.email || "").toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [customers, searchQuery]);
 
   const filteredInvoices = useMemo(() => {
     return invoices.filter(
       (invoice) =>
-        invoice.client.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        invoice.id.toLowerCase().includes(searchQuery.toLowerCase())
+        (invoice.client || "")
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase()) ||
+        (invoice.id || "").toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [invoices, searchQuery]);
 
   // Load data from localStorage
   const [storedUser, setStoredUser] = useState({});
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user")) || {
+    const currentuser = user || {
       fullName: "Alex Johnson",
       email: "admin@example.com",
       password: "password123",
       avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     };
-    setStoredUser(user);
-    setUserFullName(user.fullName); // now uses the correct updated value
+    setStoredUser(currentuser);
+    setUserFullName(currentuser.fullName); // now uses the correct updated value
 
-    const storedUsers =
-      JSON.parse(localStorage.getItem("users")) ||
-      Array.from({ length: 5 }, () => generateUser());
-    setUsers(storedUsers);
+    // const storedUsers =
+    //   JSON.parse(localStorage.getItem("users")) ||
+    //   Array.from({ length: 5 }, () => generateUser());
+    // setUsers(storedUsers);
 
     const storedCustomers =
       JSON.parse(localStorage.getItem("customers")) ||
@@ -343,52 +392,6 @@ const AdminDashboard = () => {
     password: "password123", // for demo
   });
 
-  // // Generate permissions based on role
-  // const generatePermissions = (role) => {
-  //   const basePermissions = {
-  //     dashboard: true,
-  //     profile: true,
-  //   };
-
-  //   switch (role) {
-  //     case "admin":
-  //       return {
-  //         ...basePermissions,
-  //         users: true,
-  //         customers: true,
-  //         invoices: true,
-  //         settings: true,
-  //         canEdit: true,
-  //         canDelete: true,
-  //         canCreate: true,
-  //       };
-  //     case "editor":
-  //       return {
-  //         ...basePermissions,
-  //         users: false,
-  //         customers: true,
-  //         invoices: true,
-  //         settings: false,
-  //         canEdit: true,
-  //         canDelete: false,
-  //         canCreate: true,
-  //       };
-  //     case "subscriber":
-  //       return {
-  //         ...basePermissions,
-  //         users: false,
-  //         customers: false,
-  //         invoices: true,
-  //         settings: false,
-  //         canEdit: false,
-  //         canDelete: false,
-  //         canCreate: false,
-  //       };
-  //     default:
-  //       return basePermissions;
-  //   }
-  // };
-
   // Generate Customer (for initial load)
   const generateCustomer = () => ({
     id: faker.string.uuid(),
@@ -415,97 +418,55 @@ const AdminDashboard = () => {
     };
   };
 
-  const handleAddUser = async (e) => {
-    e.preventDefault();
-
-    const userToAdd = {
-      ...newUserForm,
-      lastLogin: new Date().toISOString(),
-      avatar: newUserForm.avatar || faker.image.avatar(),
-      permissions: generatePermissions(newUserForm.role),
-    };
-
-    console.log(userToAdd, "userTo add");
-
-    try {
-      const { user } = await registerUser(userToAdd); // ID is set inside here
-      console.log(user, "random user");
-      const updatedUsers = [user, ...users];
-
-      setUsers(updatedUsers);
-      localStorage.setItem("users", JSON.stringify(updatedUsers));
-      setNewUserForm({
-        name: "",
-        email: "",
-        password: "",
-        role: "subscriber",
-        status: "active",
-        avatar: "",
-      });
-      setIsAddUserModalOpen(false);
-    } catch (err) {
-      console.error("Failed to register user:", err.message);
-      alert("Failed to add user: " + err.message);
-    }
-  };
-
   const addEmployee = async () => {
     const token = localStorage.getItem("token");
-    if (!token) throw new Error("User is not authenticated.");
+    if (!token) {
+      console.error("User is not authenticated.");
+      return;
+    }
 
     const employeeData = {
       fullName: newUserForm.fullName,
       email: newUserForm.email,
       password: newUserForm.password,
       role: newUserForm.role,
-      avatar: newUserForm.avatar || faker.image.avatar(),
-      lastLogin: new Date().toISOString(),
-      permissions: generatePermissions(newUserForm.role),
+      status: newUserForm.status,
+      permissions: JSON.stringify(generatePermissions(newUserForm.role)),
     };
 
     try {
-      const response = await axios.post(`${BASE_URL}/Employee`, employeeData, {
+      const response = await ApiService.post(`/employee`, employeeData, {
         headers: {
           Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
       });
 
-      const newEmployee = response.data;
+      const newEmployee = response.data.employee;
       const updatedUsers = [newEmployee, ...users];
       setUsers(updatedUsers);
       localStorage.setItem("users", JSON.stringify(updatedUsers));
     } catch (error) {
-      console.error(
-        "Error adding employee:",
-        error.response?.data || error.message
-      );
-      throw new Error(error.response?.data?.error || "Failed to add employee");
+      console.error("Error adding employee:", error);
+      const errMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        "Failed to add employee";
+      throw new Error(errMessage);
     }
   };
 
-  const handleAddEmployee = (e) => {
-    e.preventDefault(); // ⛔ Prevent form from refreshing the page
-    addEmployee();
-  };
-  // Add new customer from form
-  const handleAddCustomer = (e) => {
+  const handleAddEmployee = async (e) => {
     e.preventDefault();
-    const customerToAdd = {
-      ...newCustomerForm,
-      id: faker.string.uuid(),
-      createdAt: new Date().toISOString(),
-    };
-    const updatedCustomers = [customerToAdd, ...customers];
-    setCustomers(updatedCustomers);
-    localStorage.setItem("customers", JSON.stringify(updatedCustomers));
-    setNewCustomerForm({
-      name: "",
-      company: "",
-      email: "",
-      phone: "",
-      address: "",
-    });
-    setIsAddCustomerModalOpen(false);
+    try {
+      await addEmployee();
+      toast.success("Employee added successfully!");
+      setIsAddUserModalOpen(false);
+    } catch (error) {
+      console.error(error);
+      toast.error(error.message || "Something went wrong");
+    }
   };
 
   // Add new invoice from form
@@ -564,21 +525,6 @@ const AdminDashboard = () => {
     setIsEditCustomerModalOpen(true);
   };
 
-  // Save edited user
-  const handleSaveEditedUser = (e) => {
-    e.preventDefault();
-    const updatedUser = {
-      ...currentUser,
-      permissions: generatePermissions(currentUser.role),
-    };
-    const updatedUsers = users.map((u) =>
-      u.id === updatedUser.id ? updatedUser : u
-    );
-    setUsers(updatedUsers);
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
-    setIsEditUserModalOpen(false);
-  };
-
   // Edit invoice
   const handleEditInvoice = (invoice) => {
     setCurrentInvoice(invoice);
@@ -615,13 +561,115 @@ const AdminDashboard = () => {
     setIsEditInvoiceModalOpen(false);
   };
 
-  // Delete user
-  const handleDeleteUser = (userId) => {
-    if (window.confirm("Are you sure you want to delete this user?")) {
-      const updatedUsers = users.filter((u) => u.id !== userId);
-      setUsers(updatedUsers);
-      localStorage.setItem("users", JSON.stringify(updatedUsers));
+  const deleteEmployee = async (id, token) => {
+    try {
+      const res = await ApiService.delete(`/employee/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return res.data;
+    } catch (error) {
+      if (error.response) {
+        console.error(
+          "Server error:",
+          error.response.status,
+          error.response.data
+        );
+      } else if (error.request) {
+        console.error("No response received:", error.request);
+      } else {
+        console.error("Error:", error.message);
+      }
+      throw error;
     }
+  };
+
+  const handleDeleteEmployee = async (e, id) => {
+    e.preventDefault(); // Prevent default form or button behavior
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this employee?"
+    );
+    if (!confirmed) return;
+
+    try {
+      await deleteEmployee(id, authToken); // Call the delete API
+      setUsers((prevUsers) => prevUsers.filter((user) => user.id !== id)); // Update UI
+      toast.success("Employee deleted successfully.");
+    } catch (error) {
+      console.error("Failed to delete employee:", error);
+    }
+  };
+
+  //edit employee
+  const updateEmployee = async (id, data, token) => {
+    try {
+      const res = await ApiService.put(`/employee/${id}`, data, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return res.data;
+    } catch (error) {
+      if (error.response) {
+        console.error(
+          "Server error:",
+          error.response.status,
+          error.response.data
+        );
+      } else if (error.request) {
+        console.error("No response received:", error.request);
+      } else {
+        console.error("Error:", error.message);
+      }
+      throw error;
+    }
+  };
+
+  const handleUpdateEmployee = async (
+    e,
+    id,
+    formValues,
+    authToken,
+    closeModal,
+    setUsers
+  ) => {
+    e.preventDefault();
+
+    try {
+      await updateEmployee(id, formValues, authToken);
+      toast.success("Employee updated successfully.");
+      closeModal();
+      // Optionally refresh or update users
+      setUsers((prev) =>
+        prev.map((u) => (u.id === id ? { ...u, ...formValues } : u))
+      );
+    } catch (err) {
+      toast.error("Failed to update employee.");
+    }
+  };
+
+  const handleSaveEditEmployee = (e) => {
+    handleUpdateEmployee(
+      e,
+      currentUser.id,
+      {
+        fullName: currentUser.fullName,
+        email: currentUser.email,
+        role: currentUser.role,
+        status: currentUser.status,
+        // Ensure this is a JSON string
+        permissions:
+          typeof currentUser.permissions === "string"
+            ? currentUser.permissions
+            : JSON.stringify(currentUser.permissions),
+        // Only include password if it's part of your update model
+        password: currentUser.password || "", // Optional
+      },
+      authToken,
+      () => setIsEditUserModalOpen(false),
+      setUsers
+    );
   };
 
   // Delete customer
@@ -681,6 +729,58 @@ const AdminDashboard = () => {
     setNewPassword("");
     setConfirmPassword("");
     alert("Password updated successfully.");
+  };
+
+  //let us work on customer here
+  const addCustomer = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.error("User is not authenticated.");
+      return;
+    }
+
+    const customerData = {
+      name: newCustomerForm.name,
+      email: newCustomerForm.email,
+      phone: newCustomerForm.phone,
+      address: newCustomerForm.address,
+      type: newCustomerForm.type, // "individual" or "company"
+    };
+
+    try {
+      const response = await ApiService.post(`/customer`, customerData, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const newCustomer =
+        customerData || response.data.customer || response.data;
+      const updatedCustomers = [newCustomer, ...customers];
+      setCustomers(updatedCustomers);
+      localStorage.setItem("customers", JSON.stringify(updatedCustomers));
+    } catch (error) {
+      console.error("Error adding customer:", error);
+      const errMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        "Failed to add customer";
+      throw new Error(errMessage);
+    }
+  };
+
+  const handleAddCustomer = async (e) => {
+    e.preventDefault();
+    try {
+      await addCustomer();
+      toast.success("Customer added successfully!");
+      setIsAddCustomerModalOpen(false);
+    } catch (error) {
+      console.error(error);
+      toast.error(error.message || "Something went wrong");
+    }
   };
 
   // Chart Data
@@ -1303,17 +1403,17 @@ const AdminDashboard = () => {
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                    User Management
+                    Employee Management
                   </h1>
                   <p className="text-gray-600 dark:text-gray-400">
-                    Manage all registered users and their permissions.
+                    Manage all employees and their permissions.
                   </p>
                 </div>
                 <button
                   onClick={() => setIsAddUserModalOpen(true)}
                   className="mt-4 md:mt-0 px-4 py-2 bg-indigo-600 rounded-lg text-sm font-medium text-white hover:bg-indigo-700 transition-colors flex items-center"
                 >
-                  <PlusIcon className="h-4 w-4 mr-2" /> Add New User
+                  <PlusIcon className="h-4 w-4 mr-2" /> Add New Employee
                 </button>
               </div>
 
@@ -1326,13 +1426,13 @@ const AdminDashboard = () => {
                           scope="col"
                           className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
                         >
-                          User
+                          Employee
                         </th>
                         <th
                           scope="col"
                           className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
                         >
-                          Status
+                          Email
                         </th>
                         <th
                           scope="col"
@@ -1344,7 +1444,19 @@ const AdminDashboard = () => {
                           scope="col"
                           className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
                         >
-                          Last Login
+                          Status
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                        >
+                          Verified
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                        >
+                          Created At
                         </th>
                         <th
                           scope="col"
@@ -1355,52 +1467,60 @@ const AdminDashboard = () => {
                       </tr>
                     </thead>
                     <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                      {filteredUsers.map((user) => (
+                      {filteredUsers.map((employee) => (
                         <tr
-                          key={user.id}
+                          key={employee.id}
                           className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                         >
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
-                              <Avatar
-                                src={user.avatar}
-                                name={user.name || user?.fullName}
-                                size="sm"
-                              />
+                              <div className="h-9 w-9 rounded-full bg-indigo-600 text-white flex items-center justify-center text-sm font-semibold uppercase">
+                                {employee?.fullName
+                                  ? employee.fullName
+                                      .split(" ")
+                                      .map((n) => n[0])
+                                      .join("")
+                                  : "?"}
+                              </div>
                               <div className="ml-4">
                                 <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                  {user.name || user?.fullName}
-                                </div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400">
-                                  {user.email}
+                                  {employee.fullName}
                                 </div>
                               </div>
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <StatusPill status={user.status} />
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                            {employee.email}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 capitalize">
-                            {user.role}
+                          <td className="px-6 py-4 whitespace-nowrap text-sm capitalize text-gray-500 dark:text-gray-400">
+                            {employee.role}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <StatusPill status={employee.status} />
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                            {new Date(user.lastLogin).toLocaleDateString()}
+                            {employee.verified ? "Yes" : "No"}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                            {new Date(employee.createdAt).toLocaleDateString()}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <button
-                              onClick={() => handleViewUser(user)}
+                              onClick={() => handleViewUser(employee)}
                               className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 mr-3"
                             >
                               View
                             </button>
                             <button
-                              onClick={() => handleEditUser(user)}
+                              onClick={() => handleEditUser(employee)}
                               className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 mr-3"
                             >
                               Edit
                             </button>
                             <button
-                              onClick={() => handleDeleteUser(user.id)}
+                              onClick={(e) =>
+                                handleDeleteEmployee(e, employee.id)
+                              }
                               className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
                             >
                               Delete
@@ -1450,12 +1570,6 @@ const AdminDashboard = () => {
                           scope="col"
                           className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
                         >
-                          Company
-                        </th>
-                        <th
-                          scope="col"
-                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                        >
                           Email
                         </th>
                         <th
@@ -1493,9 +1607,6 @@ const AdminDashboard = () => {
                                 </div>
                               </div>
                             </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                            {customer.company}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                             {customer.email}
@@ -1950,33 +2061,33 @@ const AdminDashboard = () => {
           )}
         </main>
       </div>
-
-      {/* Add User Modal */}
+      {/* Add user modal */}
       {isAddUserModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-              Add New User
+              Add New Employee
             </h2>
             <form onSubmit={handleAddEmployee} className="space-y-4">
               <div>
                 <label
-                  htmlFor="name"
+                  htmlFor="fullName"
                   className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                 >
-                  Name
+                  Full Name
                 </label>
                 <input
                   type="text"
-                  id="name"
+                  id="fullName"
                   value={newUserForm.fullName}
                   onChange={(e) =>
                     setNewUserForm({ ...newUserForm, fullName: e.target.value })
                   }
-                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
                   required
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
                 />
               </div>
+
               <div>
                 <label
                   htmlFor="email"
@@ -1991,10 +2102,11 @@ const AdminDashboard = () => {
                   onChange={(e) =>
                     setNewUserForm({ ...newUserForm, email: e.target.value })
                   }
-                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
                   required
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
                 />
               </div>
+
               <div>
                 <label
                   htmlFor="password"
@@ -2009,14 +2121,15 @@ const AdminDashboard = () => {
                   onChange={(e) =>
                     setNewUserForm({ ...newUserForm, password: e.target.value })
                   }
-                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
                   required
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
                 />
               </div>
+
               <div>
                 <label
                   htmlFor="role"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-3 00 mb-1"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                 >
                   Role
                 </label>
@@ -2033,6 +2146,7 @@ const AdminDashboard = () => {
                   <option value="subscriber">Subscriber</option>
                 </select>
               </div>
+
               <div>
                 <label
                   htmlFor="status"
@@ -2042,17 +2156,36 @@ const AdminDashboard = () => {
                 </label>
                 <select
                   id="status"
-                  value="active"
+                  value={newUserForm.status}
                   onChange={(e) =>
                     setNewUserForm({ ...newUserForm, status: e.target.value })
                   }
-                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-7 00 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
                 >
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
                   <option value="pending">Pending</option>
                 </select>
               </div>
+
+              <div>
+                <label
+                  htmlFor="avatar"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Avatar URL (optional)
+                </label>
+                <input
+                  type="text"
+                  id="avatar"
+                  value={newUserForm.avatar}
+                  onChange={(e) =>
+                    setNewUserForm({ ...newUserForm, avatar: e.target.value })
+                  }
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                />
+              </div>
+
               <div className="flex justify-end space-x-3">
                 <button
                   type="button"
@@ -2063,9 +2196,9 @@ const AdminDashboard = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-indigo-600 rounded-md text-sm font-medium text-white hover:bg-indigo-7 00 transition-colors"
+                  className="px-4 py-2 bg-indigo-600 rounded-md text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
                 >
-                  Add User
+                  Add Employee
                 </button>
               </div>
             </form>
@@ -2098,30 +2231,11 @@ const AdminDashboard = () => {
                       name: e.target.value,
                     })
                   }
-                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2"
                   required
                 />
               </div>
-              <div>
-                <label
-                  htmlFor="company"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
-                  Company
-                </label>
-                <input
-                  type="text"
-                  id="company"
-                  value={newCustomerForm.company}
-                  onChange={(e) =>
-                    setNewCustomerForm({
-                      ...newCustomerForm,
-                      company: e.target.value,
-                    })
-                  }
-                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                />
-              </div>
+
               <div>
                 <label
                   htmlFor="customerEmail"
@@ -2139,10 +2253,10 @@ const AdminDashboard = () => {
                       email: e.target.value,
                     })
                   }
-                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                  required
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2"
                 />
               </div>
+
               <div>
                 <label
                   htmlFor="phone"
@@ -2160,9 +2274,10 @@ const AdminDashboard = () => {
                       phone: e.target.value,
                     })
                   }
-                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2"
                 />
               </div>
+
               <div>
                 <label
                   htmlFor="address"
@@ -2179,21 +2294,47 @@ const AdminDashboard = () => {
                       address: e.target.value,
                     })
                   }
-                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2"
                   rows={3}
                 />
               </div>
+
+              <div>
+                <label
+                  htmlFor="type"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Type
+                </label>
+                <select
+                  id="type"
+                  value={newCustomerForm.type}
+                  onChange={(e) =>
+                    setNewCustomerForm({
+                      ...newCustomerForm,
+                      type: e.target.value,
+                    })
+                  }
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2"
+                  required
+                >
+                  <option value="">Select Type</option>
+                  <option value="individual">Individual</option>
+                  <option value="company">Company</option>
+                </select>
+              </div>
+
               <div className="flex justify-end space-x-3">
                 <button
                   type="button"
                   onClick={() => setIsAddCustomerModalOpen(false)}
-                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-indigo-600 rounded-md text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
+                  className="px-4 py-2 bg-indigo-600 rounded-md text-sm font-medium text-white hover:bg-indigo-700"
                 >
                   Add Customer
                 </button>
@@ -2365,13 +2506,13 @@ const AdminDashboard = () => {
         </div>
       )}
 
-      {/* View User Modal */}
+      {/* View Employee Modal */}
       {isViewUserModalOpen && currentUser && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                User Details
+                Employee Details
               </h2>
               <button
                 onClick={() => setIsViewUserModalOpen(false)}
@@ -2382,14 +2523,15 @@ const AdminDashboard = () => {
             </div>
 
             <div className="flex items-center space-x-4 mb-6">
-              <Avatar
-                src={currentUser.avatar}
-                name={currentUser.name}
-                size="lg"
-              />
+              <div className="h-12 w-12 rounded-full bg-indigo-600 text-white flex items-center justify-center text-lg font-bold uppercase">
+                {(currentUser.fullName || "")
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")}
+              </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {currentUser.name}
+                  {currentUser.fullName}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400">
                   {currentUser.email}
@@ -2409,18 +2551,14 @@ const AdminDashboard = () => {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">
-                  Last Login:
-                </span>
-                <span className="font-medium text-gray-900 dark:text-white">
-                  {new Date(currentUser.lastLogin).toLocaleString()}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">
                   Permissions:
                 </span>
                 <div className="text-right">
-                  {Object.entries(currentUser.permissions || {})
+                  {Object.entries(
+                    typeof currentUser.permissions === "string"
+                      ? JSON.parse(currentUser.permissions)
+                      : currentUser.permissions || {}
+                  )
                     .filter(([_, value]) => value)
                     .map(([key]) => (
                       <span
@@ -2442,20 +2580,20 @@ const AdminDashboard = () => {
                 }}
                 className="px-4 py-2 bg-indigo-600 rounded-md text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
               >
-                Edit User
+                Edit Employee
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Edit User Modal */}
+      {/* Edit Employee Modal */}
       {isEditUserModalOpen && currentUser && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Edit User
+                Edit Employee
               </h2>
               <button
                 onClick={() => setIsEditUserModalOpen(false)}
@@ -2465,84 +2603,47 @@ const AdminDashboard = () => {
               </button>
             </div>
 
-            <form onSubmit={handleSaveEditedUser} className="space-y-4">
-              <div className="flex items-center space-x-4 mb-4">
-                <Avatar
-                  src={currentUser.avatar}
-                  name={currentUser.name}
-                  size="lg"
-                />
-                <div>
-                  <button
-                    type="button"
-                    className="px-3 py-1.5 text-sm font-medium rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
-                  >
-                    Change Avatar
-                  </button>
-                </div>
-              </div>
-
+            <form onSubmit={handleSaveEditEmployee} className="space-y-4">
               <div>
-                <label
-                  htmlFor="editName"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
-                  Name
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Full Name
                 </label>
                 <input
                   type="text"
-                  id="editName"
-                  value={currentUser.name}
+                  value={currentUser.fullName}
                   onChange={(e) =>
-                    setCurrentUser({
-                      ...currentUser,
-                      name: e.target.value,
-                    })
+                    setCurrentUser({ ...currentUser, fullName: e.target.value })
                   }
-                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2"
                   required
                 />
               </div>
 
               <div>
-                <label
-                  htmlFor="editEmail"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Email
                 </label>
                 <input
                   type="email"
-                  id="editEmail"
                   value={currentUser.email}
                   onChange={(e) =>
-                    setCurrentUser({
-                      ...currentUser,
-                      email: e.target.value,
-                    })
+                    setCurrentUser({ ...currentUser, email: e.target.value })
                   }
-                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2"
                   required
                 />
               </div>
 
               <div>
-                <label
-                  htmlFor="editRole"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Role
                 </label>
                 <select
-                  id="editRole"
                   value={currentUser.role}
                   onChange={(e) =>
-                    setCurrentUser({
-                      ...currentUser,
-                      role: e.target.value,
-                    })
+                    setCurrentUser({ ...currentUser, role: e.target.value })
                   }
-                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2"
                 >
                   <option value="admin">Admin</option>
                   <option value="editor">Editor</option>
@@ -2551,27 +2652,59 @@ const AdminDashboard = () => {
               </div>
 
               <div>
-                <label
-                  htmlFor="editStatus"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Status
                 </label>
                 <select
-                  id="editStatus"
                   value={currentUser.status}
                   onChange={(e) =>
-                    setCurrentUser({
-                      ...currentUser,
-                      status: e.target.value,
-                    })
+                    setCurrentUser({ ...currentUser, status: e.target.value })
                   }
-                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2"
                 >
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
                   <option value="pending">Pending</option>
                 </select>
+              </div>
+
+              {/* Permissions (basic checkbox list example) */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Permissions
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {["invoices", "customers", "reports", "settings"].map(
+                    (perm) => (
+                      <label
+                        key={perm}
+                        className="flex items-center space-x-2 text-sm"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={
+                            (typeof currentUser.permissions === "string"
+                              ? JSON.parse(currentUser.permissions)
+                              : currentUser.permissions || {})[perm] || false
+                          }
+                          onChange={(e) => {
+                            const updatedPerms = {
+                              ...JSON.parse(currentUser.permissions || "{}"),
+                              [perm]: e.target.checked,
+                            };
+                            setCurrentUser({
+                              ...currentUser,
+                              permissions: JSON.stringify(updatedPerms),
+                            });
+                          }}
+                        />
+                        <span className="text-gray-700 dark:text-gray-300 capitalize">
+                          {perm}
+                        </span>
+                      </label>
+                    )
+                  )}
+                </div>
               </div>
 
               <div className="flex justify-end space-x-3 pt-4">
@@ -2594,7 +2727,6 @@ const AdminDashboard = () => {
         </div>
       )}
 
-      {/* View Customer Modal */}
       {isViewCustomerModalOpen && currentCustomer && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
@@ -2616,11 +2748,9 @@ const AdminDashboard = () => {
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                   {currentCustomer.name}
                 </h3>
-                {currentCustomer.company && (
-                  <p className="text-gray-600 dark:text-gray-400">
-                    {currentCustomer.company}
-                  </p>
-                )}
+                <p className="text-gray-600 dark:text-gray-400 capitalize">
+                  {currentCustomer.type}
+                </p>
               </div>
             </div>
 
@@ -2628,7 +2758,7 @@ const AdminDashboard = () => {
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">Email:</span>
                 <span className="font-medium text-gray-900 dark:text-white">
-                  {currentCustomer.email}
+                  {currentCustomer.email || "N/A"}
                 </span>
               </div>
               <div className="flex justify-between">
@@ -2645,20 +2775,22 @@ const AdminDashboard = () => {
                   {currentCustomer.address || "N/A"}
                 </span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">
-                  Member Since:
-                </span>
-                <span className="font-medium text-gray-900 dark:text-white">
-                  {new Date(currentCustomer.createdAt).toLocaleDateString()}
-                </span>
-              </div>
+              {currentCustomer.createdAt && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Member Since:
+                  </span>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {new Date(currentCustomer.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="mt-6 flex justify-end space-x-3">
               <button
                 onClick={() => setIsViewCustomerModalOpen(false)}
-                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
               >
                 Close
               </button>
@@ -2667,7 +2799,7 @@ const AdminDashboard = () => {
                   setIsViewCustomerModalOpen(false);
                   setIsEditCustomerModalOpen(true);
                 }}
-                className="px-4 py-2 bg-indigo-600 rounded-md text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
+                className="px-4 py-2 bg-indigo-600 rounded-md text-sm font-medium text-white hover:bg-indigo-700"
               >
                 Edit Customer
               </button>
@@ -2676,7 +2808,6 @@ const AdminDashboard = () => {
         </div>
       )}
 
-      {/* Edit Customer Modal */}
       {isEditCustomerModalOpen && currentCustomer && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
@@ -2717,23 +2848,27 @@ const AdminDashboard = () => {
 
               <div>
                 <label
-                  htmlFor="editCompany"
+                  htmlFor="editType"
                   className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                 >
-                  Company
+                  Type
                 </label>
-                <input
-                  type="text"
-                  id="editCompany"
-                  value={currentCustomer.company}
+                <select
+                  id="editType"
+                  value={currentCustomer.type}
                   onChange={(e) =>
                     setCurrentCustomer({
                       ...currentCustomer,
-                      company: e.target.value,
+                      type: e.target.value,
                     })
                   }
                   className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                />
+                  required
+                >
+                  <option value="">Select Type</option>
+                  <option value="individual">Individual</option>
+                  <option value="company">Company</option>
+                </select>
               </div>
 
               <div>
