@@ -941,7 +941,7 @@ const AdminDashboard = () => {
                     : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
                 }`}
               >
-                <UserGroupIcon className="h-5 w-5 mr-3" /> Users
+                <UserGroupIcon className="h-5 w-5 mr-3" /> Employees
               </button>
               <button
                 onClick={() => {
@@ -1015,7 +1015,8 @@ const AdminDashboard = () => {
                     : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
                 }`}
               >
-                <UserGroupIcon className="h-5 w-5 mr-3" /> Users
+                <UserGroupIcon className="h-5 w-5 mr-3" />
+                Employees
               </button>
               <button
                 onClick={() => setActiveTab("customers")}
