@@ -57,9 +57,9 @@ const Header = () => {
 
   // Check auth status
   useEffect(() => {
-    const user = localStorage.getItem("user");
-    const token = localStorage.getItem("token");
-    setIsLoggedIn(!!(user && token));
+    // const user = localStorage.getItem("user");
+    const token = localStorage.getItem("authToken");
+    setIsLoggedIn(!!token);
   }, [navigate, location]);
 
   // Handle dark mode
@@ -115,8 +115,7 @@ const Header = () => {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
+    localStorage.removeItem("authToken");
     setIsLoggedIn(false);
     setProfileDropdownOpen(false);
     navigate("/");

@@ -79,7 +79,7 @@ const Login = () => {
 
       console.log("Login successful:", response);
 
-      localStorage.setItem("token", response.token);
+      localStorage.setItem("authToken", response.token);
       localStorage.setItem("user", JSON.stringify(response.user));
 
       setUser(response.user);

@@ -6,7 +6,7 @@ const AuthContext = createContext();
 // AuthContextProvider component
 const AuthContextProvider = ({ children }) => {
   const [authToken, setAuthToken] = useState(() => {
-    return localStorage.getItem("token") || null;
+    return localStorage.getItem("authToken") || null;
   });
 
   const [user, setUser] = useState(null);

@@ -20,10 +20,10 @@ import CreateUser from "./pages/admin/CreateUser";
 
 // Protected Route Component for Admin pages
 const ProtectedAdminRoute = ({ children }) => {
-  const user = JSON.parse(localStorage.getItem("user"));
+  const token = localStorage.getItem("authToken");
   const allowedRoles = ["Admin", "editor", "subscriber"]; // extend roles here
 
-  if (!user || !allowedRoles.includes(user.role)) {
+  if (!token) {
     return <Navigate to="/login" replace />;
   }
 
@@ -32,8 +32,8 @@ const ProtectedAdminRoute = ({ children }) => {
 
 // Protected Route Component for Public pages when logged in
 const ProtectedPublicRoute = ({ children }) => {
-  const user = JSON.parse(localStorage.getItem("user"));
-  if (user) {
+  const token = localStorage.getItem("authToken");
+  if (token) {
     return <Navigate to="/admin" replace />;
   }
   return children;
