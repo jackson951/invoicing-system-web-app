@@ -115,57 +115,76 @@ const Login = () => {
       setLoading(false);
     }
   };
-
   const loginWithGoogle = useGoogleLogin({
+    flow: "implicit", // or use "auth-code" for better security
     onSuccess: async (tokenResponse) => {
+      const idToken = tokenResponse.id_token;
+
       try {
-        const userInfoResponse = await fetch(
-          "https://www.googleapis.com/oauth2/v3/userinfo",
-          {
-            headers: {
-              Authorization: `Bearer ${tokenResponse.access_token}`,
-            },
-          }
-        );
+        const res = await ApiService.post("/auth/google-login", {
+          idToken, // ✅ send ID token, not access token
+        });
 
-        const userInfo = await userInfoResponse.json();
-        console.log("Google user info:", userInfo);
-        const fullName = `${userInfo.given_name} ${userInfo.family_name}`;
+        const { token, user } = res.data;
 
-        // Simulate or send this to your backend to verify/create user session
-        const user = {
-          email: userInfo?.email,
-          name: userInfo?.name,
-          picture: userInfo?.picture,
-          fullName: fullName,
-          role: "Admin", // or infer dynamically from your DB if connected
-        };
-
-        localStorage.setItem("token", tokenResponse.access_token);
+        localStorage.setItem("authToken", token);
         localStorage.setItem("user", JSON.stringify(user));
+        saveToken(token);
+        setUser(user);
         setLoginSuccess(true);
 
-        // Redirect based on role
         setTimeout(() => {
-          if (user.role === "Admin") {
-            navigate("/admin");
-          } else if (user.role === "Business Owner") {
-            navigate("/business");
-          } else if (user.role === "Accountant") {
-            navigate("/accountant");
-          } else {
-            navigate("/");
-          }
+          navigate("/admin"); // or redirect by role
         }, 1500);
       } catch (err) {
         console.error("Google login failed:", err);
-        setApiError("Failed to fetch user info from Google.");
+        setApiError("Login failed.");
       }
     },
     onError: () => {
       setApiError("Google login was cancelled or failed.");
     },
   });
+
+  const handleLoginWithGoogle = async (credentialResponse) => {
+    const idToken = credentialResponse.credential;
+    try {
+      const response = await fetch(
+        "https://localhost:7221/api/auth/google-login",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ idToken }),
+        }
+      );
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || response.statusText);
+      }
+
+      const data = await response.json();
+      console.log(data, "the data");
+      // Store your own JWT and user
+      localStorage.setItem("authToken", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      saveToken(data.token);
+      setUser(user);
+      setLoginSuccess(true);
+
+      setTimeout(() => {
+        navigate("/admin"); // or redirect by role
+      }, 1500);
+      setLoginSuccess(true);
+    } catch (err) {
+      console.error("Login failed:", err);
+      setApiError(err.message || "Google login failed.");
+    }
+  };
+
+  const handleError = () => {
+    setApiError("Google login was cancelled or failed.");
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center px-4 py-12">
@@ -368,21 +387,11 @@ const Login = () => {
           </div>
 
           <div className="mt-6 grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => loginWithGoogle()}
-              className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
-              </svg>
-            </button>
-
+            <GoogleLogin
+              onSuccess={handleLoginWithGoogle}
+              onError={handleError}
+              useOneTap // you can remove this if you don’t want One-Tap
+            />
             <button
               type="button"
               onClick={() => console.log("GitHub login")}
