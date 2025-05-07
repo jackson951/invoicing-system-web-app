@@ -74,6 +74,7 @@ const Login = () => {
   const onSubmit = async (data) => {
     setLoading(true);
     setApiError("");
+
     try {
       const response = await loginUser(data);
 
@@ -93,9 +94,19 @@ const Login = () => {
     } catch (error) {
       console.error("Login failed:", error.message);
       console.log(error.response, "the login error");
-      setApiError(
-        error.message || "Login failed. Please check your credentials."
-      );
+
+      // Extract meaningful error message from the server
+      const serverMessage =
+        error.response?.data?.message ||
+        (typeof error.response?.data === "string"
+          ? error.response.data
+          : null) ||
+        "Login failed. Please check your credentials.";
+
+      // Set error to show in the UI
+      setApiError(serverMessage);
+
+      // Reset the form: keep email, clear password
       reset({
         email: control._formValues.email,
         password: "",
