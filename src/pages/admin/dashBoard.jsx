@@ -429,7 +429,7 @@ const AdminDashboard = () => {
   };
 
   const addEmployee = async () => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("authToken");
     if (!token) {
       console.error("User is not authenticated.");
       return;
