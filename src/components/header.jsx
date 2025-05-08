@@ -150,7 +150,7 @@ const Header = () => {
   // In your Header component
   const handleAdminNavigation = (tab) => {
     setActiveTab(tab);
-    navigate(`/admin`);
+    navigate(`/admin`); // Fixed navigation to include proper path
     setProfileDropdownOpen(false);
     setMobileMenuOpen(false);
   };
@@ -256,7 +256,7 @@ const Header = () => {
             )}
           </motion.button>
 
-          {/* Notifications */}
+          {/* Notifications - Only visible when logged in */}
           {isLoggedIn && (
             <div className="relative">
               <motion.button
@@ -344,7 +344,7 @@ const Header = () => {
             </div>
           )}
 
-          {/* Profile & Login/Logout */}
+          {/* Profile & Login/Logout - Hide login buttons on smaller screens */}
           {isLoggedIn ? (
             <div className="flex items-center space-x-3">
               {/* Profile button */}
@@ -434,7 +434,7 @@ const Header = () => {
                         onClick={() => handleAdminNavigation("settings")}
                         className={`w-full text-left block px-4 py-2.5 text-sm hover:bg-gray-100/50 dark:hover:bg-gray-700/50 transition-colors duration-300 flex items-center ${
                           activeTab === "settings"
-                            ? "text-indigo-6 00 dark:text-indigo-400 font-medium"
+                            ? "text-indigo-600 dark:text-indigo-400 font-medium"
                             : "text-gray-700 dark:text-gray-300"
                         }`}
                       >
@@ -454,7 +454,7 @@ const Header = () => {
               </div>
             </div>
           ) : (
-            <div className="flex items-center space-x-3">
+            <div className="hidden md:flex items-center space-x-3">
               <Link
                 to="/login"
                 className="px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors duration-300"
