@@ -176,6 +176,7 @@ SaaS-Invoicing/
 │   └── api-spec.md
 ├── README.md
 └── .env.example
+```
 
 ## 📈 Roadmap
 
