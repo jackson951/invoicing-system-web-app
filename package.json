@@ -32,7 +32,7 @@
     "web-vitals": "^2.1.4",
     "zod": "^3.24.3"
   },
-  "homepage": "https://jackson951.github.io/invoicing-system-web-app",
+
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
