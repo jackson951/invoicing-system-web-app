@@ -390,7 +390,6 @@ const Login = () => {
             <GoogleLogin
               onSuccess={handleLoginWithGoogle}
               onError={handleError}
-              useOneTap // you can remove this if you don’t want One-Tap
             />
             <button
               type="button"
