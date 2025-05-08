@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useAnimation } from "framer-motion";
 import axios from "axios";
 
 // Components
@@ -11,7 +11,21 @@ import OtpInput from "../components/OtpInput";
 import PasswordStrengthMeter from "../components/PasswordStrengthMeter";
 
 // Icons
-import { FiEye, FiEyeOff, FiCheck, FiX, FiInfo } from "react-icons/fi";
+import {
+  FiEye,
+  FiEyeOff,
+  FiCheck,
+  FiX,
+  FiInfo,
+  FiLock,
+  FiMail,
+  FiUser,
+  FiBriefcase,
+  FiPhone,
+  FiLoader,
+  FiChevronRight,
+  FiShield,
+} from "react-icons/fi";
 
 // Services
 import {
@@ -20,7 +34,6 @@ import {
   verifyOtp,
   sendVerificationEmail,
 } from "../utils/api";
-
 import { ApiService } from "../api/web-api-service";
 
 // Zod Validation Schema
@@ -73,6 +86,45 @@ const registerSchema = z
     message: "Passwords do not match",
   });
 
+// Particle system component
+const Particles = ({ count = 30 }) => {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {[...Array(count)].map((_, i) => {
+        const size = Math.random() * 5 + 3;
+        const duration = Math.random() * 15 + 10;
+        const delay = Math.random() * 5;
+        const x = Math.random() * 100;
+        const y = Math.random() * 100;
+
+        return (
+          <motion.div
+            key={i}
+            className="absolute rounded-full bg-white/10"
+            style={{
+              width: `${size}px`,
+              height: `${size}px`,
+              left: `${x}%`,
+              top: `${y}%`,
+            }}
+            animate={{
+              x: [0, 50, 0],
+              y: [0, 50, 0],
+              opacity: [0.3, 0.8, 0.3],
+            }}
+            transition={{
+              duration: duration,
+              repeat: Infinity,
+              repeatType: "reverse",
+              delay: delay,
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+};
+
 const Register = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
@@ -84,7 +136,10 @@ const Register = () => {
   const [apiError, setApiError] = useState("");
   const [timer, setTimer] = useState(0);
   const [resendOtpDisabled, setResendOtpDisabled] = useState(false);
-  const API_URL = "https://localhost:7221/api/auth/register";
+  const [hoverState, setHoverState] = useState(null);
+  const navigate = useNavigate();
+  const formRef = useRef();
+  const controls = useAnimation();
 
   const {
     control,
@@ -100,7 +155,7 @@ const Register = () => {
   });
 
   const email = watch("email");
-  const navigate = useNavigate();
+  const password = watch("password");
 
   // OTP Timer
   useEffect(() => {
@@ -117,6 +172,12 @@ const Register = () => {
   const onSubmit = async (data) => {
     setLoading(true);
     setApiError("");
+
+    // Form submission animation
+    await controls.start({
+      scale: 0.98,
+      transition: { duration: 0.2 },
+    });
 
     const registrationData = { ...data, role: "Admin" };
 
@@ -139,8 +200,17 @@ const Register = () => {
         "Registration failed:",
         error.response?.data || error.message
       );
-      alert("Registration failed");
-      setApiError(error.message || "Registration failed. Please try again.");
+
+      // Error animation
+      await controls.start({
+        x: [0, -10, 10, -10, 0],
+        transition: { duration: 0.5 },
+      });
+
+      setApiError(
+        error.response?.data?.message ||
+          "Registration failed. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -154,6 +224,12 @@ const Register = () => {
       const result = await verifyOtp(otpData.email, otpData.otp);
       if (result.success && result.token) {
         setOtpSuccess(true);
+
+        // Success animation
+        await controls.start({
+          scale: 1,
+          transition: { duration: 0.3 },
+        });
 
         // Send verification email
         const emailRes = await sendVerificationEmail(otpData.email);
@@ -184,433 +260,587 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4 py-8">
-      <div className="max-w-4xl w-full bg-white p-8 rounded-xl shadow-xl">
-        {/* Progress Steps */}
-        <div className="flex justify-between mb-8 relative">
-          {[1, 2, 3].map((step) => (
-            <React.Fragment key={step}>
-              <div
-                className={`flex flex-col items-center ${
-                  currentStep >= step ? "text-indigo-600" : "text-gray-400"
-                }`}
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-indigo-900 overflow-hidden relative flex items-center justify-center px-4 py-12">
+      {/* Background particles */}
+      <Particles count={50} />
+
+      {/* Floating gradient circles */}
+      <motion.div
+        animate={{
+          backgroundPosition: ["0% 0%", "100% 100%"],
+        }}
+        transition={{
+          duration: 20,
+          repeat: Infinity,
+          repeatType: "reverse",
+          ease: "linear",
+        }}
+        className="absolute -left-32 -top-32 w-96 h-96 rounded-full bg-gradient-to-r from-indigo-600/20 to-purple-600/20 blur-3xl -z-10"
+      />
+      <motion.div
+        animate={{
+          backgroundPosition: ["100% 100%", "0% 0%"],
+        }}
+        transition={{
+          duration: 25,
+          repeat: Infinity,
+          repeatType: "reverse",
+          ease: "linear",
+          delay: 5,
+        }}
+        className="absolute -right-32 -bottom-32 w-96 h-96 rounded-full bg-gradient-to-r from-pink-600/20 to-purple-600/20 blur-3xl -z-10"
+      />
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="max-w-5xl w-full relative"
+      >
+        {/* Glass card effect */}
+        <div className="absolute inset-0 bg-white/5 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/10 -z-10"></div>
+
+        <motion.div
+          ref={formRef}
+          animate={controls}
+          className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 p-8 rounded-2xl shadow-xl border border-white/10 backdrop-blur-sm"
+        >
+          {/* Progress Steps */}
+          <div className="flex justify-between mb-8 relative">
+            {[1, 2, 3].map((step) => (
+              <React.Fragment key={step}>
+                <div
+                  className={`flex flex-col items-center ${
+                    currentStep >= step ? "text-indigo-400" : "text-gray-500"
+                  }`}
+                >
+                  <div
+                    className={`w-12 h-12 rounded-full flex items-center justify-center border-2 ${
+                      currentStep >= step
+                        ? "border-indigo-400 bg-indigo-900/50"
+                        : "border-gray-600"
+                    } transition-all`}
+                  >
+                    {currentStep > step ? (
+                      <FiCheck className="text-indigo-400" />
+                    ) : (
+                      <span className="text-lg font-medium">{step}</span>
+                    )}
+                  </div>
+                  <span className="mt-2 text-sm font-medium">
+                    {step === 1
+                      ? "Account"
+                      : step === 2
+                      ? "Verification"
+                      : "Complete"}
+                  </span>
+                </div>
+                {step < 3 && (
+                  <div
+                    className={`absolute top-1/2 h-1 w-1/3 ${
+                      currentStep > step ? "bg-indigo-400" : "bg-gray-600"
+                    } transition-all`}
+                    style={{ left: `${step * 33.33 - 16.66}%` }}
+                  />
+                )}
+              </React.Fragment>
+            ))}
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Left Column - Form */}
+            <div>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
               >
-                <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${
-                    currentStep >= step
-                      ? "border-indigo-600 bg-indigo-100"
-                      : "border-gray-300"
-                  }`}
-                >
-                  {currentStep > step ? (
-                    <FiCheck className="text-indigo-600" />
-                  ) : (
-                    step
-                  )}
-                </div>
-                <span className="mt-2 text-sm font-medium">
-                  {step === 1
-                    ? "Account"
-                    : step === 2
-                    ? "Verification"
-                    : "Complete"}
-                </span>
-              </div>
-              {step < 3 && (
-                <div
-                  className={`absolute top-1/2 h-1 w-1/3 ${
-                    currentStep > step ? "bg-indigo-600" : "bg-gray-300"
-                  }`}
-                  style={{ left: `${step * 33.33 - 16.66}%` }}
-                />
-              )}
-            </React.Fragment>
-          ))}
-        </div>
+                <h2 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-400">
+                  {showOtpInput
+                    ? "Verify Your Identity"
+                    : "Create Owner Account"}
+                </h2>
+                <p className="text-gray-400 mb-6">
+                  {showOtpInput
+                    ? "Enter the 6-digit code sent to your email"
+                    : "Full administrative access to the platform"}
+                </p>
+              </motion.div>
 
-        <div className="grid md:grid-cols-2 gap-8">
-          {/* Left Column - Form */}
-          <div>
-            <h2 className="text-3xl font-bold mb-6 text-gray-800">
-              {showOtpInput ? "Verify Your Email" : "Create Owner Account"}
-            </h2>
+              {/* Error Toast */}
+              <AnimatePresence>
+                {apiError && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="bg-red-900/50 border-l-4 border-red-400 p-4 mb-6 rounded-lg"
+                  >
+                    <div className="flex items-center">
+                      <FiX className="text-red-400 mr-2" />
+                      <p className="text-red-100">{apiError}</p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-            {/* Error Toast */}
-            <AnimatePresence>
-              {apiError && (
-                <motion.div
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded"
-                >
+              {/* Success Toast - Registration */}
+              {formSuccess && !showOtpInput && (
+                <div className="bg-green-900/50 border-l-4 border-green-400 text-green-100 p-4 mb-6 rounded-lg">
                   <div className="flex items-center">
-                    <FiX className="mr-2" />
-                    <p>{apiError}</p>
+                    <FiCheck className="mr-2" />
+                    Registration successful! Please verify your OTP.
                   </div>
-                </motion.div>
+                </div>
               )}
-            </AnimatePresence>
 
-            {/* Success Toast - Registration */}
-            {formSuccess && !showOtpInput && (
-              <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded">
-                <div className="flex items-center">
-                  <FiCheck className="mr-2" />
-                  Registration successful! Please verify your OTP.
-                </div>
-              </div>
-            )}
-
-            {/* Form or OTP Step */}
-            {!showOtpInput ? (
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-                {/* Full Name */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Full Name
-                  </label>
-                  <Controller
-                    name="fullName"
-                    control={control}
-                    render={({ field }) => (
-                      <input
-                        {...field}
-                        placeholder="John Doe"
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all ${
-                          errors.fullName ? "border-red-500" : "border-gray-300"
-                        }`}
-                      />
-                    )}
-                  />
-                  {errors.fullName && (
-                    <p className="text-red-500 text-sm mt-1 flex items-center">
-                      <FiInfo className="mr-1" /> {errors.fullName.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* Email */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email Address
-                  </label>
-                  <Controller
-                    name="email"
-                    control={control}
-                    render={({ field }) => (
-                      <input
-                        {...field}
-                        type="email"
-                        placeholder="john@example.com"
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all ${
-                          errors.email ? "border-red-500" : "border-gray-300"
-                        }`}
-                      />
-                    )}
-                  />
-                  {errors.email && (
-                    <p className="text-red-500 text-sm mt-1 flex items-center">
-                      <FiInfo className="mr-1" /> {errors.email.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* Company Name */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Company Name
-                  </label>
-                  <Controller
-                    name="companyName"
-                    control={control}
-                    render={({ field }) => (
-                      <input
-                        {...field}
-                        placeholder="Acme Inc"
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all ${
-                          errors.companyName
-                            ? "border-red-500"
-                            : "border-gray-300"
-                        }`}
-                      />
-                    )}
-                  />
-                  {errors.companyName && (
-                    <p className="text-red-500 text-sm mt-1 flex items-center">
-                      <FiInfo className="mr-1" /> {errors.companyName.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* Phone */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Phone Number{" "}
-                    <span className="text-gray-500">(optional)</span>
-                  </label>
-                  <Controller
-                    name="phone"
-                    control={control}
-                    render={({ field }) => (
-                      <input
-                        {...field}
-                        type="tel"
-                        placeholder="+1 (555) 123-4567"
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all ${
-                          errors.phone ? "border-red-500" : "border-gray-300"
-                        }`}
-                      />
-                    )}
-                  />
-                  {errors.phone && (
-                    <p className="text-red-500 text-sm mt-1 flex items-center">
-                      <FiInfo className="mr-1" /> {errors.phone.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* Password */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Password
-                  </label>
-                  <div className="relative">
-                    <Controller
-                      name="password"
-                      control={control}
-                      render={({ field }) => (
-                        <input
-                          {...field}
-                          type={showPassword ? "text" : "password"}
-                          placeholder="••••••••"
-                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all ${
-                            errors.password
-                              ? "border-red-500"
-                              : "border-gray-300"
-                          }`}
-                        />
-                      )}
-                    />
-                    <button
-                      type="button"
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? <FiEyeOff /> : <FiEye />}
-                    </button>
-                  </div>
-                  {watch("password") && (
-                    <PasswordStrengthMeter password={watch("password")} />
-                  )}
-                  {errors.password && (
-                    <p className="text-red-500 text-sm mt-1 flex items-center">
-                      <FiInfo className="mr-1" /> {errors.password.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* Confirm Password */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Confirm Password
-                  </label>
-                  <div className="relative">
-                    <Controller
-                      name="confirmPassword"
-                      control={control}
-                      render={({ field }) => (
-                        <input
-                          {...field}
-                          type={showConfirmPassword ? "text" : "password"}
-                          placeholder="••••••••"
-                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all ${
-                            errors.confirmPassword
-                              ? "border-red-500"
-                              : "border-gray-300"
-                          }`}
-                        />
-                      )}
-                    />
-                    <button
-                      type="button"
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                      onClick={() =>
-                        setShowConfirmPassword(!showConfirmPassword)
-                      }
-                    >
-                      {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
-                    </button>
-                  </div>
-                  {errors.confirmPassword && (
-                    <p className="text-red-500 text-sm mt-1 flex items-center">
-                      <FiInfo className="mr-1" />{" "}
-                      {errors.confirmPassword.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* Terms Checkbox */}
-                <div className="flex items-start">
-                  <div className="flex items-center h-5">
-                    <Controller
-                      name="terms"
-                      control={control}
-                      render={({ field }) => (
-                        <input
-                          type="checkbox"
-                          id="terms"
-                          checked={field.value}
-                          onChange={(e) => field.onChange(e.target.checked)}
-                          className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                        />
-                      )}
-                    />
-                  </div>
-                  <div className="ml-3 text-sm">
-                    <label
-                      htmlFor="terms"
-                      className="font-medium text-gray-700"
-                    >
-                      I agree to the{" "}
-                      <a
-                        href="#"
-                        className="text-indigo-600 hover:text-indigo-500"
-                      >
-                        Terms of Service
-                      </a>{" "}
-                      and{" "}
-                      <a
-                        href="#"
-                        className="text-indigo-600 hover:text-indigo-500"
-                      >
-                        Privacy Policy
-                      </a>
+              {/* Form or OTP Step */}
+              {!showOtpInput ? (
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+                  {/* Full Name */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                      Full Name
                     </label>
-                    {errors.terms && (
-                      <p className="text-red-500 text-sm mt-1 flex items-center">
-                        <FiInfo className="mr-1" /> {errors.terms.message}
-                      </p>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <FiUser className="text-gray-500" />
+                      </div>
+                      <Controller
+                        name="fullName"
+                        control={control}
+                        render={({ field }) => (
+                          <input
+                            {...field}
+                            placeholder="John Doe"
+                            className={`w-full pl-10 pr-4 py-3 bg-gray-700/50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-white placeholder-gray-400 transition-all ${
+                              errors.fullName
+                                ? "border-red-400"
+                                : "border-gray-600"
+                            }`}
+                          />
+                        )}
+                      />
+                    </div>
+                    {errors.fullName && (
+                      <motion.p
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-red-400 text-sm mt-1 flex items-center"
+                      >
+                        <FiInfo className="mr-1" /> {errors.fullName.message}
+                      </motion.p>
                     )}
                   </div>
-                </div>
 
-                {/* Submit Button */}
-                <button
-                  type="submit"
-                  disabled={loading || !isValid}
-                  className={`w-full py-3 px-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-all flex justify-center items-center ${
-                    loading || !isValid ? "opacity-70 cursor-not-allowed" : ""
-                  }`}
-                >
-                  {loading ? (
-                    <>
-                      <svg
-                        className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
+                  {/* Email */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                      Email Address
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <FiMail className="text-gray-500" />
+                      </div>
+                      <Controller
+                        name="email"
+                        control={control}
+                        render={({ field }) => (
+                          <input
+                            {...field}
+                            type="email"
+                            placeholder="john@example.com"
+                            className={`w-full pl-10 pr-4 py-3 bg-gray-700/50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-white placeholder-gray-400 transition-all ${
+                              errors.email
+                                ? "border-red-400"
+                                : "border-gray-600"
+                            }`}
+                          />
+                        )}
+                      />
+                    </div>
+                    {errors.email && (
+                      <motion.p
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-red-400 text-sm mt-1 flex items-center"
                       >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      Creating Account...
-                    </>
-                  ) : (
-                    "Register as Owner"
-                  )}
-                </button>
-              </form>
-            ) : currentStep === 2 ? (
-              <OtpInput
-                control={control}
-                errors={errors}
-                onSubmit={handleOtpSubmit}
-                isSubmitting={loading}
-                email={email}
-                onResendOtp={handleResendOtp}
-                resendDisabled={resendOtpDisabled}
-                timer={timer}
-              />
-            ) : (
-              <div className="text-center py-8">
-                <div className="flex justify-center mb-4">
-                  <FiCheck className="text-green-500 text-5xl" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">Email Sent</h3>
-                <p className="text-gray-600">
-                  A verification link has been sent to your email address.
-                  Please check your inbox (and spam/junk folder) and click the
-                  link to complete your registration.
-                </p>
-                <button
-                  onClick={() => navigate("/login")}
-                  className="mt-6 w-full py-3 px-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-all"
-                >
-                  Go to Login
-                </button>
-              </div>
-            )}
+                        <FiInfo className="mr-1" /> {errors.email.message}
+                      </motion.p>
+                    )}
+                  </div>
 
-            {/* Login Link */}
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
-                Already have an account?{" "}
-                <a
-                  href="/login"
-                  className="font-medium text-indigo-600 hover:text-indigo-500"
-                >
-                  Sign in
-                </a>
-              </p>
+                  {/* Company Name */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                      Company Name
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <FiBriefcase className="text-gray-500" />
+                      </div>
+                      <Controller
+                        name="companyName"
+                        control={control}
+                        render={({ field }) => (
+                          <input
+                            {...field}
+                            placeholder="Acme Inc"
+                            className={`w-full pl-10 pr-4 py-3 bg-gray-700/50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-white placeholder-gray-400 transition-all ${
+                              errors.companyName
+                                ? "border-red-400"
+                                : "border-gray-600"
+                            }`}
+                          />
+                        )}
+                      />
+                    </div>
+                    {errors.companyName && (
+                      <motion.p
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-red-400 text-sm mt-1 flex items-center"
+                      >
+                        <FiInfo className="mr-1" /> {errors.companyName.message}
+                      </motion.p>
+                    )}
+                  </div>
+
+                  {/* Phone */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                      Phone Number{" "}
+                      <span className="text-gray-500">(optional)</span>
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <FiPhone className="text-gray-500" />
+                      </div>
+                      <Controller
+                        name="phone"
+                        control={control}
+                        render={({ field }) => (
+                          <input
+                            {...field}
+                            type="tel"
+                            placeholder="+1 (555) 123-4567"
+                            className={`w-full pl-10 pr-4 py-3 bg-gray-700/50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-white placeholder-gray-400 transition-all ${
+                              errors.phone
+                                ? "border-red-400"
+                                : "border-gray-600"
+                            }`}
+                          />
+                        )}
+                      />
+                    </div>
+                    {errors.phone && (
+                      <motion.p
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-red-400 text-sm mt-1 flex items-center"
+                      >
+                        <FiInfo className="mr-1" /> {errors.phone.message}
+                      </motion.p>
+                    )}
+                  </div>
+
+                  {/* Password */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                      Password
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <FiLock className="text-gray-500" />
+                      </div>
+                      <Controller
+                        name="password"
+                        control={control}
+                        render={({ field }) => (
+                          <input
+                            {...field}
+                            type={showPassword ? "text" : "password"}
+                            placeholder="••••••••"
+                            className={`w-full pl-10 pr-10 py-3 bg-gray-700/50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-white placeholder-gray-400 transition-all ${
+                              errors.password
+                                ? "border-red-400"
+                                : "border-gray-600"
+                            }`}
+                          />
+                        )}
+                      />
+                      <button
+                        type="button"
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-300"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? <FiEyeOff /> : <FiEye />}
+                      </button>
+                    </div>
+                    {password && <PasswordStrengthMeter password={password} />}
+                    {errors.password && (
+                      <motion.p
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-red-400 text-sm mt-1 flex items-center"
+                      >
+                        <FiInfo className="mr-1" /> {errors.password.message}
+                      </motion.p>
+                    )}
+                  </div>
+
+                  {/* Confirm Password */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                      Confirm Password
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <FiLock className="text-gray-500" />
+                      </div>
+                      <Controller
+                        name="confirmPassword"
+                        control={control}
+                        render={({ field }) => (
+                          <input
+                            {...field}
+                            type={showConfirmPassword ? "text" : "password"}
+                            placeholder="••••••••"
+                            className={`w-full pl-10 pr-10 py-3 bg-gray-700/50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-white placeholder-gray-400 transition-all ${
+                              errors.confirmPassword
+                                ? "border-red-400"
+                                : "border-gray-600"
+                            }`}
+                          />
+                        )}
+                      />
+                      <button
+                        type="button"
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-300"
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
+                      >
+                        {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
+                      </button>
+                    </div>
+                    {errors.confirmPassword && (
+                      <motion.p
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-red-400 text-sm mt-1 flex items-center"
+                      >
+                        <FiInfo className="mr-1" />{" "}
+                        {errors.confirmPassword.message}
+                      </motion.p>
+                    )}
+                  </div>
+
+                  {/* Terms Checkbox */}
+                  <div className="flex items-start">
+                    <div className="flex items-center h-5">
+                      <Controller
+                        name="terms"
+                        control={control}
+                        render={({ field }) => (
+                          <input
+                            type="checkbox"
+                            id="terms"
+                            checked={field.value}
+                            onChange={(e) => field.onChange(e.target.checked)}
+                            className="w-4 h-4 text-indigo-600 border-gray-600 rounded focus:ring-indigo-500 bg-gray-700"
+                          />
+                        )}
+                      />
+                    </div>
+                    <div className="ml-3 text-sm">
+                      <label
+                        htmlFor="terms"
+                        className="font-medium text-gray-300"
+                      >
+                        I agree to the{" "}
+                        <a
+                          href="#"
+                          className="text-indigo-400 hover:text-indigo-300 hover:underline"
+                        >
+                          Terms of Service
+                        </a>{" "}
+                        and{" "}
+                        <a
+                          href="#"
+                          className="text-indigo-400 hover:text-indigo-300 hover:underline"
+                        >
+                          Privacy Policy
+                        </a>
+                      </label>
+                      {errors.terms && (
+                        <motion.p
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="text-red-400 text-sm mt-1 flex items-center"
+                        >
+                          <FiInfo className="mr-1" /> {errors.terms.message}
+                        </motion.p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Submit Button */}
+                  <button
+                    type="submit"
+                    disabled={loading || !isValid}
+                    className={`w-full py-3 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all flex justify-center items-center relative overflow-hidden ${
+                      loading || !isValid ? "opacity-70 cursor-not-allowed" : ""
+                    }`}
+                    onMouseEnter={() => setHoverState("submit")}
+                    onMouseLeave={() => setHoverState(null)}
+                  >
+                    {/* Button hover effect */}
+                    {hoverState === "submit" && (
+                      <motion.span
+                        className="absolute inset-0 bg-white/10"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.3 }}
+                      />
+                    )}
+
+                    {loading ? (
+                      <>
+                        <FiLoader className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
+                        Creating Account...
+                      </>
+                    ) : (
+                      <>
+                        <span>Register as Owner</span>
+                        <FiChevronRight className="ml-2" />
+                      </>
+                    )}
+                  </button>
+                </form>
+              ) : currentStep === 2 ? (
+                <OtpInput
+                  control={control}
+                  errors={errors}
+                  onSubmit={handleOtpSubmit}
+                  isSubmitting={loading}
+                  email={email}
+                  onResendOtp={handleResendOtp}
+                  resendDisabled={resendOtpDisabled}
+                  timer={timer}
+                />
+              ) : (
+                <div className="text-center py-8">
+                  <div className="flex justify-center mb-4">
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-r from-green-600 to-emerald-500 flex items-center justify-center">
+                      <FiCheck className="text-white text-3xl" />
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2 text-white">
+                    Email Verification Sent
+                  </h3>
+                  <p className="text-gray-400 mb-6">
+                    A secure verification link has been sent to{" "}
+                    <span className="text-indigo-300">{email}</span>. Please
+                    check your inbox (and spam/junk folder) to complete your
+                    registration.
+                  </p>
+                  <button
+                    onClick={() => navigate("/login")}
+                    className="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all"
+                  >
+                    Continue to Login
+                  </button>
+                </div>
+              )}
+
+              {/* Login Link */}
+              <div className="mt-6 text-center">
+                <p className="text-sm text-gray-400">
+                  Already have an account?{" "}
+                  <a
+                    href="/login"
+                    className="font-medium text-indigo-400 hover:text-indigo-300 hover:underline"
+                  >
+                    Sign in
+                  </a>
+                </p>
+              </div>
+            </div>
+
+            {/* Right Column - Info/Illustration */}
+            <div className="hidden md:block">
+              <div className="h-full flex flex-col justify-center items-center bg-gray-700/50 rounded-lg p-8 border border-white/10">
+                <div className="text-center max-w-xs">
+                  <div className="flex justify-center mb-6">
+                    <div className="w-24 h-24 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center">
+                      <FiShield className="text-white text-4xl" />
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-3">
+                    Owner Privileges
+                  </h3>
+                  <p className="text-gray-400 mb-6">
+                    As the owner, you'll have complete control over your
+                    organization's account with these exclusive privileges:
+                  </p>
+                  <div className="space-y-3 text-left">
+                    <div className="flex items-start">
+                      <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center mr-2 mt-0.5">
+                        <FiCheck className="text-green-400 text-xs" />
+                      </div>
+                      <span className="text-gray-300">
+                        Full administrative control
+                      </span>
+                    </div>
+                    <div className="flex items-start">
+                      <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center mr-2 mt-0.5">
+                        <FiCheck className="text-green-400 text-xs" />
+                      </div>
+                      <span className="text-gray-300">User management</span>
+                    </div>
+                    <div className="flex items-start">
+                      <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center mr-2 mt-0.5">
+                        <FiCheck className="text-green-400 text-xs" />
+                      </div>
+                      <span className="text-gray-300">
+                        System configuration
+                      </span>
+                    </div>
+                    <div className="flex items-start">
+                      <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center mr-2 mt-0.5">
+                        <FiCheck className="text-green-400 text-xs" />
+                      </div>
+                      <span className="text-gray-300">Advanced analytics</span>
+                    </div>
+                    <div className="flex items-start">
+                      <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center mr-2 mt-0.5">
+                        <FiCheck className="text-green-400 text-xs" />
+                      </div>
+                      <span className="text-gray-300">
+                        Billing and subscriptions
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
+        </motion.div>
 
-          {/* Right Column - Info/Illustration */}
-          <div className="hidden md:block">
-            <div className="h-full flex flex-col justify-center items-center bg-indigo-50 rounded-lg p-6">
-              <div className="text-center">
-                <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                  Owner Account
-                </h3>
-                <p className="text-gray-600 mb-6">
-                  As the owner, you'll have full access to manage users,
-                  settings, and all aspects of the application.
-                </p>
-                <div className="space-y-3 text-left">
-                  <div className="flex items-start">
-                    <FiCheck className="text-green-500 mt-1 mr-2" />
-                    <span>Full administrative privileges</span>
-                  </div>
-                  <div className="flex items-start">
-                    <FiCheck className="text-green-500 mt-1 mr-2" />
-                    <span>Add and manage other users</span>
-                  </div>
-                  <div className="flex items-start">
-                    <FiCheck className="text-green-500 mt-1 mr-2" />
-                    <span>Configure system settings</span>
-                  </div>
-                  <div className="flex items-start">
-                    <FiCheck className="text-green-500 mt-1 mr-2" />
-                    <span>Access all features and data</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+        {/* Security badge */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="mt-6 flex items-center justify-center text-xs text-gray-500"
+        >
+          <div className="flex items-center">
+            <FiShield className="w-4 h-4 text-green-400 mr-1" />
+            <span>End-to-end encrypted | GDPR compliant</span>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 };

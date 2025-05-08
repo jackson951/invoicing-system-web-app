@@ -1,46 +1,36 @@
 import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  FaGithub,
-  FaTwitter,
-  FaLinkedin,
-  FaFacebook,
-  FaYoutube,
-  FaInstagram,
-  FaRegEnvelope,
-  FaPhoneAlt,
-  FaMapMarkerAlt,
-} from "react-icons/fa";
+  FiMail,
+  FiPhone,
+  FiMapPin,
+  FiArrowUp,
+  FiGithub,
+  FiTwitter,
+  FiLinkedin,
+  FiYoutube,
+  FiInstagram,
+  FiFacebook,
+} from "react-icons/fi";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
 
 const Footer = () => {
-  const [year, setYear] = useState(new Date().getFullYear());
+  const [year] = useState(new Date().getFullYear());
   const [isVisible, setIsVisible] = useState(false);
   const [email, setEmail] = useState("");
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [activeHover, setActiveHover] = useState(null);
 
   useEffect(() => {
-    // Update year in case component stays mounted across year change
-    const interval = setInterval(() => {
-      setYear(new Date().getFullYear());
-    }, 1000 * 60 * 60); // Check every hour
-
-    // Animation trigger
     const handleScroll = () => {
-      if (
-        window.scrollY >
-        document.body.scrollHeight - window.innerHeight - 300
-      ) {
+      if (window.scrollY > window.innerHeight / 2) {
         setIsVisible(true);
       }
     };
 
     window.addEventListener("scroll", handleScroll);
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener("scroll", handleScroll);
-    };
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const handleSubscribe = (e) => {
@@ -48,418 +38,378 @@ const Footer = () => {
     if (!email) return;
 
     setIsLoading(true);
-    // Simulate API call
     setTimeout(() => {
       setIsSubscribed(true);
       setIsLoading(false);
       setEmail("");
-      // Reset after 5 seconds
       setTimeout(() => setIsSubscribed(false), 5000);
     }, 1500);
   };
 
   // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0, y: 20 },
+  const container = {
+    hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      y: 0,
       transition: {
         staggerChildren: 0.1,
-        delayChildren: 0.2,
-        duration: 0.5,
+        delayChildren: 0.3,
       },
     },
   };
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 },
+  const item = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { duration: 0.5 },
+    },
   };
+
+  const socialLinks = [
+    { icon: <FiGithub />, label: "GitHub", url: "https://github.com" },
+    { icon: <FiTwitter />, label: "Twitter", url: "https://twitter.com" },
+    { icon: <FiLinkedin />, label: "LinkedIn", url: "https://linkedin.com" },
+    { icon: <FiYoutube />, label: "YouTube", url: "https://youtube.com" },
+    { icon: <FiInstagram />, label: "Instagram", url: "https://instagram.com" },
+    { icon: <FiFacebook />, label: "Facebook", url: "https://facebook.com" },
+  ];
+
+  const quickLinks = [
+    { name: "Features", path: "/features" },
+    { name: "Pricing", path: "/pricing" },
+    { name: "Testimonials", path: "/testimonials" },
+    { name: "Blog", path: "/blog" },
+    { name: "Contact", path: "/contact" },
+    { name: "Request Demo", path: "/demo" },
+  ];
+
+  const resources = [
+    { name: "Help Center", path: "/help-center" },
+    { name: "Documentation", path: "/documentation" },
+    { name: "API Reference", path: "/api" },
+    { name: "Community", path: "/community" },
+    { name: "System Status", path: "/status" },
+    { name: "Security", path: "/security" },
+  ];
+
+  const legalLinks = [
+    { name: "Privacy Policy", path: "/privacy" },
+    { name: "Terms of Service", path: "/terms" },
+    { name: "Cookie Policy", path: "/cookies" },
+    { name: "GDPR Compliance", path: "/gdpr" },
+  ];
 
   return (
     <motion.footer
-      className="bg-gray-900 text-gray-300 py-12 px-4 md:px-12 mt-16"
+      className="bg-gradient-to-b from-gray-900 to-gray-950 text-gray-400 pt-16 pb-8 px-4 sm:px-6 lg:px-8 border-t border-gray-800/50"
       initial="hidden"
       animate={isVisible ? "visible" : "hidden"}
-      variants={containerVariants}
+      variants={container}
     >
       <div className="max-w-7xl mx-auto">
-        {/* Main Footer Content */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
-          {/* Company Info */}
-          <motion.div variants={itemVariants} className="space-y-4">
-            <h2 className="text-2xl font-bold text-white flex items-center">
-              <span className="bg-indigo-600 text-white p-2 rounded-lg mr-2">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+        {/* Grid Layout */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
+          {/* Brand Column */}
+          <motion.div variants={item} className="space-y-5">
+            <Link to="/" className="flex items-center group">
+              <motion.div whileHover={{ rotate: 15 }} className="relative">
+                <div className="h-10 w-10 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center mr-3">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 text-white"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                </div>
+                <motion.span
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="absolute -top-2 -right-2"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
+                  <div className="h-4 w-4 rounded-full bg-yellow-500 flex items-center justify-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-2 w-2 text-yellow-900"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                </motion.span>
+              </motion.div>
+              <span className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400 group-hover:from-indigo-300 group-hover:to-purple-300 transition-all duration-300">
+                QuantumInvoicer
               </span>
-              InvoicePro
-            </h2>
-            <p className="text-sm leading-relaxed">
-              A full-featured, SaaS-based invoicing platform to create, manage,
-              and track invoices in real-time. Empowering businesses with
-              automation, insights, and seamless payments.
+            </Link>
+
+            <p className="text-sm leading-relaxed text-gray-400">
+              Revolutionizing billing with AI-powered automation and real-time
+              analytics for modern businesses.
             </p>
 
             {/* Contact Info */}
-            <div className="space-y-2 mt-4">
+            <div className="space-y-3">
               <div className="flex items-start">
-                <FaRegEnvelope className="mt-1 mr-2 text-indigo-400" />
+                <FiMail className="mt-1 mr-3 text-indigo-400 flex-shrink-0" />
                 <a
-                  href="mailto:support@invoicepro.com"
-                  className="hover:text-indigo-400 transition-colors duration-200"
+                  href="mailto:support@quantuminvoicer.com"
+                  className="hover:text-indigo-300 transition-colors duration-300"
                 >
-                  support@invoicepro.com
+                  support@quantuminvoicer.com
                 </a>
               </div>
               <div className="flex items-start">
-                <FaPhoneAlt className="mt-1 mr-2 text-indigo-400" />
+                <FiPhone className="mt-1 mr-3 text-indigo-400 flex-shrink-0" />
                 <a
                   href="tel:+11234567890"
-                  className="hover:text-indigo-400 transition-colors duration-200"
+                  className="hover:text-indigo-300 transition-colors duration-300"
                 >
                   +1 (123) 456-7890
                 </a>
               </div>
               <div className="flex items-start">
-                <FaMapMarkerAlt className="mt-1 mr-2 text-indigo-400" />
-                <span>
-                  123 Business Ave, Suite 500, San Francisco, CA 94107
-                </span>
+                <FiMapPin className="mt-1 mr-3 text-indigo-400 flex-shrink-0" />
+                <span>123 Quantum Lane, San Francisco, CA 94107</span>
               </div>
             </div>
           </motion.div>
 
           {/* Quick Links */}
-          <motion.div variants={itemVariants} className="space-y-4">
-            <h3 className="text-sm font-semibold text-white uppercase tracking-wide">
+          <motion.div variants={item} className="space-y-5">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-300">
               Quick Links
             </h3>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link
-                  to="/features"
-                  className="hover:text-indigo-400 transition-colors duration-200 hover:underline flex items-center"
+            <ul className="space-y-3">
+              {quickLinks.map((link) => (
+                <motion.li
+                  key={link.path}
+                  whileHover={{ x: 5 }}
+                  transition={{ type: "spring", stiffness: 500 }}
                 >
-                  <span className="w-2 h-2 bg-indigo-600 rounded-full mr-2"></span>
-                  Features
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/pricing"
-                  className="hover:text-indigo-400 transition-colors duration-200 hover:underline flex items-center"
-                >
-                  <span className="w-2 h-2 bg-indigo-600 rounded-full mr-2"></span>
-                  Pricing
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/testimonials"
-                  className="hover:text-indigo-400 transition-colors duration-200 hover:underline flex items-center"
-                >
-                  <span className="w-2 h-2 bg-indigo-600 rounded-full mr-2"></span>
-                  Testimonials
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/blog"
-                  className="hover:text-indigo-400 transition-colors duration-200 hover:underline flex items-center"
-                >
-                  <span className="w-2 h-2 bg-indigo-600 rounded-full mr-2"></span>
-                  Blog
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/contact"
-                  className="hover:text-indigo-400 transition-colors duration-200 hover:underline flex items-center"
-                >
-                  <span className="w-2 h-2 bg-indigo-600 rounded-full mr-2"></span>
-                  Contact
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/demo"
-                  className="hover:text-indigo-400 transition-colors duration-200 hover:underline flex items-center"
-                >
-                  <span className="w-2 h-2 bg-indigo-600 rounded-full mr-2"></span>
-                  Request Demo
-                </Link>
-              </li>
+                  <Link
+                    to={link.path}
+                    className="flex items-center text-sm hover:text-indigo-300 transition-colors duration-300 group"
+                    onMouseEnter={() => setActiveHover(link.path)}
+                    onMouseLeave={() => setActiveHover(null)}
+                  >
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full mr-3 transition-all duration-300 ${
+                        activeHover === link.path
+                          ? "bg-gradient-to-r from-indigo-500 to-purple-500 scale-150"
+                          : "bg-gray-600"
+                      }`}
+                    ></span>
+                    {link.name}
+                  </Link>
+                </motion.li>
+              ))}
             </ul>
           </motion.div>
 
           {/* Resources */}
-          <motion.div variants={itemVariants} className="space-y-4">
-            <h3 className="text-sm font-semibold text-white uppercase tracking-wide">
+          <motion.div variants={item} className="space-y-5">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-300">
               Resources
             </h3>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link
-                  to="/help-center"
-                  className="hover:text-indigo-400 transition-colors duration-200 hover:underline flex items-center"
+            <ul className="space-y-3">
+              {resources.map((link) => (
+                <motion.li
+                  key={link.path}
+                  whileHover={{ x: 5 }}
+                  transition={{ type: "spring", stiffness: 500 }}
                 >
-                  <span className="w-2 h-2 bg-indigo-600 rounded-full mr-2"></span>
-                  Help Center
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/documentation"
-                  className="hover:text-indigo-400 transition-colors duration-200 hover:underline flex items-center"
-                >
-                  <span className="w-2 h-2 bg-indigo-600 rounded-full mr-2"></span>
-                  Documentation
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/api"
-                  className="hover:text-indigo-400 transition-colors duration-200 hover:underline flex items-center"
-                >
-                  <span className="w-2 h-2 bg-indigo-600 rounded-full mr-2"></span>
-                  API Reference
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/community"
-                  className="hover:text-indigo-400 transition-colors duration-200 hover:underline flex items-center"
-                >
-                  <span className="w-2 h-2 bg-indigo-600 rounded-full mr-2"></span>
-                  Community
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/status"
-                  className="hover:text-indigo-400 transition-colors duration-200 hover:underline flex items-center"
-                >
-                  <span className="w-2 h-2 bg-indigo-600 rounded-full mr-2"></span>
-                  System Status
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/security"
-                  className="hover:text-indigo-400 transition-colors duration-200 hover:underline flex items-center"
-                >
-                  <span className="w-2 h-2 bg-indigo-600 rounded-full mr-2"></span>
-                  Security
-                </Link>
-              </li>
+                  <Link
+                    to={link.path}
+                    className="flex items-center text-sm hover:text-indigo-300 transition-colors duration-300 group"
+                    onMouseEnter={() => setActiveHover(link.path)}
+                    onMouseLeave={() => setActiveHover(null)}
+                  >
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full mr-3 transition-all duration-300 ${
+                        activeHover === link.path
+                          ? "bg-gradient-to-r from-indigo-500 to-purple-500 scale-150"
+                          : "bg-gray-600"
+                      }`}
+                    ></span>
+                    {link.name}
+                  </Link>
+                </motion.li>
+              ))}
             </ul>
           </motion.div>
 
           {/* Newsletter */}
-          <motion.div variants={itemVariants} className="space-y-4">
-            <h3 className="text-sm font-semibold text-white uppercase tracking-wide">
-              Subscribe to our newsletter
+          <motion.div variants={item} className="space-y-5">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-300">
+              Stay Updated
             </h3>
-            <p className="text-sm">
-              Get the latest updates, news and product offers via email.
+            <p className="text-sm text-gray-400">
+              Subscribe to our newsletter for product updates and insights.
             </p>
 
-            {isSubscribed ? (
-              <div className="p-3 bg-green-100 text-green-800 rounded-md text-sm">
-                Thank you for subscribing! You'll receive our next newsletter
-                soon.
-              </div>
-            ) : (
-              <form onSubmit={handleSubscribe} className="space-y-3">
-                <div className="flex">
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Your email address"
-                    className="flex-grow px-4 py-2 rounded-l-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
-                    required
-                  />
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className={`px-4 py-2 rounded-r-md text-white ${
-                      isLoading
-                        ? "bg-indigo-400"
-                        : "bg-indigo-600 hover:bg-indigo-700"
-                    } transition-colors duration-200`}
-                  >
-                    {isLoading ? (
-                      <svg
-                        className="animate-spin h-5 w-5 text-white mx-2"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                    ) : (
-                      "Subscribe"
-                    )}
-                  </button>
-                </div>
-                <p className="text-xs text-gray-400">
-                  We respect your privacy. Unsubscribe at any time.
-                </p>
-              </form>
-            )}
+            <AnimatePresence mode="wait">
+              {isSubscribed ? (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="bg-green-900/30 border border-green-800/50 text-green-400 p-3 rounded-lg text-sm"
+                >
+                  Thanks for subscribing! Check your email for confirmation.
+                </motion.div>
+              ) : (
+                <motion.form
+                  onSubmit={handleSubscribe}
+                  initial={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="space-y-3"
+                >
+                  <div className="flex">
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Your email"
+                      className="flex-grow px-4 py-2 rounded-l-lg bg-gray-800/50 border border-gray-700/50 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-gray-300 placeholder-gray-500 transition-all duration-300"
+                      required
+                    />
+                    <motion.button
+                      type="submit"
+                      disabled={isLoading}
+                      whileHover={!isLoading ? { scale: 1.05 } : {}}
+                      whileTap={!isLoading ? { scale: 0.95 } : {}}
+                      className={`px-4 py-2 rounded-r-lg text-white ${
+                        isLoading
+                          ? "bg-indigo-700 cursor-not-allowed"
+                          : "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+                      } transition-all duration-300 flex items-center justify-center`}
+                    >
+                      {isLoading ? (
+                        <svg
+                          className="animate-spin h-5 w-5 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                      ) : (
+                        "Subscribe"
+                      )}
+                    </motion.button>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    We respect your privacy. Unsubscribe anytime.
+                  </p>
+                </motion.form>
+              )}
+            </AnimatePresence>
 
+            {/* Social Links */}
             <div className="pt-4">
-              <h3 className="text-sm font-semibold text-white uppercase tracking-wide mb-2">
-                Follow Us
-              </h3>
-              <div className="flex space-x-4">
-                <a
-                  href="https://facebook.com"
-                  aria-label="Facebook"
-                  className="hover:text-white transition-all duration-300 hover:scale-110"
-                >
-                  <FaFacebook size={20} />
-                </a>
-                <a
-                  href="https://twitter.com"
-                  aria-label="Twitter"
-                  className="hover:text-white transition-all duration-300 hover:scale-110"
-                >
-                  <FaTwitter size={20} />
-                </a>
-                <a
-                  href="https://linkedin.com"
-                  aria-label="LinkedIn"
-                  className="hover:text-white transition-all duration-300 hover:scale-110"
-                >
-                  <FaLinkedin size={20} />
-                </a>
-                <a
-                  href="https://github.com"
-                  aria-label="GitHub"
-                  className="hover:text-white transition-all duration-300 hover:scale-110"
-                >
-                  <FaGithub size={20} />
-                </a>
-                <a
-                  href="https://youtube.com"
-                  aria-label="YouTube"
-                  className="hover:text-white transition-all duration-300 hover:scale-110"
-                >
-                  <FaYoutube size={20} />
-                </a>
-                <a
-                  href="https://instagram.com"
-                  aria-label="Instagram"
-                  className="hover:text-white transition-all duration-300 hover:scale-110"
-                >
-                  <FaInstagram size={20} />
-                </a>
+              <h4 className="text-sm font-semibold text-gray-300 mb-3">
+                Connect With Us
+              </h4>
+              <div className="flex flex-wrap gap-3">
+                {socialLinks.map((social) => (
+                  <motion.a
+                    key={social.label}
+                    href={social.url}
+                    aria-label={social.label}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    whileHover={{ y: -3 }}
+                    whileTap={{ scale: 0.9 }}
+                    className="h-10 w-10 rounded-full bg-gray-800/50 hover:bg-gray-700/50 border border-gray-700/50 flex items-center justify-center text-gray-400 hover:text-white transition-all duration-300"
+                  >
+                    {social.icon}
+                  </motion.a>
+                ))}
               </div>
             </div>
           </motion.div>
         </div>
 
-        {/* Divider */}
+        {/* Bottom Bar */}
         <motion.div
-          className="border-t border-gray-700 pt-8"
-          variants={itemVariants}
+          variants={item}
+          className="border-t border-gray-800/50 pt-8"
         >
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-xs text-gray-400 mb-4 md:mb-0">
-              &copy; {year} InvoicePro. All rights reserved.
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-xs text-gray-500">
+              &copy; {year} QuantumInvoicer. All rights reserved.
             </p>
 
-            <div className="flex space-x-6">
-              <Link
-                to="/privacy"
-                className="text-xs text-gray-400 hover:text-indigo-400 transition-colors duration-200"
-              >
-                Privacy Policy
-              </Link>
-              <Link
-                to="/terms"
-                className="text-xs text-gray-400 hover:text-indigo-400 transition-colors duration-200"
-              >
-                Terms of Service
-              </Link>
-              <Link
-                to="/cookies"
-                className="text-xs text-gray-400 hover:text-indigo-400 transition-colors duration-200"
-              >
-                Cookie Policy
-              </Link>
-              <Link
-                to="/gdpr"
-                className="text-xs text-gray-400 hover:text-indigo-400 transition-colors duration-200"
-              >
-                GDPR Compliance
-              </Link>
+            <div className="flex flex-wrap justify-center gap-x-4 gap-y-2">
+              {legalLinks.map((link) => (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className="text-xs text-gray-500 hover:text-indigo-300 transition-colors duration-300"
+                >
+                  {link.name}
+                </Link>
+              ))}
             </div>
           </div>
 
-          <div className="text-center mt-4">
-            <p className="text-xs text-gray-500">
-              Made with ❤️ by the InvoicePro team •
-              <span className="inline-block mx-1">Version 2.1.0</span>
+          <div className="text-center mt-6">
+            <p className="text-xs text-gray-600">
+              Made with <span className="text-red-400">❤️</span> by Quantum Team
+              • v3.1.0
             </p>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-gray-700 mt-1">
               This product uses the Stripe API but is not endorsed or certified
               by Stripe.
             </p>
           </div>
         </motion.div>
-
-        {/* Back to Top Button */}
-        <motion.button
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed bottom-6 right-6 bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl focus:outline-none"
-          variants={itemVariants}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          aria-label="Back to top"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fillRule="evenodd"
-              d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z"
-              clipRule="evenodd"
-            />
-          </svg>
-        </motion.button>
       </div>
+
+      {/* Back to Top Button */}
+      <AnimatePresence>
+        {isVisible && (
+          <motion.button
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className="fixed bottom-6 right-6 bg-gradient-to-br from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white p-3 rounded-full shadow-xl z-50 focus:outline-none"
+            aria-label="Back to top"
+          >
+            <FiArrowUp className="h-5 w-5" />
+          </motion.button>
+        )}
+      </AnimatePresence>
     </motion.footer>
   );
 };

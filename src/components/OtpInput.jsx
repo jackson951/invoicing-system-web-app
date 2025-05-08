@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { FiRefreshCw, FiCheck, FiX } from "react-icons/fi";
+import { FiRefreshCw, FiCheck, FiX, FiClock, FiLock } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 
 const OtpInput = ({
@@ -14,6 +14,7 @@ const OtpInput = ({
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [isComplete, setIsComplete] = useState(false);
   const [error, setError] = useState(null);
+  const [focusedIndex, setFocusedIndex] = useState(0);
   const inputs = useRef([]);
 
   useEffect(() => {
@@ -42,6 +43,7 @@ const OtpInput = ({
 
     if (value && index < 5) {
       inputs.current[index + 1].focus();
+      setFocusedIndex(index + 1);
     }
 
     const fullOtp = newOtp.join("");
@@ -55,6 +57,7 @@ const OtpInput = ({
   const handleKeyDown = (e, index) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       inputs.current[index - 1].focus();
+      setFocusedIndex(index - 1);
     }
   };
 
@@ -66,7 +69,16 @@ const OtpInput = ({
       setOtp(pasteArray);
       setIsComplete(true);
       inputs.current[5].focus();
+      setFocusedIndex(5);
     }
+  };
+
+  const handleFocus = (index) => {
+    setFocusedIndex(index);
+  };
+
+  const handleBlur = () => {
+    setFocusedIndex(null);
   };
 
   const handleSubmit = (e) => {
@@ -88,12 +100,12 @@ const OtpInput = ({
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h3 className="text-xl font-semibold text-gray-800 mb-2">
-          Verify Your Email
+        <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-500 mb-2">
+          Secure Verification
         </h3>
-        <p className="text-sm text-gray-600">
+        <p className="text-gray-400">
           We've sent a 6-digit code to{" "}
-          <span className="font-medium">{email}</span>
+          <span className="font-medium text-indigo-300">{email}</span>
         </p>
       </div>
 
@@ -103,11 +115,11 @@ const OtpInput = ({
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="bg-red-50 border-l-4 border-red-500 p-4 mb-4 rounded"
+            className="bg-red-900/50 border-l-4 border-red-400 p-4 mb-4 rounded-lg"
           >
             <div className="flex items-center">
-              <FiX className="text-red-500 mr-2" />
-              <p className="text-red-700">{error}</p>
+              <FiX className="text-red-400 mr-2" />
+              <p className="text-red-100">{error}</p>
             </div>
           </motion.div>
         )}
@@ -115,65 +127,89 @@ const OtpInput = ({
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-3 text-center">
-            Enter verification code
+          <label className="block text-sm font-medium text-gray-300 mb-4 text-center">
+            Enter your verification code
           </label>
 
           <div className="flex justify-center gap-3">
             {otp.map((digit, index) => (
-              <input
+              <motion.div
                 key={index}
-                ref={(el) => (inputs.current[index] = el)}
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                maxLength="1"
-                value={digit}
-                onChange={(e) => handleChange(e, index)}
-                onKeyDown={(e) => handleKeyDown(e, index)}
-                onPaste={handlePaste}
-                className={`w-12 h-12 text-center border rounded-lg text-xl font-semibold focus:ring-2 focus:outline-none transition-all ${
-                  isComplete
-                    ? "border-green-500 focus:ring-green-200 focus:border-green-500"
-                    : "border-gray-300 focus:ring-indigo-200 focus:border-indigo-500"
-                }`}
-                disabled={isSubmitting}
-              />
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="relative"
+              >
+                <input
+                  key={index}
+                  ref={(el) => (inputs.current[index] = el)}
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength="1"
+                  value={digit}
+                  onChange={(e) => handleChange(e, index)}
+                  onKeyDown={(e) => handleKeyDown(e, index)}
+                  onPaste={handlePaste}
+                  onFocus={() => handleFocus(index)}
+                  onBlur={handleBlur}
+                  className={`w-14 h-14 text-center border-2 rounded-xl text-2xl font-bold focus:outline-none transition-all ${
+                    isComplete
+                      ? "border-green-500 bg-green-500/10"
+                      : focusedIndex === index
+                      ? "border-indigo-500 bg-indigo-500/10"
+                      : "border-gray-600 bg-gray-700/50"
+                  } ${digit ? "text-white" : "text-gray-400"} ${
+                    isSubmitting ? "opacity-70" : ""
+                  }`}
+                  disabled={isSubmitting}
+                />
+                {focusedIndex === index && (
+                  <motion.div
+                    className="absolute bottom-0 left-0 right-0 h-1 bg-indigo-500 rounded-b"
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: 1 }}
+                    transition={{ duration: 0.3 }}
+                  />
+                )}
+              </motion.div>
             ))}
           </div>
         </div>
 
-        <div className="flex items-center justify-center space-x-2">
+        <div className="flex items-center justify-center space-x-3">
           <button
             type="button"
             onClick={onResendOtp}
             disabled={resendDisabled || isSubmitting}
             className={`text-sm flex items-center ${
               resendDisabled
-                ? "text-gray-400 cursor-not-allowed"
-                : "text-indigo-600 hover:text-indigo-800"
+                ? "text-gray-500 cursor-not-allowed"
+                : "text-indigo-400 hover:text-indigo-300"
             }`}
           >
             <FiRefreshCw
-              className={`mr-1 ${
-                resendDisabled ? "" : "animate-spin-on-hover"
-              }`}
+              className={`mr-2 ${resendDisabled ? "" : "hover:animate-spin"}`}
             />
-            Resend OTP
+            Resend Code
           </button>
           {resendDisabled && (
-            <span className="text-sm text-gray-500">({formatTime(timer)})</span>
+            <div className="flex items-center text-sm text-gray-500">
+              <FiClock className="mr-1" />
+              <span>{formatTime(timer)}</span>
+            </div>
           )}
         </div>
 
-        <button
+        <motion.button
           type="submit"
           disabled={isSubmitting || !isComplete}
-          className={`w-full py-3 px-4 rounded-lg font-medium flex items-center justify-center transition-all ${
+          whileHover={!isSubmitting && isComplete ? { scale: 1.02 } : {}}
+          whileTap={!isSubmitting && isComplete ? { scale: 0.98 } : {}}
+          className={`w-full py-3 px-4 rounded-xl font-bold flex items-center justify-center transition-all ${
             isComplete
-              ? "bg-green-600 hover:bg-green-700 text-white"
-              : "bg-gray-200 text-gray-500 cursor-not-allowed"
-          } ${isSubmitting ? "opacity-75" : ""}`}
+              ? "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg"
+              : "bg-gray-700 text-gray-500 cursor-not-allowed"
+          } ${isSubmitting ? "opacity-80" : ""}`}
         >
           {isSubmitting ? (
             <>
@@ -202,10 +238,10 @@ const OtpInput = ({
           ) : (
             <>
               {isComplete && <FiCheck className="mr-2" />}
-              Verify Code
+              Verify & Continue
             </>
           )}
-        </button>
+        </motion.button>
       </form>
 
       <div className="text-center text-sm text-gray-500">
@@ -216,12 +252,19 @@ const OtpInput = ({
           disabled={resendDisabled || isSubmitting}
           className={`font-medium ${
             resendDisabled
-              ? "text-gray-400 cursor-not-allowed"
-              : "text-indigo-600 hover:text-indigo-800"
+              ? "text-gray-500 cursor-not-allowed"
+              : "text-indigo-400 hover:text-indigo-300 hover:underline"
           }`}
         >
           resend it
         </button>
+      </div>
+
+      <div className="flex items-center justify-center mt-6">
+        <div className="flex items-center text-xs text-gray-500">
+          <FiLock className="mr-1 text-green-400" />
+          <span>End-to-end encrypted verification</span>
+        </div>
       </div>
     </div>
   );
