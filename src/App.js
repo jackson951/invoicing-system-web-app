@@ -19,7 +19,7 @@ function InterceptorWrapper({ children }) {
 
 function App() {
   return (
-    <Router basename="/invoicing-system-web-app">
+    <Router >
       <AuthContextProvider>
         <InterceptorWrapper>
           <div className="flex flex-col min-h-screen">
