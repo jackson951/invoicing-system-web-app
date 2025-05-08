@@ -12,8 +12,9 @@ import { ActiveTabProvider } from './contexts/ActiveTabContext';
 
 // Moved useApiInterceptors into a wrapper component inside Router
 import { useApiInterceptors } from './api/web-api-service';
-
+import useIdleLogout from './services/useIdleLogout';
 function InterceptorWrapper({ children }) {
+  useIdleLogout(1800000); // 30 minutes = 30 * 60 * 1000 ms
   useApiInterceptors();
   return children;
 }
