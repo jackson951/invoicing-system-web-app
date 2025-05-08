@@ -360,7 +360,7 @@ const Header = () => {
                     <UserIcon className="h-5 w-5 text-white" />
                   </div>
                   <span className="hidden lg:inline text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {JSON.parse(localStorage.getItem("user"))?.name ||
+                    {JSON.parse(localStorage.getItem("user"))?.fullName ||
                       "Profile"}
                   </span>
                   <ChevronDownIcon className="hidden lg:block h-4 w-4 text-gray-500 dark:text-gray-400" />
@@ -531,7 +531,8 @@ const Header = () => {
                   </div>
                   <div className="ml-3">
                     <div className="text-base font-medium text-gray-900 dark:text-white">
-                      {JSON.parse(localStorage.getItem("user"))?.name || "User"}
+                      {JSON.parse(localStorage.getItem("user"))?.fullName ||
+                        "User"}
                     </div>
                     <div className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
                       {JSON.parse(localStorage.getItem("user"))?.email ||
