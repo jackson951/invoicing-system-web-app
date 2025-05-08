@@ -390,6 +390,9 @@ const Login = () => {
             <GoogleLogin
               onSuccess={handleLoginWithGoogle}
               onError={handleError}
+              theme="outline"
+              size="large" // or "small"
+              text="Sign in with Google" // hides email & shows only: "Sign in with Google"
             />
             <button
               type="button"
