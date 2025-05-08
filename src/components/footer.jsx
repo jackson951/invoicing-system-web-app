@@ -68,9 +68,17 @@ const Footer = () => {
   };
 
   const socialLinks = [
-    { icon: <FiGithub />, label: "GitHub", url: "https://github.com" },
+    {
+      icon: <FiGithub />,
+      label: "GitHub",
+      url: "https://github.com/jackson951",
+    },
     { icon: <FiTwitter />, label: "Twitter", url: "https://twitter.com" },
-    { icon: <FiLinkedin />, label: "LinkedIn", url: "https://linkedin.com" },
+    {
+      icon: <FiLinkedin />,
+      label: "LinkedIn",
+      url: "https://www.linkedin.com/in/jackson-khuto-625360267/",
+    },
     { icon: <FiYoutube />, label: "YouTube", url: "https://youtube.com" },
     { icon: <FiInstagram />, label: "Instagram", url: "https://instagram.com" },
     { icon: <FiFacebook />, label: "Facebook", url: "https://facebook.com" },
@@ -179,12 +187,14 @@ const Footer = () => {
                   href="tel:+11234567890"
                   className="hover:text-indigo-300 transition-colors duration-300"
                 >
-                  +1 (123) 456-7890
+                  +27 (66) 180-2747
                 </a>
               </div>
               <div className="flex items-start">
                 <FiMapPin className="mt-1 mr-3 text-indigo-400 flex-shrink-0" />
-                <span>123 Quantum Lane, San Francisco, CA 94107</span>
+                <span>
+                  456 Zuurfontein Road, Kempton Park, Gauteng 1619, South Africa
+                </span>
               </div>
             </div>
           </motion.div>
