@@ -409,7 +409,7 @@ const Header = () => {
                         Invoices
                       </button>
                       <button
-                        onClick={() => handleAdminNavigation("employees")}
+                        onClick={() => handleAdminNavigation("users")}
                         className={`w-full text-left block px-4 py-2.5 text-sm hover:bg-gray-100/50 dark:hover:bg-gray-700/50 transition-colors duration-300 flex items-center ${
                           activeTab === "employees"
                             ? "text-indigo-600 dark:text-indigo-400 font-medium"
@@ -561,7 +561,7 @@ const Header = () => {
                     Invoices
                   </button>
                   <button
-                    onClick={() => handleAdminNavigation("employees")}
+                    onClick={() => handleAdminNavigation("users")}
                     className={`w-full text-left block px-3 py-3 rounded-lg text-base font-medium hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-colors duration-300 ${
                       activeTab === "employees"
                         ? "text-indigo-600 dark:text-indigo-400 font-medium"
