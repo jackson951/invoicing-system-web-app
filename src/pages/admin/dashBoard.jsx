@@ -42,6 +42,8 @@ import { generatePermissions } from "../../utils/permissions";
 import { useAuth } from "../../contexts/AuthContext";
 import { ApiService } from "../../api/web-api-service";
 import { toast } from "react-toastify";
+import { useActiveTab } from "../../contexts/ActiveTabContext";
+import { useLocation } from "react-router-dom";
 
 ChartJS.register(
   CategoryScale,
@@ -189,7 +191,7 @@ const AdminDashboard = () => {
   const [customers, setCustomers] = useState([]);
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const { activeTab, setActiveTab } = useActiveTab();
   const [searchQuery, setSearchQuery] = useState("");
   const [notificationCount, setNotificationCount] = useState(3);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -210,6 +212,7 @@ const AdminDashboard = () => {
   const [currentInvoice, setCurrentInvoice] = useState(null);
 
   const { user, authToken } = useAuth();
+  const location = useLocation();
 
   const [newUserForm, setNewUserForm] = useState({
     fullName: "",
@@ -242,6 +245,13 @@ const AdminDashboard = () => {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
+  useEffect(() => {
+    const pathParts = location.pathname.split("/");
+    if (pathParts[1] === "admin" && pathParts[2]) {
+      setActiveTab(pathParts[2]);
+    }
+  }, [location.pathname, setActiveTab]);
 
   useEffect(() => {
     const fetchEmployees = async () => {

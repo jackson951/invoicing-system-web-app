@@ -8,6 +8,7 @@ import Layout from './components/Layout';
 import { AuthContextProvider } from './contexts/AuthContext'; // Optional
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { ActiveTabProvider } from './contexts/ActiveTabContext';
 
 // Moved useApiInterceptors into a wrapper component inside Router
 import { useApiInterceptors } from './api/web-api-service';
@@ -20,6 +21,7 @@ function InterceptorWrapper({ children }) {
 function App() {
   return (
     <Router >
+      <ActiveTabProvider>
       <AuthContextProvider>
         <InterceptorWrapper>
           <div className="flex flex-col min-h-screen">
@@ -33,6 +35,7 @@ function App() {
           </div>
         </InterceptorWrapper>
       </AuthContextProvider>
+      </ActiveTabProvider>
     </Router>
   );
 }

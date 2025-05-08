@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useActiveTab } from "../contexts/ActiveTabContext";
 import {
   UserIcon,
   MoonIcon,
@@ -15,6 +16,8 @@ import {
   BellIcon,
   ChevronDownIcon,
   SparklesIcon,
+  UsersIcon,
+  UserGroupIcon,
 } from "@heroicons/react/24/outline";
 
 const Header = () => {
@@ -34,6 +37,15 @@ const Header = () => {
   const profileDropdownRef = useRef(null);
   const notificationsRef = useRef(null);
   const navRef = useRef(null);
+  const { activeTab, setActiveTab } = useActiveTab();
+
+  // Sync active tab with URL path
+  useEffect(() => {
+    const pathParts = location.pathname.split("/");
+    if (pathParts[1] === "admin" && pathParts[2]) {
+      setActiveTab(pathParts[2]);
+    }
+  }, [location.pathname, setActiveTab]);
 
   // Mock notifications data
   const [notifications, setNotifications] = useState([
@@ -81,7 +93,6 @@ const Header = () => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
     };
-
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -113,9 +124,7 @@ const Header = () => {
     };
 
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const handleLogout = () => {
@@ -136,6 +145,14 @@ const Header = () => {
 
   const handleProfileClick = () => {
     setProfileDropdownOpen(!profileDropdownOpen);
+  };
+
+  // In your Header component
+  const handleAdminNavigation = (tab) => {
+    setActiveTab(tab);
+    navigate(`/admin`);
+    setProfileDropdownOpen(false);
+    setMobileMenuOpen(false);
   };
 
   // Navigation items
@@ -169,7 +186,11 @@ const Header = () => {
             )}
           </button>
 
-          <Link to="/" className="text-2xl font-bold flex items-center group">
+          <Link
+            to="/"
+            className="text-2xl font-bold flex items-center group"
+            onClick={() => setActiveTab("dashboard")}
+          >
             <motion.div whileHover={{ rotate: 15 }} className="relative">
               <DocumentTextIcon className="h-8 w-8 text-indigo-600 dark:text-indigo-400 mr-2" />
               <motion.span
@@ -345,7 +366,7 @@ const Header = () => {
                   <ChevronDownIcon className="hidden lg:block h-4 w-4 text-gray-500 dark:text-gray-400" />
                 </motion.button>
 
-                {/* Profile Dropdown (for both mobile and desktop) */}
+                {/* Profile Dropdown */}
                 {profileDropdownOpen && (
                   <motion.div
                     ref={profileDropdownRef}
@@ -365,38 +386,61 @@ const Header = () => {
                             "User"}
                         </p>
                       </div>
-                      <Link
-                        to="/admin"
-                        onClick={() => setProfileDropdownOpen(false)}
-                        className="block px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100/50 dark:hover:bg-gray-700/50 transition-colors duration-300 flex items-center"
+                      <button
+                        onClick={() => handleAdminNavigation("dashboard")}
+                        className={`w-full text-left block px-4 py-2.5 text-sm hover:bg-gray-100/50 dark:hover:bg-gray-700/50 transition-colors duration-300 flex items-center ${
+                          activeTab === "dashboard"
+                            ? "text-indigo-600 dark:text-indigo-400 font-medium"
+                            : "text-gray-700 dark:text-gray-300"
+                        }`}
                       >
                         <HomeIcon className="h-4 w-4 mr-2.5" />
                         Dashboard
-                      </Link>
-                      <Link
-                        to="/admin/invoices"
-                        onClick={() => setProfileDropdownOpen(false)}
-                        className="block px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100/50 dark:hover:bg-gray-700/50 transition-colors duration-300 flex items-center"
+                      </button>
+                      <button
+                        onClick={() => handleAdminNavigation("invoices")}
+                        className={`w-full text-left block px-4 py-2.5 text-sm hover:bg-gray-100/50 dark:hover:bg-gray-700/50 transition-colors duration-300 flex items-center ${
+                          activeTab === "invoices"
+                            ? "text-indigo-600 dark:text-indigo-400 font-medium"
+                            : "text-gray-700 dark:text-gray-300"
+                        }`}
                       >
                         <DocumentTextIcon className="h-4 w-4 mr-2.5" />
                         Invoices
-                      </Link>
-                      <Link
-                        to="/admin/reports"
-                        onClick={() => setProfileDropdownOpen(false)}
-                        className="block px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100/50 dark:hover:bg-gray-700/50 transition-colors duration-300 flex items-center"
+                      </button>
+                      <button
+                        onClick={() => handleAdminNavigation("employees")}
+                        className={`w-full text-left block px-4 py-2.5 text-sm hover:bg-gray-100/50 dark:hover:bg-gray-700/50 transition-colors duration-300 flex items-center ${
+                          activeTab === "employees"
+                            ? "text-indigo-600 dark:text-indigo-400 font-medium"
+                            : "text-gray-700 dark:text-gray-300"
+                        }`}
                       >
-                        <ChartBarIcon className="h-4 w-4 mr-2.5" />
-                        Reports
-                      </Link>
-                      <Link
-                        to="/admin/settings"
-                        onClick={() => setProfileDropdownOpen(false)}
-                        className="block px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100/50 dark:hover:bg-gray-700/50 transition-colors duration-300 flex items-center"
+                        <UserGroupIcon className="h-4 w-4 mr-2.5" />
+                        Employees
+                      </button>
+                      <button
+                        onClick={() => handleAdminNavigation("customers")}
+                        className={`w-full text-left block px-4 py-2.5 text-sm hover:bg-gray-100/50 dark:hover:bg-gray-700/50 transition-colors duration-300 flex items-center ${
+                          activeTab === "customers"
+                            ? "text-indigo-600 dark:text-indigo-400 font-medium"
+                            : "text-gray-700 dark:text-gray-300"
+                        }`}
+                      >
+                        <UsersIcon className="h-4 w-4 mr-2.5" />
+                        Customers
+                      </button>
+                      <button
+                        onClick={() => handleAdminNavigation("settings")}
+                        className={`w-full text-left block px-4 py-2.5 text-sm hover:bg-gray-100/50 dark:hover:bg-gray-700/50 transition-colors duration-300 flex items-center ${
+                          activeTab === "settings"
+                            ? "text-indigo-6 00 dark:text-indigo-400 font-medium"
+                            : "text-gray-700 dark:text-gray-300"
+                        }`}
                       >
                         <Cog6ToothIcon className="h-4 w-4 mr-2.5" />
                         Settings
-                      </Link>
+                      </button>
                       <button
                         onClick={handleLogout}
                         className="w-full text-left block px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50/50 dark:hover:bg-gray-700/50 transition-colors duration-300 flex items-center"
@@ -496,27 +540,56 @@ const Header = () => {
                   </div>
                 </div>
                 <div className="mt-3 px-2 space-y-1">
-                  <Link
-                    to="/admin"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block px-3 py-3 rounded-lg text-base font-medium text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-colors duration-300"
+                  <button
+                    onClick={() => handleAdminNavigation("dashboard")}
+                    className={`w-full text-left block px-3 py-3 rounded-lg text-base font-medium hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-colors duration-300 ${
+                      activeTab === "dashboard"
+                        ? "text-indigo-600 dark:text-indigo-400 font-medium"
+                        : "text-gray-600 dark:text-gray-300"
+                    }`}
                   >
                     Dashboard
-                  </Link>
-                  <Link
-                    to="/admin/invoices"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block px-3 py-3 rounded-lg text-base font-medium text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-colors duration-300"
+                  </button>
+                  <button
+                    onClick={() => handleAdminNavigation("invoices")}
+                    className={`w-full text-left block px-3 py-3 rounded-lg text-base font-medium hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-colors duration-300 ${
+                      activeTab === "invoices"
+                        ? "text-indigo-600 dark:text-indigo-400 font-medium"
+                        : "text-gray-600 dark:text-gray-300"
+                    }`}
                   >
                     Invoices
-                  </Link>
-                  <Link
-                    to="/admin/settings"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block px-3 py-3 rounded-lg text-base font-medium text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-colors duration-300"
+                  </button>
+                  <button
+                    onClick={() => handleAdminNavigation("employees")}
+                    className={`w-full text-left block px-3 py-3 rounded-lg text-base font-medium hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-colors duration-300 ${
+                      activeTab === "employees"
+                        ? "text-indigo-600 dark:text-indigo-400 font-medium"
+                        : "text-gray-600 dark:text-gray-300"
+                    }`}
+                  >
+                    Employees
+                  </button>
+                  <button
+                    onClick={() => handleAdminNavigation("customers")}
+                    className={`w-full text-left block px-3 py-3 rounded-lg text-base font-medium hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-colors duration-300 ${
+                      activeTab === "customers"
+                        ? "text-indigo-600 dark:text-indigo-400 font-medium"
+                        : "text-gray-600 dark:text-gray-300"
+                    }`}
+                  >
+                    Customers
+                  </button>
+                  <button
+                    onClick={() => handleAdminNavigation("settings")}
+                    className={`w-full text-left block px-3 py-3 rounded-lg text-base font-medium hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-colors duration-300 ${
+                      activeTab === "settings"
+                        ? "text-indigo-600 dark:text-indigo-400 font-medium"
+                        : "text-gray-600 dark:text-gray-300"
+                    }`}
                   >
                     Settings
-                  </Link>
+                  </button>
                   <button
                     onClick={handleLogout}
                     className="w-full text-left block px-3 py-3 rounded-lg text-base font-medium text-red-600 dark:text-red-400 hover:bg-red-50/50 dark:hover:bg-gray-800/50 transition-colors duration-300"

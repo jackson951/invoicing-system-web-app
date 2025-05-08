@@ -10,7 +10,6 @@ import ForgotPassword from "./pages/forgotPassword";
 import Contact from "./pages/contact";
 import VerifyEmail from "./pages/verifyEmail";
 
-// Admin Pages
 import AdminDashboard from "./pages/admin/dashBoard";
 import AdminUsers from "./pages/admin/Users";
 import AdminInvoices from "./pages/admin/Invoices";
@@ -21,10 +20,15 @@ import CreateUser from "./pages/admin/CreateUser";
 // Protected Route Component for Admin pages
 const ProtectedAdminRoute = ({ children }) => {
   const token = localStorage.getItem("authToken");
-  const allowedRoles = ["Admin", "editor", "subscriber"]; // extend roles here
+  const user = JSON.parse(localStorage.getItem("user"));
+  const allowedRoles = ["Admin", "editor", "subscriber"];
 
   if (!token) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (user && !allowedRoles.includes(user.role)) {
+    return <Navigate to="/" replace />;
   }
 
   return children;
@@ -34,7 +38,7 @@ const ProtectedAdminRoute = ({ children }) => {
 const ProtectedPublicRoute = ({ children }) => {
   const token = localStorage.getItem("authToken");
   if (token) {
-    return <Navigate to="/admin" replace />;
+    return <Navigate to="/admin/dashboard" replace />;
   }
   return children;
 };
@@ -71,10 +75,12 @@ const AppRoutes = () => {
         element={
           <ProtectedAdminRoute>
             <AdminDashboard />
+            {/* This will handle the shared admin layout */}
           </ProtectedAdminRoute>
         }
       >
-        <Route index element={<AdminDashboard />} />
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="users" element={<AdminUsers />} />
         <Route path="users/create" element={<CreateUser />} />
         <Route path="invoices" element={<AdminInvoices />} />
