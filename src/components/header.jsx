@@ -130,6 +130,7 @@ const Header = () => {
   const handleLogout = () => {
     localStorage.removeItem("authToken");
     localStorage.removeItem("user");
+    setActiveTab("dashboard");
     setIsLoggedIn(false);
     setProfileDropdownOpen(false);
     navigate("/");
