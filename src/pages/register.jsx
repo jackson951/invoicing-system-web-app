@@ -167,13 +167,10 @@ const Register = () => {
     }
     return () => clearInterval(interval);
   }, [timer, resendOtpDisabled]);
-
-  // Handle Registration
   const onSubmit = async (data) => {
     setLoading(true);
     setApiError("");
 
-    // Form submission animation
     await controls.start({
       scale: 0.98,
       transition: { duration: 0.2 },
@@ -183,10 +180,10 @@ const Register = () => {
 
     try {
       const res = await ApiService.post("/auth/register", registrationData);
-      console.log(res, "resuuuuuuuuuuuuuuuuuuult");
+      console.log("API response:", res.data);
 
-      if (res.status === 200 || res.data === "User registered successfully.") {
-        await sendOtp(data.email);
+      if (res.status === 200) {
+        //sendOtp(res.data.email);
         setShowOtpInput(true);
         setCurrentStep(2);
         setFormSuccess(true);
@@ -201,7 +198,6 @@ const Register = () => {
         error.response?.data || error.message
       );
 
-      // Error animation
       await controls.start({
         x: [0, -10, 10, -10, 0],
         transition: { duration: 0.5 },
