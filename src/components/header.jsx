@@ -135,11 +135,7 @@ const Header = () => {
   const unreadNotificationsCount = notifications.filter((n) => !n.read).length;
 
   const handleProfileClick = () => {
-    if (window.innerWidth < 768) {
-      setProfileDropdownOpen(!profileDropdownOpen);
-    } else {
-      navigate("/admin");
-    }
+    setProfileDropdownOpen(!profileDropdownOpen);
   };
 
   // Navigation items
@@ -349,8 +345,8 @@ const Header = () => {
                   <ChevronDownIcon className="hidden lg:block h-4 w-4 text-gray-500 dark:text-gray-400" />
                 </motion.button>
 
-                {/* Mobile Profile Dropdown */}
-                {profileDropdownOpen && window.innerWidth < 768 && (
+                {/* Profile Dropdown (for both mobile and desktop) */}
+                {profileDropdownOpen && (
                   <motion.div
                     ref={profileDropdownRef}
                     initial={{ opacity: 0, y: 10 }}
