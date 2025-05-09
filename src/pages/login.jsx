@@ -240,9 +240,7 @@ const Login = () => {
     try {
       const credential = await navigator.credentials.get({
         publicKey: {
-          challenge: new Uint8Array([
-            /* random challenge bytes */
-          ]),
+          challenge: new Uint8Array([user.id]),
           allowCredentials: [
             {
               type: "public-key",
