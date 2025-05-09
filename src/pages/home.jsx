@@ -1765,7 +1765,7 @@ const Home = () => {
       </section>
 
       {/* Scroll to top button */}
-      <AnimatePresence>
+      {/* <AnimatePresence>
         {showScrollTop && (
           <motion.button
             initial={{ opacity: 0, scale: 0.8 }}
@@ -1793,7 +1793,7 @@ const Home = () => {
             </svg>
           </motion.button>
         )}
-      </AnimatePresence>
+      </AnimatePresence> */}
     </div>
   );
 };
