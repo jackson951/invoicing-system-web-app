@@ -8,107 +8,108 @@ import {
 } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 
-// Components
+// Static imports for better performance
 import SectionTitle from "../components/SectionTitle";
 import TestimonialCard from "../components/TestimonialCard";
-import Feature from "../components/Feature";
-import ProcessStep from "../components/ProcessStep";
-import UseCase from "../components/UseCase";
-import FaqItem from "../components/FaqItem";
-
-// Constants
 import { testimonialsData } from "../constants/testimonials";
 import { faqData } from "../constants/faqs";
 import { pricingPlansData } from "../constants/pricingPlans";
 
-// Holographic VideoPlayer component
-const VideoPlayer = ({ src, poster, className = "", borderRadius = "xl" }) => {
-  const videoRef = useRef(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
+// Optimized VideoPlayer component with lazy loading
+const VideoPlayer = React.memo(
+  ({ src, poster, className = "", borderRadius = "xl" }) => {
+    const videoRef = useRef(null);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [isHovered, setIsHovered] = useState(false);
 
-  const togglePlay = () => {
-    if (videoRef.current.paused) {
-      videoRef.current.play();
-      setIsPlaying(true);
-    } else {
-      videoRef.current.pause();
-      setIsPlaying(false);
-    }
-  };
+    const togglePlay = () => {
+      const video = videoRef.current;
+      if (video.paused) {
+        video
+          .play()
+          .then(() => setIsPlaying(true))
+          .catch((e) => console.error("Video play failed:", e));
+      } else {
+        video.pause();
+        setIsPlaying(false);
+      }
+    };
 
-  return (
-    <div
-      className={`relative ${className} group`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <motion.div
-        initial={{ opacity: 0.8 }}
-        animate={{
-          opacity: isHovered ? 1 : 0.8,
-          scale: isHovered ? 1.02 : 1,
-        }}
-        transition={{ duration: 0.3 }}
-        className={`relative overflow-hidden rounded-${borderRadius} bg-gradient-to-br from-indigo-500/10 to-purple-600/10 border border-white/10 backdrop-blur-sm`}
+    return (
+      <div
+        className={`relative ${className} group`}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       >
-        <video
-          ref={videoRef}
-          src={src}
-          poster={poster}
-          className={`w-full rounded-${borderRadius} transition-all duration-500 ${
-            isPlaying ? "scale-100" : "group-hover:scale-105"
-          }`}
-          onClick={togglePlay}
-          loop
-          muted
-        />
-
-        {!isPlaying && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            whileHover={{ scale: 1.1 }}
-            onClick={togglePlay}
-            className="absolute inset-0 flex items-center justify-center w-full h-full"
-            aria-label="Play video"
-          >
-            <div className="w-20 h-20 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-full flex items-center justify-center shadow-2xl shadow-indigo-500/30 group-hover:shadow-indigo-500/50 transition-all duration-300">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                className="w-10 h-10 text-white"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </div>
-          </motion.button>
-        )}
-
-        {/* Holographic effect */}
         <motion.div
+          initial={{ opacity: 0.8 }}
           animate={{
-            backgroundPosition: isHovered ? "100% 50%" : "0% 50%",
+            opacity: isHovered ? 1 : 0.8,
+            scale: isHovered ? 1.02 : 1,
           }}
-          transition={{
-            duration: 3,
-            repeat: Infinity,
-            ease: "linear",
-          }}
-          className="absolute inset-0 pointer-events-none bg-[length:200%_200%] bg-gradient-to-r from-transparent via-white/10 to-transparent rounded-xl mix-blend-overlay"
-        />
-      </motion.div>
-    </div>
-  );
-};
+          transition={{ duration: 0.3 }}
+          className={`relative overflow-hidden rounded-${borderRadius} bg-gradient-to-br from-indigo-500/10 to-purple-600/10 border border-white/10 backdrop-blur-sm`}
+        >
+          <video
+            ref={videoRef}
+            src={src}
+            poster={poster}
+            className={`w-full rounded-${borderRadius} transition-all duration-500 ${
+              isPlaying ? "scale-100" : "group-hover:scale-105"
+            }`}
+            onClick={togglePlay}
+            loop
+            muted
+            playsInline
+            preload="none"
+            loading="lazy"
+          />
 
-// Futuristic NewsletterSignup with floating animation
-const NewsletterSignup = () => {
+          {!isPlaying && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              whileHover={{ scale: 1.1 }}
+              onClick={togglePlay}
+              className="absolute inset-0 flex items-center justify-center w-full h-full"
+              aria-label="Play video"
+            >
+              <div className="w-20 h-20 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-full flex items-center justify-center shadow-2xl shadow-indigo-500/30 group-hover:shadow-indigo-500/50 transition-all duration-300">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="w-10 h-10 text-white"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+            </motion.button>
+          )}
+
+          <motion.div
+            animate={{
+              backgroundPosition: isHovered ? "100% 50%" : "0% 50%",
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              ease: "linear",
+            }}
+            className="absolute inset-0 pointer-events-none bg-[length:200%_200%] bg-gradient-to-r from-transparent via-white/10 to-transparent rounded-xl mix-blend-overlay"
+          />
+        </motion.div>
+      </div>
+    );
+  }
+);
+
+// Optimized NewsletterSignup with memoization
+const NewsletterSignup = React.memo(() => {
   const [email, setEmail] = useState("");
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -132,7 +133,6 @@ const NewsletterSignup = () => {
       transition={{ duration: 0.5 }}
       className="relative overflow-hidden rounded-2xl p-8 shadow-2xl"
     >
-      {/* Animated gradient background */}
       <div className="absolute inset-0 overflow-hidden">
         <motion.div
           animate={{
@@ -147,7 +147,6 @@ const NewsletterSignup = () => {
           className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 bg-[length:200%_200%] opacity-90"
         />
 
-        {/* Floating particles */}
         {[...Array(8)].map((_, i) => (
           <motion.div
             key={i}
@@ -205,7 +204,7 @@ const NewsletterSignup = () => {
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.value)}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your quantum email"
                 required
                 className="w-full px-5 py-4 rounded-lg bg-white/20 backdrop-blur-sm border border-white/30 text-white placeholder-indigo-200 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all"
@@ -252,10 +251,10 @@ const NewsletterSignup = () => {
       </div>
     </motion.div>
   );
-};
+});
 
-// Futuristic pricing toggle with smooth animation
-const PricingToggle = ({ isYearly, onToggle }) => {
+// Optimized PricingToggle with memoization
+const PricingToggle = React.memo(({ isYearly, onToggle }) => {
   return (
     <div className="flex items-center justify-center mb-12">
       <span
@@ -287,22 +286,30 @@ const PricingToggle = ({ isYearly, onToggle }) => {
       </span>
     </div>
   );
-};
+});
 
 const Home = () => {
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const [activeFaqs, setActiveFaqs] = useState([]);
   const [isYearlyBilling, setIsYearlyBilling] = useState(false);
-  const [scrollY, setScrollY] = useState(0);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // Auto-slide testimonials every 5 seconds
+  // Auto-slide testimonials with cleanup
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveTestimonial((prev) => (prev + 1) % testimonialsData.length);
     }, 5000);
     return () => clearInterval(interval);
+  }, []);
+
+  // Scroll to top button visibility with cleanup
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   // FAQ Toggle logic
@@ -311,16 +318,6 @@ const Home = () => {
       prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
     );
   };
-
-  // Scroll to top button visibility
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrollY(window.scrollY);
-      setShowScrollTop(window.scrollY > 300);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   // Scroll to top function
   const scrollToTop = () => {
@@ -345,8 +342,8 @@ const Home = () => {
   // Parallax effects
   const { scrollYProgress } = useScroll();
   const y1 = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
-  const y2 = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
 
+  // Optimized integrations data
   const integrations = [
     {
       name: "QuickBooks",
@@ -389,7 +386,6 @@ const Home = () => {
         ref={heroRef}
         className="relative min-h-screen max-h-[1000px] overflow-hidden flex items-center justify-center"
       >
-        {/* Animated gradient background */}
         <motion.div
           animate={{
             backgroundPosition: ["0% 0%", "100% 100%"],
@@ -403,7 +399,6 @@ const Home = () => {
           className="absolute inset-0 bg-gradient-to-br from-indigo-900 via-purple-900 to-gray-900 bg-[length:200%_200%]"
         />
 
-        {/* Floating particles */}
         {[...Array(20)].map((_, i) => (
           <motion.div
             key={i}
@@ -428,7 +423,6 @@ const Home = () => {
           />
         ))}
 
-        {/* Video background with parallax */}
         <motion.div
           style={{ y: y1 }}
           className="absolute inset-0 overflow-hidden"
@@ -440,6 +434,7 @@ const Home = () => {
             playsInline
             className="absolute inset-0 w-full h-full object-cover opacity-30"
             poster="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80"
+            preload="none"
           >
             <source
               src="https://assets.mixkit.co/videos/preview/mixkit-man-holding-a-credit-card-and-paying-with-it-43703-large.mp4"
@@ -448,7 +443,6 @@ const Home = () => {
           </video>
         </motion.div>
 
-        {/* Hero content with staggered animation */}
         <div className="container mx-auto px-6 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -535,7 +529,6 @@ const Home = () => {
             </motion.div>
           </motion.div>
 
-          {/* Scroll indicator */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={heroInView ? { opacity: 1 } : {}}
@@ -545,7 +538,7 @@ const Home = () => {
             <motion.button
               onClick={() => {
                 const featuresSection = document.getElementById("features");
-                featuresSection.scrollIntoView({ behavior: "smooth" });
+                featuresSection?.scrollIntoView({ behavior: "smooth" });
               }}
               animate={{
                 y: [0, 10, 0],
@@ -640,7 +633,7 @@ const Home = () => {
                   </li>
                   <li className="flex items-start">
                     <svg
-                      className="h-5 w-5 text-green-500 mr-2 mt-0.5"
+                      className="h-5 w-5 text-green-500 mr-2 mt=0.5"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -656,7 +649,7 @@ const Home = () => {
                   </li>
                   <li className="flex items-start">
                     <svg
-                      className="h-5 w-5 text-green-500 mr-2 mt-0.5"
+                      className="h-5 w-5 text-green-500 mr-2 mt=0.5"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -681,8 +674,8 @@ const Home = () => {
               transition={{ duration: 0.5, delay: 0.3 }}
               className="relative"
             >
-              <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-300"></div>
-              <div className="relative bg-white dark:bg-gray-800 rounded-2xl p-8 h-full border border-gray-100 dark:border-gray-700 shadow-xl hover:shadow-2xl transition-all">
+              <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl blur opacity-25 group-hover:opacity=50 transition duration-300"></div>
+              <div className="relative bg-white dark:bg-gray-800 rounded-2xl p-8 h-full border border-gray-100 dark:border-gray=700 shadow-xl hover:shadow-2xl transition-all">
                 <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center mb-6 shadow-lg">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -707,10 +700,10 @@ const Home = () => {
                   mistakes in amounts, client details, or missing information
                   before they reach your clients.
                 </p>
-                <ul className="space-y-2 text-gray-700 dark:text-gray-300">
+                <ul className="space-y=2 text-gray-700 dark:text-gray-300">
                   <li className="flex items-start">
                     <svg
-                      className="h-5 w-5 text-green-500 mr-2 mt-0.5"
+                      className="h-5 w-5 text-green-500 mr-2 mt=0.5"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -726,7 +719,7 @@ const Home = () => {
                   </li>
                   <li className="flex items-start">
                     <svg
-                      className="h-5 w-5 text-green-500 mr-2 mt-0.5"
+                      className="h-5 w-5 text-green-500 mr-2 mt=0.5"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -742,7 +735,7 @@ const Home = () => {
                   </li>
                   <li className="flex items-start">
                     <svg
-                      className="h-5 w-5 text-green-500 mr-2 mt-0.5"
+                      className="h-5 w-5 text-green-500 mr-2 mt=0.5"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -767,8 +760,8 @@ const Home = () => {
               transition={{ duration: 0.5, delay: 0.5 }}
               className="relative"
             >
-              <div className="absolute -inset-1 bg-gradient-to-r from-indigo-600 to-blue-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-300"></div>
-              <div className="relative bg-white dark:bg-gray-800 rounded-2xl p-8 h-full border border-gray-100 dark:border-gray-700 shadow-xl hover:shadow-2xl transition-all">
+              <div className="absolute -inset-1 bg-gradient-to-r from-indigo-600 to-blue-600 rounded-2xl blur opacity=25 group-hover:opacity=50 transition duration-300"></div>
+              <div className="relative bg-white dark:bg-gray=800 rounded-2xl p-8 h-full border border-gray=100 dark:border-gray=700 shadow-xl hover:shadow-2xl transition-all">
                 <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-xl flex items-center justify-center mb-6 shadow-lg">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -793,10 +786,10 @@ const Home = () => {
                   and client behaviors to predict your future cash flow with 95%
                   accuracy.
                 </p>
-                <ul className="space-y-2 text-gray-700 dark:text-gray-300">
+                <ul className="space-y=2 text-gray=700 dark:text-gray=300">
                   <li className="flex items-start">
                     <svg
-                      className="h-5 w-5 text-green-500 mr-2 mt-0.5"
+                      className="h-5 w-5 text-green-500 mr-2 mt=0.5"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -812,7 +805,7 @@ const Home = () => {
                   </li>
                   <li className="flex items-start">
                     <svg
-                      className="h-5 w-5 text-green-500 mr-2 mt-0.5"
+                      className="h-5 w-5 text-green-500 mr-2 mt=0.5"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -828,7 +821,7 @@ const Home = () => {
                   </li>
                   <li className="flex items-start">
                     <svg
-                      className="h-5 w-5 text-green-500 mr-2 mt-0.5"
+                      className="h-5 w-5 text-green-500 mr-2 mt=0.5"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -848,7 +841,6 @@ const Home = () => {
           </div>
         </div>
 
-        {/* Floating abstract shapes */}
         <motion.div
           animate={{
             x: [0, 50, 0],
@@ -940,7 +932,7 @@ const Home = () => {
                     </div>
                   </div>
                   <div className="flex items-start">
-                    <div className="flex-shrink-0 mt-1">
+                    <div className="flex-shrink-0 mt=1">
                       <div className="flex items-center justify-center h-8 w-8 rounded-full bg-indigo-100 text-indigo-600">
                         <svg
                           className="h-5 w-5"
@@ -964,8 +956,8 @@ const Home = () => {
                     </div>
                   </div>
                   <div className="flex items-start">
-                    <div className="flex-shrink-0 mt-1">
-                      <div className="flex items-center justify-center h-8 w-8 rounded-full bg-indigo-100 text-indigo-600">
+                    <div className="flex-shrink-0 mt=1">
+                      <div className="flex items-center justify-center h=8 w=8 rounded-full bg-indigo-100 text-indigo-600">
                         <svg
                           className="h-5 w-5"
                           fill="none"
@@ -1007,8 +999,8 @@ const Home = () => {
               className="grid lg:grid-cols-2 gap-16 items-center"
             >
               <div>
-                <div className="inline-flex items-center px-4 py-2 rounded-full bg-purple-100 text-purple-800 text-sm font-bold mb-6">
-                  <span className="w-2 h-2 bg-purple-600 rounded-full mr-2 animate-pulse"></span>
+                <div className="inline-flex items-center px-4 py=2 rounded-full bg-purple-100 text-purple-800 text-sm font-bold mb-6">
+                  <span className="w-2 h=2 bg-purple-600 rounded-full mr-2 animate-pulse"></span>
                   STEP 2
                 </div>
                 <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
@@ -1024,8 +1016,8 @@ const Home = () => {
                 </p>
                 <div className="grid gap-4">
                   <div className="flex items-start">
-                    <div className="flex-shrink-0 mt-1">
-                      <div className="flex items-center justify-center h-8 w-8 rounded-full bg-purple-100 text-purple-600">
+                    <div className="flex-shrink-0 mt=1">
+                      <div className="flex items-center justify-center h=8 w=8 rounded-full bg-purple-100 text-purple-600">
                         <svg
                           className="h-5 w-5"
                           fill="none"
@@ -1048,8 +1040,8 @@ const Home = () => {
                     </div>
                   </div>
                   <div className="flex items-start">
-                    <div className="flex-shrink-0 mt-1">
-                      <div className="flex items-center justify-center h-8 w-8 rounded-full bg-purple-100 text-purple-600">
+                    <div className="flex-shrink-0 mt=1">
+                      <div className="flex items-center justify-center h=8 w=8 rounded-full bg-purple-100 text-purple-600">
                         <svg
                           className="h-5 w-5"
                           fill="none"
@@ -1072,8 +1064,8 @@ const Home = () => {
                     </div>
                   </div>
                   <div className="flex items-start">
-                    <div className="flex-shrink-0 mt-1">
-                      <div className="flex items-center justify-center h-8 w-8 rounded-full bg-purple-100 text-purple-600">
+                    <div className="flex-shrink-0 mt=1">
+                      <div className="flex items-center justify-center h=8 w=8 rounded-full bg-purple-100 text-purple-600">
                         <svg
                           className="h-5 w-5"
                           fill="none"
@@ -1115,8 +1107,8 @@ const Home = () => {
               className="grid lg:grid-cols-2 gap-16 items-center"
             >
               <div className="order-1 lg:order-2">
-                <div className="inline-flex items-center px-4 py-2 rounded-full bg-pink-100 text-pink-800 text-sm font-bold mb-6">
-                  <span className="w-2 h-2 bg-pink-600 rounded-full mr-2 animate-pulse"></span>
+                <div className="inline-flex items-center px-4 py=2 rounded-full bg-pink-100 text-pink-800 text-sm font-bold mb-6">
+                  <span className="w-2 h=2 bg-pink-600 rounded-full mr-2 animate-pulse"></span>
                   STEP 3
                 </div>
                 <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
@@ -1132,8 +1124,8 @@ const Home = () => {
                 </p>
                 <div className="grid gap-4">
                   <div className="flex items-start">
-                    <div className="flex-shrink-0 mt-1">
-                      <div className="flex items-center justify-center h-8 w-8 rounded-full bg-pink-100 text-pink-600">
+                    <div className="flex-shrink-0 mt=1">
+                      <div className="flex items-center justify-center h=8 w=8 rounded-full bg-pink-100 text-pink-600">
                         <svg
                           className="h-5 w-5"
                           fill="none"
@@ -1156,8 +1148,8 @@ const Home = () => {
                     </div>
                   </div>
                   <div className="flex items-start">
-                    <div className="flex-shrink-0 mt-1">
-                      <div className="flex items-center justify-center h-8 w-8 rounded-full bg-pink-100 text-pink-600">
+                    <div className="flex-shrink-0 mt=1">
+                      <div className="flex items-center justify-center h=8 w=8 rounded-full bg-pink-100 text-pink-600">
                         <svg
                           className="h-5 w-5"
                           fill="none"
@@ -1180,8 +1172,8 @@ const Home = () => {
                     </div>
                   </div>
                   <div className="flex items-start">
-                    <div className="flex-shrink-0 mt-1">
-                      <div className="flex items-center justify-center h-8 w-8 rounded-full bg-pink-100 text-pink-600">
+                    <div className="flex-shrink-0 mt=1">
+                      <div className="flex items-center justify-center h=8 w=8 rounded-full bg-pink-100 text-pink-600">
                         <svg
                           className="h-5 w-5"
                           fill="none"
@@ -1216,8 +1208,7 @@ const Home = () => {
           </div>
         </div>
 
-        {/* Animated connecting line */}
-        <div className="hidden lg:block absolute left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-indigo-500 via-purple-500 to-pink-500 opacity-10 -ml-0.5 -z-10"></div>
+        <div className="hidden lg:block absolute left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-indigo-500 via-purple-500 to-pink-500 opacity-10 -ml=0.5 -z-10"></div>
       </section>
 
       {/* Integration Showcase with Floating Grid */}
@@ -1252,6 +1243,7 @@ const Home = () => {
                   alt={integration.name}
                   className="h-12 object-contain opacity-80 hover:opacity-100 transition-opacity"
                   whileHover={{ scale: 1.1 }}
+                  loading="lazy"
                 />
               </motion.div>
             ))}
@@ -1268,7 +1260,6 @@ const Home = () => {
           </motion.div>
         </div>
 
-        {/* Floating grid pattern */}
         <div className="absolute inset-0 overflow-hidden -z-10">
           <div className="absolute inset-0 bg-grid-white/5 dark:bg-grid-gray-800/5 [mask-image:linear-gradient(to_bottom,transparent,white,transparent)] dark:[mask-image:linear-gradient(to_bottom,transparent,black,transparent)]"></div>
         </div>
@@ -1671,7 +1662,6 @@ const Home = () => {
           </motion.div>
         </div>
 
-        {/* Floating abstract shape */}
         <motion.div
           animate={{
             x: [0, 50, 0],
@@ -1749,7 +1739,6 @@ const Home = () => {
           </motion.div>
         </div>
 
-        {/* Floating particles */}
         {[...Array(15)].map((_, i) => (
           <motion.div
             key={i}
@@ -1775,8 +1764,8 @@ const Home = () => {
         ))}
       </section>
 
-      {/* Scroll to top button
-      <AnimatePresence>
+      {/* Scroll to top button */}
+      {/* <AnimatePresence>
         {showScrollTop && (
           <motion.button
             initial={{ opacity: 0, scale: 0.8 }}
