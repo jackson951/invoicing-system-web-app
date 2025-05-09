@@ -151,7 +151,6 @@ const Login = () => {
     },
     [setValue]
   );
-
   const loginUser = async (credentials) => {
     try {
       const endpoint = isEmployeeLogin ? "/auth/employee-login" : "/auth/login";
@@ -174,8 +173,12 @@ const Login = () => {
 
     try {
       const response = await loginUser(data);
+      const decodedToken = decodeJwt(response.token);
+      console.log(decodedToken, "the token decoded");
+      const expirationTime = decodedToken.exp * 1000; // Convert from seconds to milliseconds
       localStorage.setItem("authToken", response.token);
       localStorage.setItem("user", JSON.stringify(response.user));
+      localStorage.setItem("tokenExpiration", expirationTime); // Store expiration time
 
       setUser(response.user);
       saveToken(response.token);
@@ -215,6 +218,21 @@ const Login = () => {
     } finally {
       setLoading(false);
     }
+  };
+  // decode jwt function
+  const decodeJwt = (token) => {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map(function (c) {
+          return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+        })
+        .join("")
+    );
+
+    return JSON.parse(jsonPayload);
   };
 
   // Biometric authentication handler
