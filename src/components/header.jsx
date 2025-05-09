@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useActiveTab } from "../contexts/ActiveTabContext";
+import { useAuth } from "../contexts/AuthContext";
 import {
   UserIcon,
   MoonIcon,
@@ -26,7 +27,7 @@ const Header = () => {
     const savedMode = localStorage.getItem("darkMode");
     return savedMode ? JSON.parse(savedMode) : false;
   });
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -38,6 +39,7 @@ const Header = () => {
   const notificationsRef = useRef(null);
   const navRef = useRef(null);
   const { activeTab, setActiveTab } = useActiveTab();
+  const { isLoggedIn, setIsLoggedIn } = useAuth();
 
   // Sync active tab with URL path
   useEffect(() => {

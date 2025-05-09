@@ -15,6 +15,8 @@ export const ActiveTabProvider = ({ children }) => {
     return "dashboard"; // default tab
   });
 
+  c;
+
   return (
     <ActiveTabContext.Provider value={{ activeTab, setActiveTab }}>
       {children}
