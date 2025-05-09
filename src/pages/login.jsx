@@ -16,7 +16,7 @@ import {
   FiUsers,
   FiBriefcase,
   FiFingerprint,
-  FiKey, // Replace FiFingerprint with FiKey
+  FiKey,
 } from "react-icons/fi";
 import { useGoogleLogin } from "@react-oauth/google";
 import { useAuth } from "../contexts/AuthContext";
@@ -399,7 +399,7 @@ const Login = () => {
               <span className="flex items-center">
                 {isEmployeeLogin ? (
                   <>
-                    <FiUsers className="mr-2" /> Switch to Regular Login
+                    <FiUsers className="mr-2" /> Switch to Admin Login
                   </>
                 ) : (
                   <>
@@ -727,44 +727,44 @@ const Login = () => {
           )}
 
           {/* Register Link */}
-          <div className="mt-8 text-center text-sm text-gray-400">
-            <p>
-              {isEmployeeLogin ? "Not an employee?" : "Don't have an account?"}{" "}
-              <Link
-                to={isEmployeeLogin ? "/register" : "/employee-registration"}
-                className="font-medium text-indigo-400 hover:text-indigo-300 hover:underline"
-              >
-                {isEmployeeLogin
-                  ? "Create regular account"
-                  : "Register as employee"}
-              </Link>
-            </p>
-          </div>
-        </motion.div>
+          {!isEmployeeLogin && (
+            <div className="mt-8 text-center text-sm text-gray-400">
+              <p>
+                Don't have an account?{" "}
+                <Link
+                  to="/register"
+                  className="font-medium text-indigo-400 hover:text-indigo-300 hover:underline"
+                >
+                  Register here
+                </Link>
+              </p>
+            </div>
+          )}
 
-        {/* Security badge */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="mt-6 flex items-center justify-center text-xs text-gray-500"
-        >
-          <div className="flex items-center">
-            <svg
-              className="w-4 h-4 text-green-400 mr-1"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-              />
-            </svg>
-            <span>Quantum-grade end-to-end encryption</span>
-          </div>
+          {/* Security badge */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="mt-6 flex items-center justify-center text-xs text-gray-500"
+          >
+            <div className="flex items-center">
+              <svg
+                className="w-4 h-4 text-green-400 mr-1"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                />
+              </svg>
+              <span>Quantum-grade end-to-end encryption</span>
+            </div>
+          </motion.div>
         </motion.div>
       </motion.div>
     </div>
