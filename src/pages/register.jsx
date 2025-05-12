@@ -344,7 +344,7 @@ const TermsModal = ({ isOpen, onClose }) => {
                   </h4>
                   <p>
                     If you have any questions about these Terms, please contact
-                    us at legal@yourcompany.com.
+                    us at legal@quantumInvoicer.com.
                   </p>
                 </section>
               </div>
