@@ -293,7 +293,7 @@ const Header = () => {
                               markNotificationAsRead(notification.id);
                               setNotificationsOpen(false);
                             }}
-                            className={`block px-4 py-3 text-sm hover:bg-gray-100/50 dark:hover:bg-gray-700/50 transition-colors duration-300 ${
+                            className={`block px-4 py-3 text-sm hover:bg-gray-100/50 dark:hover:bg-gray-7/50 transition-colors duration-300 ${
                               notification.read
                                 ? "text-gray-600 dark:text-gray-400"
                                 : "text-gray-900 dark:text-white font-medium"
@@ -333,8 +333,8 @@ const Header = () => {
 
           {/* Profile & Login/Logout */}
           {isLoggedIn ? (
-            <div className="flex items-center space-x-2">
-              {/* Profile button - now only navigates to /admin */}
+            <div className="flex items-center space-x-4">
+              {/* Profile button */}
               <motion.button
                 onClick={() => handleAdminNavigation("dashboard")}
                 whileHover={{ scale: 1.05 }}
@@ -351,22 +351,22 @@ const Header = () => {
                 </span>
               </motion.button>
 
-              {/* Logout button - now with better visibility */}
+              {/* Logout button with text on larger screens */}
               <motion.div
-                className="relative group"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                className="flex items-center"
               >
                 <button
                   onClick={handleLogout}
-                  className="p-2 rounded-full bg-gray-100 dark:bg-gray-800 text-red-600 dark:text-red-400 hover:bg-red-100/50 dark:hover:bg-red-900/30 focus:outline-none transition-all duration-300"
+                  className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-red-600 dark:text-red-400 hover:bg-red-100/50 dark:hover:bg-red-900/30 focus:outline-none transition-all duration-300"
                   aria-label="Logout"
                 >
                   <ArrowLeftOnRectangleIcon className="h-5 w-5" />
+                  <span className="hidden md:inline text-sm font-medium">
+                    Sign Out
+                  </span>
                 </button>
-                <div className="absolute top-full right-0 mt-2 hidden group-hover:block px-2 py-1 text-xs text-white bg-gray-800 rounded whitespace-nowrap">
-                  Sign Out
-                </div>
               </motion.div>
             </div>
           ) : (
@@ -392,174 +392,181 @@ const Header = () => {
 
       {/* Mobile menu - slides from left for logged-in users */}
       <AnimatePresence>
-        {isLoggedIn && mobileMenuOpen && (
+        {mobileMenuOpen && (
           <motion.div
             ref={mobileMenuRef}
-            initial={{ opacity: 0, x: -300 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -300 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="md:hidden fixed top-0 left-0 bottom-0 w-72 bg-white/95 dark:bg-gray-900/95 shadow-xl z-50 border-r border-gray-200/50 dark:border-gray-700/30 backdrop-blur-md"
+            initial={{
+              opacity: 0,
+              x: isLoggedIn ? -300 : 0,
+              y: !isLoggedIn ? -20 : 0,
+            }}
+            animate={{ opacity: 1, x: 0, y: 0 }}
+            exit={{
+              opacity: 0,
+              x: isLoggedIn ? -300 : 0,
+              y: !isLoggedIn ? -20 : 0,
+            }}
+            transition={{
+              type: "spring",
+              stiffness: 300,
+              damping: 30,
+              duration: isLoggedIn ? undefined : 0.2,
+            }}
+            className={`md:hidden fixed top-0 ${
+              isLoggedIn ? "left-0 bottom-0 w-72" : "left-0 right-0"
+            } bg-white/95 dark:bg-gray-900/95 shadow-xl z-50 border-r border-gray-200/50 dark:border-gray-700/30 backdrop-blur-md`}
           >
-            <div className="h-full flex flex-col">
-              {/* Header with close button */}
-              <div className="px-4 py-5 border-b border-gray-200/50 dark:border-gray-700/30 flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="h-10 w-10 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center shadow-sm">
-                    <UserIcon className="h-5 w-5 text-white" />
-                  </div>
-                  <div className="ml-3">
-                    <div className="text-lg font-medium text-gray-900 dark:text-white">
-                      {JSON.parse(localStorage.getItem("user"))?.fullName ||
-                        "User"}
+            {isLoggedIn ? (
+              <div className="h-full flex flex-col">
+                {/* Header with close button */}
+                <div className="px-4 py-5 border-b border-gray-200/50 dark:border-gray-700/30 flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="h-10 w-10 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center shadow-sm">
+                      <UserIcon className="h-5 w-5 text-white" />
                     </div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                      {JSON.parse(localStorage.getItem("user"))?.email ||
-                        "email@example.com"}
+                    <div className="ml-3">
+                      <div className="text-lg font-medium text-gray-900 dark:text-white">
+                        {JSON.parse(localStorage.getItem("user"))?.fullName ||
+                          "User"}
+                      </div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                        {JSON.parse(localStorage.getItem("user"))?.email ||
+                          "email@example.com"}
+                      </div>
                     </div>
                   </div>
-                </div>
-                <button
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
-                  aria-label="Close menu"
-                >
-                  <XMarkIcon className="h-5 w-5" />
-                </button>
-              </div>
-
-              {/* Navigation items */}
-              <div className="flex-1 overflow-y-auto py-4 px-2">
-                <div className="space-y-1">
                   <button
-                    onClick={() => {
-                      handleAdminNavigation("dashboard");
-                    }}
-                    className={`w-full text-left flex items-center px-4 py-3 rounded-lg text-base font-medium transition-colors duration-300 ${
-                      activeTab === "dashboard"
-                        ? "text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-gray-800/50"
-                        : "text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
-                    }`}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
+                    aria-label="Close menu"
                   >
-                    <HomeIcon className="h-5 w-5 mr-3" />
-                    Dashboard
-                  </button>
-                  <button
-                    onClick={() => {
-                      handleAdminNavigation("invoices");
-                    }}
-                    className={`w-full text-left flex items-center px-4 py-3 rounded-lg text-base font-medium transition-colors duration-300 ${
-                      activeTab === "invoices"
-                        ? "text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-gray-800/50"
-                        : "text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
-                    }`}
-                  >
-                    <DocumentTextIcon className="h-5 w-5 mr-3" />
-                    Invoices
-                  </button>
-                  <button
-                    onClick={() => {
-                      handleAdminNavigation("users");
-                    }}
-                    className={`w-full text-left flex items-center px-4 py-3 rounded-lg text-base font-medium transition-colors duration-300 ${
-                      activeTab === "users"
-                        ? "text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-gray-800/50"
-                        : "text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
-                    }`}
-                  >
-                    <UserGroupIcon className="h-5 w-5 mr-3" />
-                    Employees
-                  </button>
-                  <button
-                    onClick={() => {
-                      handleAdminNavigation("customers");
-                    }}
-                    className={`w-full text-left flex items-center px-4 py-3 rounded-lg text-base font-medium transition-colors duration-300 ${
-                      activeTab === "customers"
-                        ? "text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-gray-800/50"
-                        : "text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
-                    }`}
-                  >
-                    <UsersIcon className="h-5 w-5 mr-3" />
-                    Customers
-                  </button>
-                  <button
-                    onClick={() => {
-                      handleAdminNavigation("settings");
-                    }}
-                    className={`w-full text-left flex items-center px-4 py-3 rounded-lg text-base font-medium transition-colors duration-300 ${
-                      activeTab === "settings"
-                        ? "text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-gray-800/50"
-                        : "text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
-                    }`}
-                  >
-                    <Cog6ToothIcon className="h-5 w-5 mr-3" />
-                    Settings
+                    <XMarkIcon className="h-5 w-5" />
                   </button>
                 </div>
-              </div>
 
-              {/* Footer with logout button */}
-              <div className="px-4 py-4 border-t border-gray-200/50 dark:border-gray-700/30">
-                <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center justify-center px-4 py-2.5 bg-red-50/50 dark:bg-gray-800/50 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100/50 dark:hover:bg-gray-700/50 transition-colors duration-300"
-                >
-                  <ArrowLeftOnRectangleIcon className="h-5 w-5 mr-2" />
-                  Sign Out
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
+                {/* Navigation items */}
+                <div className="flex-1 overflow-y-auto py-4 px-2">
+                  <div className="space-y-1">
+                    <button
+                      onClick={() => {
+                        handleAdminNavigation("dashboard");
+                      }}
+                      className={`w-full text-left flex items-center px-4 py-3 rounded-lg text-base font-medium transition-colors duration-300 ${
+                        activeTab === "dashboard"
+                          ? "text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-gray-800/50"
+                          : "text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
+                      }`}
+                    >
+                      <HomeIcon className="h-5 w-5 mr-3" />
+                      Dashboard
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleAdminNavigation("invoices");
+                      }}
+                      className={`w-full text-left flex items-center px-4 py-3 rounded-lg text-base font-medium transition-colors duration-300 ${
+                        activeTab === "invoices"
+                          ? "text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-gray-800/50"
+                          : "text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
+                      }`}
+                    >
+                      <DocumentTextIcon className="h-5 w-5 mr-3" />
+                      Invoices
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleAdminNavigation("users");
+                      }}
+                      className={`w-full text-left flex items-center px-4 py-3 rounded-lg text-base font-medium transition-colors duration-300 ${
+                        activeTab === "users"
+                          ? "text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-gray-800/50"
+                          : "text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
+                      }`}
+                    >
+                      <UserGroupIcon className="h-5 w-5 mr-3" />
+                      Employees
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleAdminNavigation("customers");
+                      }}
+                      className={`w-full text-left flex items-center px-4 py-3 rounded-lg text-base font-medium transition-colors duration-300 ${
+                        activeTab === "customers"
+                          ? "text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-gray-800/50"
+                          : "text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
+                      }`}
+                    >
+                      <UsersIcon className="h-5 w-5 mr-3" />
+                      Customers
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleAdminNavigation("settings");
+                      }}
+                      className={`w-full text-left flex items-center px-4 py-3 rounded-lg text-base font-medium transition-colors duration-300 ${
+                        activeTab === "settings"
+                          ? "text indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-gray-800/50"
+                          : "text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
+                      }`}
+                    >
+                      <Cog6ToothIcon className="h-5 w-5 mr-3" />
+                      Settings
+                    </button>
+                  </div>
+                </div>
 
-        {/* Mobile menu for non-logged-in users (dropdown from top) */}
-        {!isLoggedIn && mobileMenuOpen && (
-          <motion.div
-            ref={mobileMenuRef}
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
-            className="md:hidden absolute top-full left-0 right-0 bg-white/95 dark:bg-gray-900/95 shadow-lg z-40 border-t border-gray-200/50 dark:border-gray-700/30 backdrop-blur-md"
-          >
-            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-              {navItems.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`block px-3 py-3 rounded-lg text-base font-medium transition-colors duration-300 ${
-                    location.pathname === item.path
-                      ? "text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-gray-800/50"
-                      : "text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
-                  }`}
-                >
-                  {item.name}
-                </Link>
-              ))}
-            </div>
-            <div className="pt-4 pb-3 border-t border-gray-200/50 dark:border-gray-700/30">
-              <div className="px-5 space-y-3">
-                <motion.button
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => {
-                    navigate("/register");
-                    setMobileMenuOpen(false);
-                  }}
-                  className="w-full px-4 py-3 text-center bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium rounded-lg shadow-sm transition-all duration-300"
-                >
-                  Get Started
-                </motion.button>
-                <Link
-                  to="/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block w-full px-4 py-3 text-center text-indigo-600 dark:text-indigo-400 font-medium rounded-lg border border-indigo-600 dark:border-indigo-400 hover:bg-indigo-50/50 dark:hover:bg-gray-800/50 transition-colors duration-300"
-                >
-                  Login
-                </Link>
+                {/* Footer with logout button */}
+                <div className="px-4 py-4 border-t border-gray-200/50 dark:border-gray-700/30">
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center justify-center px-4 py-2.5 bg-red-50/50 dark:bg-gray-800/50 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100/50 dark:hover:bg-gray-700/50 transition-colors duration-300"
+                  >
+                    <ArrowLeftOnRectangleIcon className="h-5 w-5 mr-2" />
+                    Sign Out
+                  </button>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div>
+                <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                  {navItems.map((item) => (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`block px-3 py-3 rounded-lg text-base font-medium transition-colors duration-300 ${
+                        location.pathname === item.path
+                          ? "text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-gray-800/50"
+                          : "text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
+                      }`}
+                    >
+                      {item.name}
+                    </Link>
+                  ))}
+                </div>
+                <div className="pt-4 pb-3 border-t border-gray-200/50 dark:border-gray-700/30">
+                  <div className="px-5 space-y-3">
+                    <motion.button
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => {
+                        navigate("/register");
+                        setMobileMenuOpen(false);
+                      }}
+                      className="w-full px-4 py-3 text-center bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium rounded-lg shadow-sm transition-all duration-300"
+                    >
+                      Get Started
+                    </motion.button>
+                    <Link
+                      to="/login"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block w-full px-4 py-3 text-center text-indigo-600 dark:text-indigo-400 font-medium rounded-lg border border-indigo-600 dark:border-indigo-400 hover:bg-indigo-50/50 dark:hover:bg-gray-800/50 transition-colors duration-300"
+                    >
+                      Login
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
