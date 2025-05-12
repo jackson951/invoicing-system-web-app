@@ -29,13 +29,11 @@ const Header = () => {
   });
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [activeHover, setActiveHover] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
   const mobileMenuRef = useRef(null);
-  const profileDropdownRef = useRef(null);
   const notificationsRef = useRef(null);
   const navRef = useRef(null);
   const { activeTab, setActiveTab } = useActiveTab();
@@ -110,13 +108,6 @@ const Header = () => {
         setMobileMenuOpen(false);
       }
       if (
-        profileDropdownRef.current &&
-        !profileDropdownRef.current.contains(event.target) &&
-        !event.target.closest(".profile-button")
-      ) {
-        setProfileDropdownOpen(false);
-      }
-      if (
         notificationsRef.current &&
         !notificationsRef.current.contains(event.target) &&
         !event.target.closest(".notifications-button")
@@ -134,7 +125,7 @@ const Header = () => {
     localStorage.removeItem("user");
     setActiveTab("dashboard");
     setIsLoggedIn(false);
-    setProfileDropdownOpen(false);
+    setMobileMenuOpen(false);
     navigate("/");
   };
 
@@ -146,15 +137,9 @@ const Header = () => {
 
   const unreadNotificationsCount = notifications.filter((n) => !n.read).length;
 
-  const handleProfileClick = () => {
-    setProfileDropdownOpen(!profileDropdownOpen);
-  };
-
-  // In your Header component
-  const handleAdminNavigation = (tab) => {
+  const handleAdminNavigation = (tab = "dashboard") => {
     setActiveTab(tab);
-    navigate(`/admin`); // Fixed navigation to include proper path
-    setProfileDropdownOpen(false);
+    navigate(`/admin`);
     setMobileMenuOpen(false);
   };
 
@@ -265,7 +250,6 @@ const Header = () => {
               <motion.button
                 onClick={() => {
                   setNotificationsOpen(!notificationsOpen);
-                  setProfileDropdownOpen(false);
                 }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -347,114 +331,43 @@ const Header = () => {
             </div>
           )}
 
-          {/* Profile & Login/Logout - Hide login buttons on smaller screens */}
+          {/* Profile & Login/Logout */}
           {isLoggedIn ? (
-            <div className="flex items-center space-x-3">
-              {/* Profile button */}
-              <div className="relative">
-                <motion.button
-                  onClick={handleProfileClick}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="flex items-center space-x-2 p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-300 focus:outline-none profile-button"
-                  aria-label="User profile"
-                >
-                  <div className="h-9 w-9 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center shadow-sm">
-                    <UserIcon className="h-5 w-5 text-white" />
-                  </div>
-                  <span className="hidden lg:inline text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {JSON.parse(localStorage.getItem("user"))?.fullName ||
-                      "Profile"}
-                  </span>
-                  <ChevronDownIcon className="hidden lg:block h-4 w-4 text-gray-500 dark:text-gray-400" />
-                </motion.button>
+            <div className="flex items-center space-x-2">
+              {/* Profile button - now only navigates to /admin */}
+              <motion.button
+                onClick={() => handleAdminNavigation("dashboard")}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="flex items-center space-x-2 p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-300 focus:outline-none"
+                aria-label="User profile"
+              >
+                <div className="h-9 w-9 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center shadow-sm">
+                  <UserIcon className="h-5 w-5 text-white" />
+                </div>
+                <span className="hidden lg:inline text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {JSON.parse(localStorage.getItem("user"))?.fullName ||
+                    "Profile"}
+                </span>
+              </motion.button>
 
-                {/* Profile Dropdown */}
-                {profileDropdownOpen && (
-                  <motion.div
-                    ref={profileDropdownRef}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    transition={{ duration: 0.2 }}
-                    className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden z-50 border border-gray-200/50 dark:border-gray-700/30 backdrop-blur-md"
-                  >
-                    <div className="py-1">
-                      <div className="px-4 py-3 border-b border-gray-200/50 dark:border-gray-700/30 bg-gray-50/50 dark:bg-gray-700/30">
-                        <p className="text-sm text-gray-700 dark:text-gray-300">
-                          Signed in as
-                        </p>
-                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                          {JSON.parse(localStorage.getItem("user"))?.email ||
-                            "User"}
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => handleAdminNavigation("dashboard")}
-                        className={`w-full text-left block px-4 py-2.5 text-sm hover:bg-gray-100/50 dark:hover:bg-gray-700/50 transition-colors duration-300 flex items-center ${
-                          activeTab === "dashboard"
-                            ? "text-indigo-600 dark:text-indigo-400 font-medium"
-                            : "text-gray-700 dark:text-gray-300"
-                        }`}
-                      >
-                        <HomeIcon className="h-4 w-4 mr-2.5" />
-                        Dashboard
-                      </button>
-                      <button
-                        onClick={() => handleAdminNavigation("invoices")}
-                        className={`w-full text-left block px-4 py-2.5 text-sm hover:bg-gray-100/50 dark:hover:bg-gray-700/50 transition-colors duration-300 flex items-center ${
-                          activeTab === "invoices"
-                            ? "text-indigo-600 dark:text-indigo-400 font-medium"
-                            : "text-gray-700 dark:text-gray-300"
-                        }`}
-                      >
-                        <DocumentTextIcon className="h-4 w-4 mr-2.5" />
-                        Invoices
-                      </button>
-                      <button
-                        onClick={() => handleAdminNavigation("users")}
-                        className={`w-full text-left block px-4 py-2.5 text-sm hover:bg-gray-100/50 dark:hover:bg-gray-700/50 transition-colors duration-300 flex items-center ${
-                          activeTab === "employees"
-                            ? "text-indigo-600 dark:text-indigo-400 font-medium"
-                            : "text-gray-700 dark:text-gray-300"
-                        }`}
-                      >
-                        <UserGroupIcon className="h-4 w-4 mr-2.5" />
-                        Employees
-                      </button>
-                      <button
-                        onClick={() => handleAdminNavigation("customers")}
-                        className={`w-full text-left block px-4 py-2.5 text-sm hover:bg-gray-100/50 dark:hover:bg-gray-700/50 transition-colors duration-300 flex items-center ${
-                          activeTab === "customers"
-                            ? "text-indigo-600 dark:text-indigo-400 font-medium"
-                            : "text-gray-700 dark:text-gray-300"
-                        }`}
-                      >
-                        <UsersIcon className="h-4 w-4 mr-2.5" />
-                        Customers
-                      </button>
-                      <button
-                        onClick={() => handleAdminNavigation("settings")}
-                        className={`w-full text-left block px-4 py-2.5 text-sm hover:bg-gray-100/50 dark:hover:bg-gray-700/50 transition-colors duration-300 flex items-center ${
-                          activeTab === "settings"
-                            ? "text-indigo-600 dark:text-indigo-400 font-medium"
-                            : "text-gray-700 dark:text-gray-300"
-                        }`}
-                      >
-                        <Cog6ToothIcon className="h-4 w-4 mr-2.5" />
-                        Settings
-                      </button>
-                      <button
-                        onClick={handleLogout}
-                        className="w-full text-left block px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50/50 dark:hover:bg-gray-700/50 transition-colors duration-300 flex items-center"
-                      >
-                        <ArrowLeftOnRectangleIcon className="h-4 w-4 mr-2.5" />
-                        Sign out
-                      </button>
-                    </div>
-                  </motion.div>
-                )}
-              </div>
+              {/* Logout button - now with better visibility */}
+              <motion.div
+                className="relative group"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <button
+                  onClick={handleLogout}
+                  className="p-2 rounded-full bg-gray-100 dark:bg-gray-800 text-red-600 dark:text-red-400 hover:bg-red-100/50 dark:hover:bg-red-900/30 focus:outline-none transition-all duration-300"
+                  aria-label="Logout"
+                >
+                  <ArrowLeftOnRectangleIcon className="h-5 w-5" />
+                </button>
+                <div className="absolute top-full right-0 mt-2 hidden group-hover:block px-2 py-1 text-xs text-white bg-gray-800 rounded whitespace-nowrap">
+                  Sign Out
+                </div>
+              </motion.div>
             </div>
           ) : (
             <div className="hidden md:flex items-center space-x-3">
@@ -477,9 +390,131 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Mobile menu */}
+      {/* Mobile menu - slides from left for logged-in users */}
       <AnimatePresence>
-        {mobileMenuOpen && (
+        {isLoggedIn && mobileMenuOpen && (
+          <motion.div
+            ref={mobileMenuRef}
+            initial={{ opacity: 0, x: -300 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -300 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="md:hidden fixed top-0 left-0 bottom-0 w-72 bg-white/95 dark:bg-gray-900/95 shadow-xl z-50 border-r border-gray-200/50 dark:border-gray-700/30 backdrop-blur-md"
+          >
+            <div className="h-full flex flex-col">
+              {/* Header with close button */}
+              <div className="px-4 py-5 border-b border-gray-200/50 dark:border-gray-700/30 flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="h-10 w-10 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center shadow-sm">
+                    <UserIcon className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="ml-3">
+                    <div className="text-lg font-medium text-gray-900 dark:text-white">
+                      {JSON.parse(localStorage.getItem("user"))?.fullName ||
+                        "User"}
+                    </div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                      {JSON.parse(localStorage.getItem("user"))?.email ||
+                        "email@example.com"}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
+                  aria-label="Close menu"
+                >
+                  <XMarkIcon className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Navigation items */}
+              <div className="flex-1 overflow-y-auto py-4 px-2">
+                <div className="space-y-1">
+                  <button
+                    onClick={() => {
+                      handleAdminNavigation("dashboard");
+                    }}
+                    className={`w-full text-left flex items-center px-4 py-3 rounded-lg text-base font-medium transition-colors duration-300 ${
+                      activeTab === "dashboard"
+                        ? "text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-gray-800/50"
+                        : "text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
+                    }`}
+                  >
+                    <HomeIcon className="h-5 w-5 mr-3" />
+                    Dashboard
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleAdminNavigation("invoices");
+                    }}
+                    className={`w-full text-left flex items-center px-4 py-3 rounded-lg text-base font-medium transition-colors duration-300 ${
+                      activeTab === "invoices"
+                        ? "text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-gray-800/50"
+                        : "text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
+                    }`}
+                  >
+                    <DocumentTextIcon className="h-5 w-5 mr-3" />
+                    Invoices
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleAdminNavigation("users");
+                    }}
+                    className={`w-full text-left flex items-center px-4 py-3 rounded-lg text-base font-medium transition-colors duration-300 ${
+                      activeTab === "users"
+                        ? "text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-gray-800/50"
+                        : "text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
+                    }`}
+                  >
+                    <UserGroupIcon className="h-5 w-5 mr-3" />
+                    Employees
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleAdminNavigation("customers");
+                    }}
+                    className={`w-full text-left flex items-center px-4 py-3 rounded-lg text-base font-medium transition-colors duration-300 ${
+                      activeTab === "customers"
+                        ? "text indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-gray-800/50"
+                        : "text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
+                    }`}
+                  >
+                    <UsersIcon className="h-5 w-5 mr-3" />
+                    Customers
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleAdminNavigation("settings");
+                    }}
+                    className={`w-full text-left flex items-center px-4 py-3 rounded-lg text-base font-medium transition-colors duration-300 ${
+                      location.pathname === "/admin/settings"
+                        ? "text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-gray-800/50"
+                        : "text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
+                    }`}
+                  >
+                    <Cog6ToothIcon className="h-5 w-5 mr-3" />
+                    Settings
+                  </button>
+                </div>
+              </div>
+
+              {/* Footer with logout button */}
+              <div className="px-4 py-4 border-t border-gray-200/50 dark:border-gray-700/30">
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center justify-center px-4 py-2.5 bg-red-50/50 dark:bg-gray-800/50 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100/50 dark:hover:bg-gray-700/50 transition-colors duration-300"
+                >
+                  <ArrowLeftOnRectangleIcon className="h-5 w-5 mr-2" />
+                  Sign Out
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Mobile menu for non-logged-in users (dropdown from top) */}
+        {!isLoggedIn && mobileMenuOpen && (
           <motion.div
             ref={mobileMenuRef}
             initial={{ opacity: 0, y: -20 }}
@@ -504,105 +539,27 @@ const Header = () => {
                 </Link>
               ))}
             </div>
-            {!isLoggedIn ? (
-              <div className="pt-4 pb-3 border-t border-gray-200/50 dark:border-gray-700/30">
-                <div className="flex items-center px-5 space-x-3">
-                  <motion.button
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => {
-                      navigate("/register");
-                      setMobileMenuOpen(false);
-                    }}
-                    className="w-full px-4 py-3 text-center bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium rounded-lg shadow-sm transition-all duration-300"
-                  >
-                    Get Started
-                  </motion.button>
-                  <Link
-                    to="/login"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="w-full px-4 py-3 text-center text-indigo-600 dark:text-indigo-400 font-medium rounded-lg border border-indigo-600 dark:border-indigo-400 hover:bg-indigo-50/50 dark:hover:bg-gray-800/50 transition-colors duration-300"
-                  >
-                    Login
-                  </Link>
-                </div>
+            <div className="pt-4 pb-3 border-t border-gray-200/50 dark:border-gray-700/30">
+              <div className="px-5 space-y-3">
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    navigate("/register");
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full px-4 py-3 text-center bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium rounded-lg shadow-sm transition-all duration-300"
+                >
+                  Get Started
+                </motion.button>
+                <Link
+                  to="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block w-full px-4 py-3 text-center text-indigo-600 dark:text-indigo-400 font-medium rounded-lg border border-indigo-600 dark:border-indigo-400 hover:bg-indigo-50/50 dark:hover:bg-gray-800/50 transition-colors duration-300"
+                >
+                  Login
+                </Link>
               </div>
-            ) : (
-              <div className="pt-4 pb-3 border-t border-gray-200/50 dark:border-gray-700/30">
-                <div className="flex items-center px-5">
-                  <div className="h-10 w-10 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center shadow-sm">
-                    <UserIcon className="h-5 w-5 text-white" />
-                  </div>
-                  <div className="ml-3">
-                    <div className="text-base font-medium text-gray-900 dark:text-white">
-                      {JSON.parse(localStorage.getItem("user"))?.fullName ||
-                        "User"}
-                    </div>
-                    <div className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
-                      {JSON.parse(localStorage.getItem("user"))?.email ||
-                        "email@example.com"}
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-3 px-2 space-y-1">
-                  <button
-                    onClick={() => handleAdminNavigation("dashboard")}
-                    className={`w-full text-left block px-3 py-3 rounded-lg text-base font-medium hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-colors duration-300 ${
-                      activeTab === "dashboard"
-                        ? "text-indigo-600 dark:text-indigo-400 font-medium"
-                        : "text-gray-600 dark:text-gray-300"
-                    }`}
-                  >
-                    Dashboard
-                  </button>
-                  <button
-                    onClick={() => handleAdminNavigation("invoices")}
-                    className={`w-full text-left block px-3 py-3 rounded-lg text-base font-medium hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-colors duration-300 ${
-                      activeTab === "invoices"
-                        ? "text-indigo-600 dark:text-indigo-400 font-medium"
-                        : "text-gray-600 dark:text-gray-300"
-                    }`}
-                  >
-                    Invoices
-                  </button>
-                  <button
-                    onClick={() => handleAdminNavigation("users")}
-                    className={`w-full text-left block px-3 py-3 rounded-lg text-base font-medium hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-colors duration-300 ${
-                      activeTab === "employees"
-                        ? "text-indigo-600 dark:text-indigo-400 font-medium"
-                        : "text-gray-600 dark:text-gray-300"
-                    }`}
-                  >
-                    Employees
-                  </button>
-                  <button
-                    onClick={() => handleAdminNavigation("customers")}
-                    className={`w-full text-left block px-3 py-3 rounded-lg text-base font-medium hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-colors duration-300 ${
-                      activeTab === "customers"
-                        ? "text-indigo-600 dark:text-indigo-400 font-medium"
-                        : "text-gray-600 dark:text-gray-300"
-                    }`}
-                  >
-                    Customers
-                  </button>
-                  <button
-                    onClick={() => handleAdminNavigation("settings")}
-                    className={`w-full text-left block px-3 py-3 rounded-lg text-base font-medium hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-colors duration-300 ${
-                      activeTab === "settings"
-                        ? "text-indigo-600 dark:text-indigo-400 font-medium"
-                        : "text-gray-600 dark:text-gray-300"
-                    }`}
-                  >
-                    Settings
-                  </button>
-                  <button
-                    onClick={handleLogout}
-                    className="w-full text-left block px-3 py-3 rounded-lg text-base font-medium text-red-600 dark:text-red-400 hover:bg-red-50/50 dark:hover:bg-gray-800/50 transition-colors duration-300"
-                  >
-                    Sign out
-                  </button>
-                </div>
-              </div>
-            )}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
