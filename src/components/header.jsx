@@ -488,7 +488,7 @@ const Header = () => {
                       handleAdminNavigation("settings");
                     }}
                     className={`w-full text-left flex items-center px-4 py-3 rounded-lg text-base font-medium transition-colors duration-300 ${
-                      location.pathname === "/admin/settings"
+                      activeTab === "settings"
                         ? "text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-gray-800/50"
                         : "text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
                     }`}
