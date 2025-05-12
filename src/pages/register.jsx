@@ -125,6 +125,247 @@ const Particles = ({ count = 30 }) => {
   );
 };
 
+// Terms and Conditions Modal Component
+const TermsModal = ({ isOpen, onClose }) => {
+  const modalRef = useRef();
+
+  // Close modal when clicking outside
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (event) => {
+      if (modalRef.current && !modalRef.current.contains(event.target)) {
+        onClose();
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen, onClose]);
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ type: "spring", damping: 20, stiffness: 300 }}
+            ref={modalRef}
+            className="relative max-w-4xl w-full max-h-[90vh] bg-white text-black dark:bg-gray-800 dark:text-white rounded-xl shadow-2xl overflow-hidden border border-gray-300 dark:border-gray-700"
+          >
+            {/* Modal Header */}
+            <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 p-6 border-b border-gray-300 dark:border-gray-700">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold">Terms and Conditions</h2>
+                <button
+                  onClick={onClose}
+                  className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors"
+                >
+                  <FiX size={24} />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+              <div className="prose dark:prose-invert max-w-none">
+                <h3 className="text-xl font-semibold mb-4">
+                  Last Updated: {new Date().toLocaleDateString()}
+                </h3>
+
+                <section className="mb-8">
+                  <h4 className="text-lg font-semibold mb-3">
+                    1. Introduction
+                  </h4>
+                  <p className="mb-4">
+                    Welcome to our platform. These terms and conditions outline
+                    the rules and regulations for the use of our services.
+                  </p>
+                  <p>
+                    By accessing this platform, we assume you accept these terms
+                    and conditions. Do not continue to use our services if you
+                    do not agree to all of the terms and conditions stated on
+                    this page.
+                  </p>
+                </section>
+
+                <section className="mb-8">
+                  <h4 className="text-lg font-semibold mb-3">
+                    2. License to Use
+                  </h4>
+                  <p className="mb-2">
+                    Unless otherwise stated, we own the intellectual property
+                    rights for all material on this platform. All intellectual
+                    property rights are reserved.
+                  </p>
+                  <p className="mb-2">
+                    You may view and/or print pages for your personal use
+                    subject to restrictions set in these terms and conditions.
+                  </p>
+                  <p>You must not:</p>
+                  <ul className="list-disc pl-5 mt-2 space-y-1">
+                    <li>Republish material from this platform</li>
+                    <li>
+                      Sell, rent or sub-license material from this platform
+                    </li>
+                    <li>
+                      Reproduce, duplicate or copy material from this platform
+                    </li>
+                    <li>
+                      Redistribute content from this platform (unless content is
+                      specifically made for redistribution)
+                    </li>
+                  </ul>
+                </section>
+
+                <section className="mb-8">
+                  <h4 className="text-lg font-semibold mb-3">
+                    3. User Responsibilities
+                  </h4>
+                  <p className="mb-2">
+                    As a user of our platform, you agree to:
+                  </p>
+                  <ul className="list-disc pl-5 mt-2 space-y-1">
+                    <li>
+                      Provide accurate and complete information when registering
+                    </li>
+                    <li>
+                      Maintain the confidentiality of your account credentials
+                    </li>
+                    <li>
+                      Notify us immediately of any unauthorized use of your
+                      account
+                    </li>
+                    <li>Use the platform only for lawful purposes</li>
+                    <li>
+                      Not engage in any activity that disrupts or interferes
+                      with our services
+                    </li>
+                  </ul>
+                </section>
+
+                <section className="mb-8">
+                  <h4 className="text-lg font-semibold mb-3">
+                    4. Privacy Policy
+                  </h4>
+                  <p className="mb-2">
+                    Your privacy is important to us. Our Privacy Policy explains
+                    how we collect, use, and protect your personal information.
+                  </p>
+                  <p>
+                    By using our platform, you consent to the collection and use
+                    of information in accordance with our Privacy Policy.
+                  </p>
+                </section>
+
+                <section className="mb-8">
+                  <h4 className="text-lg font-semibold mb-3">
+                    5. Account Termination
+                  </h4>
+                  <p className="mb-2">
+                    We reserve the right to terminate or suspend your account
+                    and access to our services immediately, without prior notice
+                    or liability, for any reason whatsoever, including without
+                    limitation if you breach these Terms and Conditions.
+                  </p>
+                  <p>
+                    Upon termination, your right to use the platform will
+                    immediately cease. If you wish to terminate your account,
+                    you may simply discontinue using our services.
+                  </p>
+                </section>
+
+                <section className="mb-8">
+                  <h4 className="text-lg font-semibold mb-3">
+                    6. Limitation of Liability
+                  </h4>
+                  <p className="mb-2">
+                    In no event shall we, nor any of our officers, directors and
+                    employees, be liable to you for anything arising out of or
+                    in any way connected with your use of this platform, whether
+                    such liability is under contract, tort or otherwise.
+                  </p>
+                  <p>
+                    We shall not be liable for any indirect, consequential or
+                    special liability arising out of or in any way related to
+                    your use of this platform.
+                  </p>
+                </section>
+
+                <section className="mb-8">
+                  <h4 className="text-lg font-semibold mb-3">
+                    7. Indemnification
+                  </h4>
+                  <p>
+                    You hereby indemnify us from and against any and all
+                    liabilities, costs, demands, causes of action, damages and
+                    expenses (including reasonable attorney's fees) arising out
+                    of or in any way related to your breach of any of the
+                    provisions of these Terms.
+                  </p>
+                </section>
+
+                <section className="mb-8">
+                  <h4 className="text-lg font-semibold mb-3">
+                    8. Changes to Terms
+                  </h4>
+                  <p className="mb-2">
+                    We reserve the right, at our sole discretion, to modify or
+                    replace these Terms at any time. If a revision is material,
+                    we will try to provide at least 30 days' notice prior to any
+                    new terms taking effect.
+                  </p>
+                  <p>
+                    By continuing to access or use our platform after those
+                    revisions become effective, you agree to be bound by the
+                    revised terms.
+                  </p>
+                </section>
+
+                <section className="mb-8">
+                  <h4 className="text-lg font-semibold mb-3">
+                    9. Governing Law
+                  </h4>
+                  <p>
+                    These Terms shall be governed and construed in accordance
+                    with the laws of the jurisdiction in which our company is
+                    registered, without regard to its conflict of law
+                    provisions.
+                  </p>
+                </section>
+
+                <section>
+                  <h4 className="text-lg font-semibold mb-3">
+                    10. Contact Information
+                  </h4>
+                  <p>
+                    If you have any questions about these Terms, please contact
+                    us at legal@yourcompany.com.
+                  </p>
+                </section>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="sticky bottom-0 bg-white dark:bg-gray-800 p-4 border-t border-gray-300 dark:border-gray-700 flex justify-end">
+              <button
+                onClick={onClose}
+                className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+              >
+                I Understand
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  );
+};
+
 const Register = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
@@ -137,6 +378,7 @@ const Register = () => {
   const [timer, setTimer] = useState(0);
   const [resendOtpDisabled, setResendOtpDisabled] = useState(false);
   const [hoverState, setHoverState] = useState(null);
+  const [showTermsModal, setShowTermsModal] = useState(false);
   const navigate = useNavigate();
   const formRef = useRef();
   const controls = useAnimation();
@@ -167,6 +409,7 @@ const Register = () => {
     }
     return () => clearInterval(interval);
   }, [timer, resendOtpDisabled]);
+
   const onSubmit = async (data) => {
     setLoading(true);
     setApiError("");
@@ -257,6 +500,12 @@ const Register = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-indigo-900 overflow-hidden relative flex items-center justify-center px-4 py-12">
+      {/* Terms and Conditions Modal */}
+      <TermsModal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+      />
+
       {/* Background particles */}
       <Particles count={50} />
 
@@ -655,12 +904,13 @@ const Register = () => {
                         className="font-medium text-gray-300"
                       >
                         I agree to the{" "}
-                        <a
-                          href="#"
+                        <button
+                          type="button"
+                          onClick={() => setShowTermsModal(true)}
                           className="text-indigo-400 hover:text-indigo-300 hover:underline"
                         >
                           Terms of Service
-                        </a>{" "}
+                        </button>{" "}
                         and{" "}
                         <a
                           href="#"
