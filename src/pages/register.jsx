@@ -909,15 +909,9 @@ const Register = () => {
                           onClick={() => setShowTermsModal(true)}
                           className="text-indigo-400 hover:text-indigo-300 hover:underline"
                         >
-                          Terms of Service
-                        </button>{" "}
-                        and{" "}
-                        <a
-                          href="#"
-                          className="text-indigo-400 hover:text-indigo-300 hover:underline"
-                        >
-                          Privacy Policy
-                        </a>
+                          Terms and Conditions
+                        </button>
+                        .
                       </label>
                       {errors.terms && (
                         <motion.p
