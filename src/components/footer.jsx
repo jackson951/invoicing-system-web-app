@@ -24,9 +24,7 @@ const Footer = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > window.innerHeight / 2) {
-        setIsVisible(true);
-      }
+      setIsVisible(window.scrollY > window.innerHeight / 2);
     };
 
     window.addEventListener("scroll", handleScroll);
@@ -46,7 +44,6 @@ const Footer = () => {
     }, 1500);
   };
 
-  // Animation variants
   const container = {
     hidden: { opacity: 0 },
     visible: {
@@ -111,72 +108,49 @@ const Footer = () => {
 
   return (
     <motion.footer
-      className="bg-gradient-to-b from-gray-900 to-gray-950 text-gray-400 pt-16 pb-8 px-4 sm:px-6 lg:px-8 border-t border-gray-800/50"
+      className="bg-gray-900 text-gray-400 pt-12 pb-8 px-4 sm:px-6 lg:px-8 border-t border-gray-800"
       initial="hidden"
-      animate={isVisible ? "visible" : "hidden"}
+      animate="visible"
       variants={container}
     >
       <div className="max-w-7xl mx-auto">
-        {/* Grid Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
+        {/* Grid Layout - Responsive columns */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
           {/* Brand Column */}
-          <motion.div variants={item} className="space-y-5">
+          <motion.div variants={item} className="space-y-4">
             <Link to="/" className="flex items-center group">
-              <motion.div whileHover={{ rotate: 15 }} className="relative">
-                <div className="h-10 w-10 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center mr-3">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 text-white"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                </div>
-                <motion.span
-                  initial={{ opacity: 0, scale: 0.5 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="absolute -top-2 -right-2"
+              <div className="h-10 w-10 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center mr-3">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
                 >
-                  <div className="h-4 w-4 rounded-full bg-yellow-500 flex items-center justify-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-2 w-2 text-yellow-900"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </div>
-                </motion.span>
-              </motion.div>
-              <span className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400 group-hover:from-indigo-300 group-hover:to-purple-300 transition-all duration-300">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+              </div>
+              <span className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">
                 QuantumInvoicer
               </span>
             </Link>
 
-            <p className="text-sm leading-relaxed text-gray-400">
-              Revolutionizing billing with AI-powered automation and real-time
-              analytics for modern businesses.
+            <p className="text-sm text-gray-400">
+              AI-powered billing automation for modern businesses.
             </p>
 
             {/* Contact Info */}
-            <div className="space-y-3">
+            <div className="space-y-2 pt-2">
               <div className="flex items-start">
                 <FiMail className="mt-1 mr-3 text-indigo-400 flex-shrink-0" />
                 <a
                   href="mailto:support@quantuminvoicer.com"
-                  className="hover:text-indigo-300 transition-colors duration-300"
+                  className="text-sm hover:text-indigo-300 transition-colors"
                 >
                   support@quantuminvoicer.com
                 </a>
@@ -184,27 +158,27 @@ const Footer = () => {
               <div className="flex items-start">
                 <FiPhone className="mt-1 mr-3 text-indigo-400 flex-shrink-0" />
                 <a
-                  href="tel:+11234567890"
-                  className="hover:text-indigo-300 transition-colors duration-300"
+                  href="tel:+27661802747"
+                  className="text-sm hover:text-indigo-300 transition-colors"
                 >
-                  +27 (66) 180-2747
+                  +27 66 180 2747
                 </a>
               </div>
               <div className="flex items-start">
                 <FiMapPin className="mt-1 mr-3 text-indigo-400 flex-shrink-0" />
-                <span>
-                  456 Zuurfontein Road, Kempton Park, Gauteng 1619, South Africa
+                <span className="text-sm">
+                  Kempton Park, Gauteng, South Africa
                 </span>
               </div>
             </div>
           </motion.div>
 
           {/* Quick Links */}
-          <motion.div variants={item} className="space-y-5">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-300">
+          <motion.div variants={item} className="space-y-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-300">
               Quick Links
             </h3>
-            <ul className="space-y-3">
+            <ul className="space-y-2">
               {quickLinks.map((link) => (
                 <motion.li
                   key={link.path}
@@ -213,14 +187,14 @@ const Footer = () => {
                 >
                   <Link
                     to={link.path}
-                    className="flex items-center text-sm hover:text-indigo-300 transition-colors duration-300 group"
+                    className="flex items-center text-sm hover:text-indigo-300 transition-colors group"
                     onMouseEnter={() => setActiveHover(link.path)}
                     onMouseLeave={() => setActiveHover(null)}
                   >
                     <span
-                      className={`w-1.5 h-1.5 rounded-full mr-3 transition-all duration-300 ${
+                      className={`w-1.5 h-1.5 rounded-full mr-3 transition-all ${
                         activeHover === link.path
-                          ? "bg-gradient-to-r from-indigo-500 to-purple-500 scale-150"
+                          ? "bg-indigo-500 scale-150"
                           : "bg-gray-600"
                       }`}
                     ></span>
@@ -232,11 +206,11 @@ const Footer = () => {
           </motion.div>
 
           {/* Resources */}
-          <motion.div variants={item} className="space-y-5">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-300">
+          <motion.div variants={item} className="space-y-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-300">
               Resources
             </h3>
-            <ul className="space-y-3">
+            <ul className="space-y-2">
               {resources.map((link) => (
                 <motion.li
                   key={link.path}
@@ -245,14 +219,14 @@ const Footer = () => {
                 >
                   <Link
                     to={link.path}
-                    className="flex items-center text-sm hover:text-indigo-300 transition-colors duration-300 group"
+                    className="flex items-center text-sm hover:text-indigo-300 transition-colors group"
                     onMouseEnter={() => setActiveHover(link.path)}
                     onMouseLeave={() => setActiveHover(null)}
                   >
                     <span
-                      className={`w-1.5 h-1.5 rounded-full mr-3 transition-all duration-300 ${
+                      className={`w-1.5 h-1.5 rounded-full mr-3 transition-all ${
                         activeHover === link.path
-                          ? "bg-gradient-to-r from-indigo-500 to-purple-500 scale-150"
+                          ? "bg-indigo-500 scale-150"
                           : "bg-gray-600"
                       }`}
                     ></span>
@@ -263,13 +237,13 @@ const Footer = () => {
             </ul>
           </motion.div>
 
-          {/* Newsletter */}
-          <motion.div variants={item} className="space-y-5">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-300">
+          {/* Newsletter & Social */}
+          <motion.div variants={item} className="space-y-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-300">
               Stay Updated
             </h3>
             <p className="text-sm text-gray-400">
-              Subscribe to our newsletter for product updates and insights.
+              Subscribe for product updates and insights.
             </p>
 
             <AnimatePresence mode="wait">
@@ -278,16 +252,16 @@ const Footer = () => {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="bg-green-900/30 border border-green-800/50 text-green-400 p-3 rounded-lg text-sm"
+                  className="bg-green-900/20 border border-green-800/50 text-green-400 p-3 rounded text-xs"
                 >
-                  Thanks for subscribing! Check your email for confirmation.
+                  Thanks for subscribing!
                 </motion.div>
               ) : (
                 <motion.form
                   onSubmit={handleSubscribe}
                   initial={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="space-y-3"
+                  className="space-y-2"
                 >
                   <div className="flex">
                     <input
@@ -295,7 +269,7 @@ const Footer = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="Your email"
-                      className="flex-grow px-4 py-2 rounded-l-lg bg-gray-800/50 border border-gray-700/50 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-gray-300 placeholder-gray-500 transition-all duration-300"
+                      className="flex-grow px-3 py-2 rounded-l bg-gray-800 border border-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 text-gray-300 placeholder-gray-500 text-sm"
                       required
                     />
                     <motion.button
@@ -303,15 +277,15 @@ const Footer = () => {
                       disabled={isLoading}
                       whileHover={!isLoading ? { scale: 1.05 } : {}}
                       whileTap={!isLoading ? { scale: 0.95 } : {}}
-                      className={`px-4 py-2 rounded-r-lg text-white ${
+                      className={`px-3 py-2 rounded-r text-white text-sm ${
                         isLoading
                           ? "bg-indigo-700 cursor-not-allowed"
-                          : "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
-                      } transition-all duration-300 flex items-center justify-center`}
+                          : "bg-indigo-600 hover:bg-indigo-700"
+                      } transition-all flex items-center justify-center min-w-[100px]`}
                     >
                       {isLoading ? (
                         <svg
-                          className="animate-spin h-5 w-5 text-white"
+                          className="animate-spin h-4 w-4 text-white"
                           xmlns="http://www.w3.org/2000/svg"
                           fill="none"
                           viewBox="0 0 24 24"
@@ -336,18 +310,18 @@ const Footer = () => {
                     </motion.button>
                   </div>
                   <p className="text-xs text-gray-500">
-                    We respect your privacy. Unsubscribe anytime.
+                    We respect your privacy.
                   </p>
                 </motion.form>
               )}
             </AnimatePresence>
 
             {/* Social Links */}
-            <div className="pt-4">
-              <h4 className="text-sm font-semibold text-gray-300 mb-3">
+            <div className="pt-2">
+              <h4 className="text-xs font-semibold text-gray-300 mb-2">
                 Connect With Us
               </h4>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-2">
                 {socialLinks.map((social) => (
                   <motion.a
                     key={social.label}
@@ -355,9 +329,9 @@ const Footer = () => {
                     aria-label={social.label}
                     target="_blank"
                     rel="noopener noreferrer"
-                    whileHover={{ y: -3 }}
+                    whileHover={{ y: -2 }}
                     whileTap={{ scale: 0.9 }}
-                    className="h-10 w-10 rounded-full bg-gray-800/50 hover:bg-gray-700/50 border border-gray-700/50 flex items-center justify-center text-gray-400 hover:text-white transition-all duration-300"
+                    className="h-8 w-8 rounded bg-gray-800 hover:bg-gray-700 border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white transition-all"
                   >
                     {social.icon}
                   </motion.a>
@@ -368,21 +342,18 @@ const Footer = () => {
         </div>
 
         {/* Bottom Bar */}
-        <motion.div
-          variants={item}
-          className="border-t border-gray-800/50 pt-8"
-        >
+        <motion.div variants={item} className="border-t border-gray-800 pt-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-xs text-gray-500">
               &copy; {year} QuantumInvoicer. All rights reserved.
             </p>
 
-            <div className="flex flex-wrap justify-center gap-x-4 gap-y-2">
+            <div className="flex flex-wrap justify-center gap-x-4 gap-y-1">
               {legalLinks.map((link) => (
                 <Link
                   key={link.path}
                   to={link.path}
-                  className="text-xs text-gray-500 hover:text-indigo-300 transition-colors duration-300"
+                  className="text-xs text-gray-500 hover:text-indigo-300 transition-colors"
                 >
                   {link.name}
                 </Link>
@@ -390,14 +361,9 @@ const Footer = () => {
             </div>
           </div>
 
-          <div className="text-center mt-6">
+          <div className="text-center mt-4">
             <p className="text-xs text-gray-600">
               Made with <span className="text-red-400">❤️</span> by Quantum Team
-              • v3.1.0
-            </p>
-            <p className="text-xs text-gray-700 mt-1">
-              This product uses the Stripe API but is not endorsed or certified
-              by Stripe.
             </p>
           </div>
         </motion.div>
@@ -413,10 +379,10 @@ const Footer = () => {
             exit={{ opacity: 0, y: 20 }}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            className="fixed bottom-6 right-6 bg-gradient-to-br from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white p-3 rounded-full shadow-xl z-50 focus:outline-none"
+            className="fixed bottom-4 right-4 bg-indigo-600 hover:bg-indigo-700 text-white p-2 rounded-full shadow-md z-50 focus:outline-none"
             aria-label="Back to top"
           >
-            <FiArrowUp className="h-5 w-5" />
+            <FiArrowUp className="h-4 w-4" />
           </motion.button>
         )}
       </AnimatePresence>
