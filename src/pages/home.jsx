@@ -72,14 +72,19 @@ const SectionTitle = ({ title, subtitle, icon }) => (
     </motion.p>
   </div>
 );
-
 const VideoPlayer = React.memo(({ src, poster, className = "" }) => {
   const videoRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
   const togglePlay = () => {
+    if (!videoRef.current) return;
     if (videoRef.current.paused) {
-      videoRef.current.play().then(() => setIsPlaying(true));
+      videoRef.current
+        .play()
+        .then(() => setIsPlaying(true))
+        .catch((err) => {
+          console.error("Play failed", err);
+        });
     } else {
       videoRef.current.pause();
       setIsPlaying(false);
@@ -90,7 +95,6 @@ const VideoPlayer = React.memo(({ src, poster, className = "" }) => {
     <div className={`relative group ${className}`}>
       <video
         ref={videoRef}
-        src={src}
         poster={poster}
         className="w-full rounded-2xl transition-transform duration-500 group-hover:scale-105"
         onClick={togglePlay}
@@ -98,7 +102,11 @@ const VideoPlayer = React.memo(({ src, poster, className = "" }) => {
         muted
         playsInline
         preload="metadata"
-      />
+      >
+        <source src={src} type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
+
       {!isPlaying && (
         <button
           onClick={togglePlay}
