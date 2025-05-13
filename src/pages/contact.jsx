@@ -9,8 +9,17 @@ const contactSchema = z.object({
   name: z.string().min(2, "Full name is too short."),
   email: z.string().email("Please enter a valid email."),
   company: z.string().optional(),
+  enquiryType: z.string().min(1, "Please select an enquiry type"),
   message: z.string().min(10, "Message must be at least 10 characters."),
 });
+
+const enquiryTypes = [
+  "General Inquiry",
+  "Pricing & Plans",
+  "Technical Support",
+  "Feature Request",
+  "Sales Demo",
+];
 
 const Contact = () => {
   const {
@@ -39,7 +48,6 @@ const Contact = () => {
           const delay = Math.random() * 5;
           const x = Math.random() * 100;
           const y = Math.random() * 100;
-
           return (
             <motion.div
               key={i}
@@ -102,9 +110,10 @@ const Contact = () => {
       >
         <div className="absolute inset-0 bg-white/5 backdrop-blur-md rounded-2xl shadow-2xl border border-white/10 -z-10"></div>
         <div className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 p-8 rounded-2xl shadow-xl border border-white/10 backdrop-blur-sm relative z-10">
-          <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-400 mb-6 text-center">
-            Schedule a Demo
+          <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-400 mb-2 text-center">
+            QuantumInvoicer
           </h2>
+          <p className="text-gray-300 text-center mb-6">Get in touch with us</p>
 
           <AnimatePresence>
             {isSubmitSuccessful && (
@@ -233,6 +242,51 @@ const Contact = () => {
                   <label className="absolute left-4 top-3 text-sm text-gray-400 transition-all peer-placeholder-shown:top-3 peer-placeholder-shown:text-base peer-focus:top-1 peer-focus:text-xs peer-focus:text-indigo-400">
                     Company (Optional)
                   </label>
+                </div>
+              )}
+            />
+
+            {/* Enquiry Type Field */}
+            <Controller
+              name="enquiryType"
+              control={control}
+              defaultValue=""
+              render={({ field }) => (
+                <div className="relative">
+                  <select
+                    {...field}
+                    className={`peer w-full px-4 pt-5 pb-2 bg-gray-800/50 border ${
+                      errors.enquiryType ? "border-red-500" : "border-gray-600"
+                    } rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-white placeholder-transparent appearance-none`}
+                  >
+                    <option value="" disabled></option>
+                    {enquiryTypes.map((type, index) => (
+                      <option key={index} value={type}>
+                        {type}
+                      </option>
+                    ))}
+                  </select>
+                  <label className="absolute left-4 top-3 text-sm text-gray-400 transition-all peer-placeholder-shown:top-3 peer-placeholder-shown:text-base peer-focus:top-1 peer-focus:text-xs peer-focus:text-indigo-400">
+                    Enquiry Type
+                  </label>
+                  {errors.enquiryType && (
+                    <p className="text-red-400 text-xs mt-1 flex items-center">
+                      <svg
+                        className="w-4 h-4 mr-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                        />
+                      </svg>
+                      {errors.enquiryType.message}
+                    </p>
+                  )}
                 </div>
               )}
             />
