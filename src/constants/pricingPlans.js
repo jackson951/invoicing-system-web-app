@@ -1,49 +1,48 @@
 export const pricingPlansData = [
   {
     name: "Starter",
-    monthlyPrice: 19,
-    annualPrice: 190,
+    description: "Perfect for freelancers and small businesses",
+    monthlyPrice: "19",
+    annualPrice: "180",
     features: [
-      "Up to 20 invoices/month",
-      "2 user accounts",
+      "Up to 50 invoices/month",
+      "Basic AI suggestions",
       "Email support",
-      "Basic analytics",
-      "PDF invoice generation",
-      "Single tenant",
+      "3 integrations",
+      "Basic reporting"
     ],
-    cta: "Start Free Trial",
+    featured: false
   },
   {
     name: "Professional",
-    popular: true,
-    monthlyPrice: 49,
-    annualPrice: 490,
+    description: "For growing businesses with more complex needs",
+    monthlyPrice: "49",
+    annualPrice: "468",
     features: [
-      "Unlimited invoices",
-      "10 user accounts",
+      "Up to 200 invoices/month",
+      "Advanced AI suggestions",
       "Priority support",
-      "Advanced analytics & reporting",
-      "Custom invoice templates",
-      "Up to 3 tenants",
-      "Automated reminders",
-      "Client portal",
+      "10 integrations",
+      "Advanced reporting",
+      "Cash flow forecasting"
     ],
-    cta: "Start Free Trial",
+    featured: true
   },
   {
     name: "Enterprise",
-    monthlyPrice: 99,
-    annualPrice: 990,
+    description: "For large organizations with custom requirements",
+    monthlyPrice: "99",
+    annualPrice: "948",
     features: [
-      "Everything in Professional",
-      "Unlimited user accounts",
-      "Dedicated support manager",
-      "Custom integrations",
+      "Unlimited invoices",
+      "Premium AI suggestions",
+      "24/7 dedicated support",
+      "Unlimited integrations",
+      "Custom reporting",
+      "Advanced cash flow forecasting",
       "API access",
-      "Unlimited tenants",
-      "Advanced security features",
-      "White-labeling options",
+      "Custom workflows"
     ],
-    cta: "Contact Sales",
-  },
+    featured: false
+  }
 ];

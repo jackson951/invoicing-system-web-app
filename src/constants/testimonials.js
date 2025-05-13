@@ -1,23 +1,26 @@
 export const testimonialsData = [
   {
-    quote:
-      "Since implementing this platform, we've reduced our billing cycle by 60% and virtually eliminated late payments. The automated reminders alone are worth the investment.",
-    author: "Sarah Johnson",
-    position: "Finance Director, TechGrowth Inc.",
-    rating: 5,
+    name: "Alex Chen",
+    role: "CTO at FinTech Startup",
+    content: "Reduced our invoice processing time by 75% while improving accuracy. The AI suggestions are eerily accurate and have saved us countless hours.",
+    rating: 5
   },
   {
-    quote:
-      "As a freelancer juggling multiple clients, this invoicing system has been a game-changer. I've actually calculated that I save about 8 hours per month on invoice creation and payment tracking.",
-    author: "Marcus Chen",
-    position: "Independent Design Consultant",
-    rating: 5,
+    name: "Maria Rodriguez",
+    role: "Freelance Developer",
+    content: "As a solo entrepreneur, this has completely transformed how I manage my billing. I get paid faster with less effort, and the forecasting helps me plan my cash flow.",
+    rating: 5
   },
   {
-    quote:
-      "The multi-tenant feature lets us manage billing for all our subsidiary companies from one central dashboard. Reporting that used to take days now happens in real-time.",
-    author: "Jessica Williams",
-    position: "CFO, Horizon Group",
-    rating: 4,
+    name: "James Wilson",
+    role: "Finance Director at Creative Agency",
+    content: "The automated reconciliation feature alone has saved us 20 hours per month. Our accounting team is thrilled with the reduction in manual work.",
+    rating: 4
   },
+  {
+    name: "Sarah Johnson",
+    role: "E-commerce Store Owner",
+    content: "Switching to this platform was the best business decision we made last year. The time saved on billing has allowed us to focus on growing our business.",
+    rating: 5
+  }
 ];

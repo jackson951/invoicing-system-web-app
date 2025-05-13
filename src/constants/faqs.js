@@ -1,27 +1,22 @@
 export const faqData = [
   {
-    question: "How does the 14-day free trial work?",
-    answer:
-      "Our free trial gives you full access to all features of your selected plan for 14 days. No credit card is required to start. You'll receive a reminder 3 days before your trial ends with options to subscribe or cancel.",
+    question: "How does the AI-powered billing work?",
+    answer: "Our system uses machine learning to analyze your billing patterns, client behavior, and industry standards to suggest optimal invoice formats, payment terms, and even predict potential late payments before they happen."
   },
   {
-    question: "Can I switch plans later?",
-    answer:
-      "Yes, you can upgrade or downgrade your plan at any time. When upgrading, the new features are instantly available and we'll prorate your billing. When downgrading, changes take effect at the end of your current billing cycle.",
+    question: "Is my financial data secure?",
+    answer: "Absolutely. We use bank-grade 256-bit encryption, regular security audits, and comply with all major financial data protection standards. Your data is never shared with third parties without your explicit consent."
   },
   {
-    question: "What payment methods do you accept?",
-    answer:
-      "We accept all major credit cards (Visa, Mastercard, American Express, Discover) as well as PayPal. For Enterprise plans, we can also accommodate bank transfers and purchase orders.",
+    question: "Can I integrate with my existing accounting software?",
+    answer: "Yes, we offer seamless integration with all major accounting platforms including QuickBooks, Xero, and FreshBooks. Our API also allows for custom integrations if needed."
   },
   {
-    question: "Is my data secure?",
-    answer:
-      "Absolutely. We implement bank-level security with 256-bit SSL encryption for all data transfers. Your data is stored in SOC 2 compliant data centers with regular backups. We never share your data with third parties.",
+    question: "What happens if I need to cancel my subscription?",
+    answer: "You can cancel anytime with no hidden fees. We'll provide a full export of all your data in standard formats that can be imported into other systems."
   },
   {
-    question: "Can I import existing client data?",
-    answer:
-      "Yes, our platform supports importing client data and invoice history via CSV files. For larger migrations, our Enterprise plan include personalized onboarding assistance to ensure a smooth transition.",
-  },
+    question: "How accurate is the cash flow forecasting?",
+    answer: "Our forecasting algorithm has a 92-95% accuracy rate based on historical client payment behavior, seasonal trends, and market conditions. The more you use the system, the smarter it gets."
+  }
 ];
