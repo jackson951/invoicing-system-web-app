@@ -718,27 +718,49 @@ const AdminDashboard = () => {
   };
 
   // Change password
-  const handleChangePassword = (e) => {
+  const handleChangePassword = async (e) => {
     e.preventDefault();
     const storedUser = JSON.parse(localStorage.getItem("user")) || {};
-    console.log(storedUser, "userrrr");
-    if (currentPassword !== user.password) {
-      alert("Current password is incorrect.");
+    const token = localStorage.getItem("token");
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      alert("Please fill in all fields.");
       return;
     }
+
     if (newPassword !== confirmPassword) {
       alert("New passwords do not match.");
       return;
     }
-    const updatedUser = {
-      ...storedUser,
-      password: newPassword,
-    };
-    localStorage.setItem("user", JSON.stringify(updatedUser));
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
-    alert("Password updated successfully.");
+
+    try {
+      const response = await ApiService.post(
+        `/user/${user.id}/change-password`,
+        {
+          currentPassword,
+          newPassword,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      // Clear input fields on success
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+
+      alert("Password updated successfully.");
+    } catch (error) {
+      console.error("Error updating password:", error);
+      alert(
+        error.response?.data?.message ||
+          "An error occurred while updating the password."
+      );
+    }
   };
 
   //let us work on customer here
