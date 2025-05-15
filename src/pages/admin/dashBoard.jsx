@@ -722,7 +722,7 @@ const AdminDashboard = () => {
     e.preventDefault();
     const storedUser = JSON.parse(localStorage.getItem("user")) || {};
     console.log(storedUser, "userrrr");
-    if (currentPassword !== storedUser.password) {
+    if (currentPassword !== user.password) {
       alert("Current password is incorrect.");
       return;
     }

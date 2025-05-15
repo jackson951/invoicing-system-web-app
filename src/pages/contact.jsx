@@ -29,13 +29,21 @@ const Contact = () => {
     formState: { errors, isSubmitting, isSubmitSuccessful },
   } = useForm({
     resolver: zodResolver(contactSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      company: "",
+      enquiryType: "",
+      message: "",
+    },
     mode: "onBlur",
   });
 
   const onSubmit = async (data) => {
     console.log("Submitted data:", data);
+    // Simulate API call
     await new Promise((res) => setTimeout(res, 1500));
-    reset();
+    reset(); // This resets the form to default values
   };
 
   return (
@@ -150,7 +158,6 @@ const Contact = () => {
             <Controller
               name="name"
               control={control}
-              defaultValue=""
               render={({ field }) => (
                 <div className="relative">
                   <input
@@ -190,7 +197,6 @@ const Contact = () => {
             <Controller
               name="email"
               control={control}
-              defaultValue=""
               render={({ field }) => (
                 <div className="relative">
                   <input
@@ -230,7 +236,6 @@ const Contact = () => {
             <Controller
               name="company"
               control={control}
-              defaultValue=""
               render={({ field }) => (
                 <div className="relative">
                   <input
@@ -250,7 +255,6 @@ const Contact = () => {
             <Controller
               name="enquiryType"
               control={control}
-              defaultValue=""
               render={({ field }) => (
                 <div className="relative">
                   <select
@@ -295,7 +299,6 @@ const Contact = () => {
             <Controller
               name="message"
               control={control}
-              defaultValue=""
               render={({ field }) => (
                 <div className="relative">
                   <textarea
@@ -336,7 +339,7 @@ const Contact = () => {
               whileTap={{ scale: 0.98 }}
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all flex justify-center items-center relative overflow-hidden disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibound rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all flex justify-center items-center relative overflow-hidden disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <>
