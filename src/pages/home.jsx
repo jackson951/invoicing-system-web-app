@@ -185,7 +185,7 @@ const PriceCard = React.memo(({ plan, isYearly }) => (
       <p className="text-gray-400 mb-6">{plan.description}</p>
       <div className="mb-8">
         <div className="text-4xl font-bold text-white mb-1">
-          ${isYearly ? plan.annualPrice : plan.monthlyPrice}
+          {isYearly ? plan.annualPrice : plan.monthlyPrice}
           <span className="text-lg font-normal text-gray-400">
             {isYearly ? "/year" : "/month"}
           </span>
