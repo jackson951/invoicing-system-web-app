@@ -528,7 +528,7 @@ const Home = () => {
               className="flex flex-wrap justify-center gap-4"
             >
               <Link
-                to="/dashboard"
+                to="/admin"
                 className="px-8 py-4 bg-white text-indigo-600 rounded-full font-bold shadow-xl hover:shadow-2xl hover:bg-gray-100 transition-all"
               >
                 Go to Dashboard
@@ -1083,7 +1083,7 @@ const Home = () => {
                     Contact Support
                   </Link>
                   <Link
-                    to="/dashboard"
+                    to="/admin"
                     className="px-8 py-4 bg-transparent text-white rounded-full font-bold shadow-xl hover:shadow-2xl hover:bg-white/10 transition-all border-2 border-white/30"
                   >
                     Go to Dashboard
