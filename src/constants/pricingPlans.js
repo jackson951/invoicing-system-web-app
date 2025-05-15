@@ -2,8 +2,8 @@ export const pricingPlansData = [
   {
     name: "Starter",
     description: "Perfect for freelancers and small businesses",
-    monthlyPrice: "19",
-    annualPrice: "180",
+    monthlyPrice: "R351.50",
+    annualPrice: "R3,330",
     features: [
       "Up to 50 invoices/month",
       "Basic AI suggestions",
@@ -16,8 +16,8 @@ export const pricingPlansData = [
   {
     name: "Professional",
     description: "For growing businesses with more complex needs",
-    monthlyPrice: "49",
-    annualPrice: "468",
+    monthlyPrice: "R906.50",
+    annualPrice: "R8,658",
     features: [
       "Up to 200 invoices/month",
       "Advanced AI suggestions",
@@ -31,8 +31,8 @@ export const pricingPlansData = [
   {
     name: "Enterprise",
     description: "For large organizations with custom requirements",
-    monthlyPrice: "99",
-    annualPrice: "948",
+    monthlyPrice: "R1,831.50",
+    annualPrice: "R17,538",
     features: [
       "Unlimited invoices",
       "Premium AI suggestions",
