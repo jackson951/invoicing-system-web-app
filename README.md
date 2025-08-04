@@ -1,6 +1,6 @@
 # 📇 SaaS-Based Invoicing System
 
-A robust, multi-tenant **SaaS invoicing platform** built with **ASP.NET Core** and **React.js**, designed for business scalability, real-time operations, and secure invoice management. Features include Stripe payments, role-based access, real-time dashboards, and an AI assistant to boost productivity.
+A robust, multi-tenant **SaaS invoicing platform** built with **Express.js** and **React.js**, designed for business scalability, real-time operations, and secure invoice management. Features include Stripe payments, role-based access, real-time dashboards, and an AI assistant to boost productivity.
 
 ---
 
@@ -8,13 +8,14 @@ A robust, multi-tenant **SaaS invoicing platform** built with **ASP.NET Core** a
 
 | Layer          | Tech                                                 |
 | -------------- | ---------------------------------------------------- |
-| **Backend**    | ASP.NET Core (C#), Entity Framework Core, **SQLite** **<<<** |
+| **Backend**    | Node.js, Express.js, Sequelize/SQLite                |
 | **Frontend**   | React.js, Tailwind CSS                               |
-| **Auth**       | ASP.NET Identity                                     |
+| **Auth**       | JWT (JSON Web Tokens)                                |
 | **Payments**   | Stripe API                                           |
-| **Analytics**  | SignalR (Real-time), Chart.js                        |
-| **PDF**        | iTextSharp                                           |
-| **AI Service** | Python (scikit-learn, FastAPI) or ML.NET             |
+| **Analytics**  | Socket.IO (Real-time), Chart.js                      |
+| **PDF**        | PDFKit or Puppeteer                                  |
+| **AI Service** | Python (scikit-learn, FastAPI) or TensorFlow.js      |
+| **Database**   | SQLite (with Sequelize ORM)                          |
 
 ---
 
@@ -24,7 +25,7 @@ A robust, multi-tenant **SaaS invoicing platform** built with **ASP.NET Core** a
 - ✅ Multi-tenant architecture with scoped access
 - ✅ Role-based access control (Admin, Editor, Subscriber)
 - ✅ Stripe for payments (one-time + subscriptions)
-- ✅ Real-time financial dashboard (SignalR)
+- ✅ Real-time financial dashboard (Socket.IO)
 - ✅ PDF generation with branding
 - ✅ Email verification & password reset
 - ✅ Admin panel for employee management
@@ -115,15 +116,16 @@ AI assistant learns from invoice data to provide:
 ## 🔐 Security Features
 
 - Email confirmation + password reset
-- Session-based authentication
+- JWT authentication
 - Role-based API/UI access
 - Two-Factor Authentication (optional)
+- Helmet.js for security headers
 
 ---
 
 ## 📊 Real-Time Dashboard
 
-Powered by **SignalR** and **Chart.js**:
+Powered by **Socket.IO** and **Chart.js**:
 
 - 📈 Revenue charts
 - 🧾 Invoice status breakdown
@@ -134,23 +136,20 @@ Powered by **SignalR** and **Chart.js**:
 
 ## 🖨️ PDF Invoice Generation
 
-- Built with **iTextSharp**
+- Built with **PDFKit** or **Puppeteer**
 - Printable/downloadable invoices
 - Branding with logo & footers
 
 ---
 
-## 🗃️ Database Design (EF Core)
+## 🗃️ Database Design (Sequelize)
 
-### **<<< SQLite Implementation Notes >>>**
+### SQLite Implementation
 - Lightweight file-based database
-- Zero-configuration required
-- Supports all EF Core features
-- Perfect for development and small-scale deployments
-- Easily migratable to other databases if needed
+- Sequelize ORM for model management
+- Migrations and seeders supported
 
-### Entities
-
+### Models
 - `User`
 - `Employee` (w/ roles)
 - `Customer`
@@ -166,12 +165,15 @@ Powered by **SignalR** and **Chart.js**:
 ```bash
 SaaS-Invoicing/
 ├── backend/
-│   ├── Controllers/
-│   ├── Models/
-│   ├── Services/
-│   ├── Data/
-│   │   └── app.db **<<< SQLite database file**
-│   └── Program.cs
+│   ├── controllers/
+│   ├── models/
+│   ├── routes/
+│   ├── middlewares/
+│   ├── services/
+│   ├── config/
+│   │   └── database.js
+│   ├── app.js
+│   └── package.json
 ├── frontend/
 │   ├── src/
 │   │   ├── components/
