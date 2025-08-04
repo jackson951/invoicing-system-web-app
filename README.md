@@ -8,7 +8,7 @@ A robust, multi-tenant **SaaS invoicing platform** built with **ASP.NET Core** a
 
 | Layer          | Tech                                                 |
 | -------------- | ---------------------------------------------------- |
-| **Backend**    | ASP.NET Core (C#), Entity Framework Core, SQL Server |
+| **Backend**    | ASP.NET Core (C#), Entity Framework Core, **SQLite** **<<<** |
 | **Frontend**   | React.js, Tailwind CSS                               |
 | **Auth**       | ASP.NET Identity                                     |
 | **Payments**   | Stripe API                                           |
@@ -142,6 +142,13 @@ Powered by **SignalR** and **Chart.js**:
 
 ## 🗃️ Database Design (EF Core)
 
+### **<<< SQLite Implementation Notes >>>**
+- Lightweight file-based database
+- Zero-configuration required
+- Supports all EF Core features
+- Perfect for development and small-scale deployments
+- Easily migratable to other databases if needed
+
 ### Entities
 
 - `User`
@@ -163,6 +170,7 @@ SaaS-Invoicing/
 │   ├── Models/
 │   ├── Services/
 │   ├── Data/
+│   │   └── app.db **<<< SQLite database file**
 │   └── Program.cs
 ├── frontend/
 │   ├── src/
@@ -176,35 +184,3 @@ SaaS-Invoicing/
 │   └── api-spec.md
 ├── README.md
 └── .env.example
-```
-
-## 📈 Roadmap
-
-- [ ] Invoicing module with PDF export  
-- [ ] Role-based access system  
-- [ ] Stripe integration  
-- [ ] Real-time dashboard  
-- [ ] Employee management  
-- [ ] AI smart assistant for suggestions & automation  
-- [ ] Multi-language support  
-- [ ] Mobile-optimized frontend  
-
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository  
-2. Create a new branch (`git checkout -b feature/your-feature`)  
-3. Commit your changes (`git commit -m 'Add your feature'`)  
-4. Push to the branch (`git push origin feature/your-feature`)  
-5. Create a new Pull Request  
-
-For major changes, please open an issue first to discuss what you’d like to change.  
-Don’t forget to add or update tests as necessary.
-
-## 📫 Contact
-
-**Jackson Khuto**  
-📍 Kempton Park, South Africa  
-📧 [LinkedIn](https://www.linkedin.com/in/YOUR_USERNAME)  
-📱 WhatsApp
