@@ -15,6 +15,7 @@
     "@types/react": "^19.1.2",
     "axios": "^1.9.0",
     "chart.js": "^4.4.9",
+    "concurrently": "^9.2.0",
     "faker-js": "^1.0.0",
     "framer-motion": "^12.9.2",
     "gh-pages": "^6.3.0",
@@ -34,12 +35,12 @@
     "zod": "^3.24.3"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "concurrently \"npm run server\" \"react-scripts start\"",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "server": "node server/index.js",
+    "dev": "concurrently \"npm run server\" \"npm start\""
   },
   "eslintConfig": {
     "extends": [
